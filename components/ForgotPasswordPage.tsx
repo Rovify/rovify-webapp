@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiMail, FiArrowLeft, FiCheck } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
+import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
 export default function ForgotPasswordPage() {
     const router = useRouter();
@@ -55,7 +56,7 @@ export default function ForgotPasswordPage() {
                     <div className="flex items-center gap-2">
                         <div className="h-10 w-10 bg-[#FF5722] rounded-xl flex items-center justify-center shadow-sm overflow-hidden">
                             <Image
-                                src="/images/contents/rovi-logo.png"
+                                src={RoviLogo}
                                 alt="Rovify Logo"
                                 width={32}
                                 height={32}

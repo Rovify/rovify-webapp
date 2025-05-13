@@ -1,12 +1,12 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiSearch, FiChevronDown, FiChevronUp, FiArrowLeft, FiMessageSquare, FiMail, FiHelpCircle, FiUser, FiCalendar, FiCreditCard, FiSmartphone } from 'react-icons/fi';
-import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
+import PublicHeader from '@/components/PublicHeader';
+import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
 // FAQ categories and questions
 const faqData = {
@@ -114,7 +114,7 @@ export default function HelpPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
+            <PublicHeader />
 
             <main className="container mx-auto px-4 py-6 pt-24 pb-28">
                 <div className="max-w-3xl mx-auto">
@@ -367,7 +367,160 @@ export default function HelpPage() {
                 </div>
             </main>
 
-            <BottomNavigation />
+            <footer className="bg-white border-t border-gray-100">
+                {/* Main Footer */}
+                <div className="container mx-auto px-4 py-12">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+                        {/* Brand Column */}
+                        <div className="space-y-6">
+                            <div className="flex items-center">
+                                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#FF5722] to-[#FF9800] flex items-center justify-center">
+                                    <Image
+                                        src={RoviLogo}
+                                        alt="Rovify Logo"
+                                        width={32}
+                                        height={32}
+                                        className="object-contain"
+                                    />
+                                </div>
+                                <h2 className="ml-2 text-xl font-bold text-gray-900">Rovify</h2>
+                            </div>
+                            <p className="text-gray-600 text-sm">
+                                The premium Web2.5 social-first NFT event discovery platform connecting creators and enthusiasts through unique experiences.
+                            </p>
+                            <div className="flex items-center space-x-4">
+                                <a href="#" className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-[#FF5722]/10 hover:text-[#FF5722] transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                                    </svg>
+                                </a>
+                                <a href="#" className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-[#FF5722]/10 hover:text-[#FF5722] transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                    </svg>
+                                </a>
+                                <a href="#" className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-[#FF5722]/10 hover:text-[#FF5722] transition-all">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+                                        <rect x="2" y="9" width="4" height="12"></rect>
+                                        <circle cx="4" cy="4" r="2"></circle>
+                                    </svg>
+                                </a>
+                                <a href="#" className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-[#FF5722]/10 hover:text-[#FF5722] transition-all">
+                                    <svg
+                                        className="rotate-45"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        {/* Quick Links Column */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Explore</h3>
+                            <ul className="space-y-3">
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">All Events</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">NFT Collections</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Create Event</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Sell Tickets</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Event Calendar</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Featured Creators</a></li>
+                            </ul>
+                        </div>
+
+                        {/* Resources Column */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Company</h3>
+                            <ul className="space-y-3">
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">About Us</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Blog</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Careers</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Press Kit</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Partners</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Contact</a></li>
+                            </ul>
+                        </div>
+
+                        {/* Support Column */}
+                        <div>
+                            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Support</h3>
+                            <ul className="space-y-3">
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Help Center</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">FAQs</a></li>
+                                <li><a href="/terms" className="text-[#FF5722] font-medium">Terms of Service</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Privacy Policy</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Cookie Policy</a></li>
+                                <li><a href="#" className="text-gray-600 hover:text-[#FF5722] transition-colors">Trust & Safety</a></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {/* Newsletter Subscription */}
+                    <div className="mt-12 pt-8 border-t border-gray-100">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                            <div className="max-w-md">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">Join our community</h3>
+                                <p className="text-gray-600 text-sm">Get exclusive updates on new features, events, and NFT drops.</p>
+                            </div>
+                            <div className="w-full md:w-auto">
+                                <div className="flex rounded-full overflow-hidden shadow-sm border border-gray-200 bg-gray-50 focus-within:ring-2 focus-within:ring-[#FF5722]/30">
+                                    <input
+                                        type="email"
+                                        placeholder="Enter your email"
+                                        className="px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#FF5722]/20 focus:border-[#FF5722] w-full md:w-64"
+                                    />
+                                    <button className="bg-[#FF5722] hover:bg-[#E64A19] text-white px-4 py-2.5 rounded-r-lg transition-colors">
+                                        Subscribe
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Bottom Bar */}
+                <div className="bg-gray-50 border-t border-gray-100">
+                    <div className="container mx-auto px-4 py-4">
+                        <div className="flex flex-col md:flex-row justify-between items-center">
+                            <div className="text-sm text-gray-500 mb-4 md:mb-0">
+                                © 2025 Rovify. All rights reserved.
+                            </div>
+                            <div className="flex items-center space-x-6">
+                                <a href="#" className="text-sm text-gray-500 hover:text-[#FF5722] transition-colors flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016a11.955 11.955 0 01-8.618 3.88 11.955 11.955 0 01-8.618-3.88A19.936 19.936 0 0112 2.5c2.3 0 4.4.48 6.254 1.332" />
+                                    </svg>
+                                    Security
+                                </a>
+                                <a href="#" className="text-sm text-gray-500 hover:text-[#FF5722] transition-colors flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    Status
+                                </a>
+                                <div className="flex items-center text-sm text-gray-500">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5 text-[#FF5722]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+                                    </svg>
+                                    Kigali, Rwanda
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     );
 }

@@ -3,8 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { FiArrowRight } from 'react-icons/fi';
+import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
 export default function PublicHeader() {
     const [scrolled, setScrolled] = useState(false);
@@ -31,7 +33,13 @@ export default function PublicHeader() {
                 {/* Logo */}
                 <Link href="/" className="flex items-center group">
                     <div className="h-10 w-10 rounded-full bg-[#FF5722] flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
-                        <span className="text-white font-bold text-xl">R</span>
+                        <Image
+                            src={RoviLogo}
+                            alt="Rovify Logo"
+                            width={32}
+                            height={32}
+                            className="object-contain"
+                        />
                     </div>
                     <span className="ml-2 text-[#FF5722] text-xl font-bold">rovify</span>
                 </Link>

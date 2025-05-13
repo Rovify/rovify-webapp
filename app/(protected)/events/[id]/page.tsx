@@ -2,22 +2,20 @@ import { Metadata } from 'next';
 import { getEventById } from '@/mocks/data/events';
 import EventDetailsPage from '@/components/EventDetailsPage';
 
-// Types for TypeScript
-interface EventPageProps {
-    params: {
-        id: string;
-    };
-}
+type Params = {
+    id: string;
+};
 
-// Generate metadata dynamically based on the event
-export async function generateMetadata({ params }: EventPageProps): Promise<Metadata> {
+export async function generateMetadata({
+    params,
+}: {
+    params: Params;
+}): Promise<Metadata> {
     const eventId = params.id;
     const event = getEventById(eventId);
 
     if (!event) {
-        return {
-            title: 'Event Not Found',
-        };
+        return { title: 'Event Not Found' };
     }
 
     return {
@@ -31,6 +29,10 @@ export async function generateMetadata({ params }: EventPageProps): Promise<Meta
     };
 }
 
-export default function EventPage({ params }: EventPageProps) {
+export default function EventPage({
+    params,
+}: {
+    params: { id: string };
+}) {
     return <EventDetailsPage id={params.id} />;
 }

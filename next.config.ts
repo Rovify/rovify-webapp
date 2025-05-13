@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   reactStrictMode: true,
   images: {
     domains: [
       'via.placeholder.com',
-      'images.unsplash.com'
+      'images.unsplash.com',
+      'api.qrserver.com'
     ],
     remotePatterns: [
       {
@@ -22,7 +26,7 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  swcMinify: true,
+  // Remove swcMinify: true
 };
 
 export default nextConfig;

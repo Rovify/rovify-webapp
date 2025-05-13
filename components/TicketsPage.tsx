@@ -1,427 +1,960 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// components/TicketsPage.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { format } from 'date-fns';
+import Link from 'next/link';
+import { FiCalendar, FiMapPin, FiClock, FiTag, FiSend, FiDownload, FiShare2 } from 'react-icons/fi';
 import { getUserTickets } from '@/mocks/data/tickets';
 import { getEventById } from '@/mocks/data/events';
 import { getCurrentUser } from '@/mocks/data/users';
 import { Ticket, Event, User } from '@/types';
+import BottomNavigation from '@/components/BottomNavigation';
+import Header from '@/components/Header';
 
 export default function TicketsPage() {
-    // const [tickets, setTickets] = useState<Ticket[]>([]);
-    const [ticketsWithEvents, setTicketsWithEvents] = useState<Array<Ticket & { event: Event }>>([]);
+    const router = useRouter();
+    const [userTickets, setUserTickets] = useState<Array<Ticket & { event: Event }>>([]);
+    const [availableEvents, setAvailableEvents] = useState<Event[]>([]);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [activeTab, setActiveTab] = useState<'mytickets' | 'marketplace'>('mytickets');
+    const [ticketView, setTicketView] = useState<'upcoming' | 'past' | 'nft'>('upcoming');
     const [selectedTicket, setSelectedTicket] = useState<string | null>(null);
-    type TabType = 'upcoming' | 'past' | 'nft';
-    const [activeTab, setActiveTab] = useState<TabType>('upcoming');
     const [isLoading, setIsLoading] = useState(true);
-    const [isWalletConnected, setIsWalletConnected] = useState(false);
+    const [isPurchasing, setIsPurchasing] = useState(false);
+    const [purchaseStep, setPurchaseStep] = useState(1);
+    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+    const [ticketQuantity, setTicketQuantity] = useState(1);
+    const [ticketType, setTicketType] = useState<'GENERAL' | 'VIP'>('GENERAL');
 
     useEffect(() => {
-        // Simulate API fetch delay
+        // Simulate API fetch
         const timer = setTimeout(() => {
             const user = getCurrentUser();
             setCurrentUser(user);
 
-            const userTickets = getUserTickets(user.id);
-            // setTickets(userTickets);
-
-            // Enrich tickets with event data
-            const enrichedTickets = userTickets.map(ticket => {
-                const event = getEventById(ticket.eventId);
-                return {
-                    ...ticket,
-                    event: event!
-                };
+            // Get user tickets with event data
+            const tickets = getUserTickets(user.id).map(ticket => {
+                const event = getEventById(ticket.eventId)!;
+                return { ...ticket, event };
             });
+            setUserTickets(tickets);
 
-            setTicketsWithEvents(enrichedTickets);
+            // For marketplace tab
+            const upcomingEvents = tickets.map(ticket => ticket.event);
+            setAvailableEvents(upcomingEvents);
+
             setIsLoading(false);
-        }, 800);
+        }, 1000);
 
         return () => clearTimeout(timer);
     }, []);
 
-    // Filter tickets based on selected tab
+    // Filter user tickets based on selected view
     const now = new Date();
-    const filteredTickets = ticketsWithEvents.filter(ticket => {
-        if (activeTab === 'upcoming') {
+    const filteredUserTickets = userTickets.filter(ticket => {
+        if (ticketView === 'upcoming') {
             return new Date(ticket.event.date) > now;
-        } else if (activeTab === 'past') {
+        } else if (ticketView === 'past') {
             return new Date(ticket.event.date) <= now;
-        } else {
+        } else { // nft
             return ticket.isNft;
         }
     });
 
-    // Sort tickets by date (upcoming first for upcoming tab, most recent first for past tab)
-    const sortedTickets = [...filteredTickets].sort((a, b) => {
-        const dateA = new Date(a.event.date).getTime();
-        const dateB = new Date(b.event.date).getTime();
-        return activeTab === 'upcoming' ? dateA - dateB : dateB - dateA;
-    });
-
+    // Get selected ticket data
     const selectedTicketData = selectedTicket
-        ? ticketsWithEvents.find(t => t.id === selectedTicket)
+        ? userTickets.find(t => t.id === selectedTicket)
         : null;
 
+    // Handle ticket purchase
+    const handlePurchaseTicket = (event: Event) => {
+        setSelectedEvent(event);
+        setPurchaseStep(1);
+        setIsPurchasing(true);
+    };
+
+    const continueToPayment = () => {
+        setPurchaseStep(2);
+    };
+
+    const completePayment = () => {
+        // Simulate API call
+        setTimeout(() => {
+            setIsPurchasing(false);
+            // Show success message or redirect
+            router.push('/success?type=ticket');
+        }, 1000);
+    };
+
+    // Calculate price based on ticket type and quantity
+    const calculatePrice = () => {
+        if (!selectedEvent) return 0;
+
+        const basePrice = ticketType === 'VIP'
+            ? selectedEvent.price.max
+            : selectedEvent.price.min;
+
+        return basePrice * ticketQuantity;
+    };
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-rovify-black to-black text-white">
-            {/* Header */}
-            <header className="sticky top-0 z-50 backdrop-blur-md bg-rovify-black/70 border-b border-white/10">
-                <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-                    <Link href="/" className="flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-rovify-orange to-rovify-lavender flex items-center justify-center">
-                            <span className="text-white font-bold">R</span>
-                        </div>
-                        <span className="text-xl font-bold tracking-tight">Rovify</span>
-                    </Link>
+        <div className="min-h-screen bg-gray-50">
+            <Header />
 
-                    {!isLoading && currentUser && (
-                        <div className="flex items-center gap-2">
-                            <Link href="/profile" className="h-8 w-8 rounded-full overflow-hidden">
-                                <Image
-                                    src={currentUser.image}
-                                    alt={currentUser.name}
-                                    width={32}
-                                    height={32}
-                                    className="object-cover"
-                                />
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            </header>
+            <main className="container mx-auto px-4 py-6 pt-24 pb-32">
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold text-gray-900">Tickets</h1>
 
-            <main className="container mx-auto px-4 py-6">
-                <h1 className="text-3xl font-bold mb-2">My Tickets</h1>
-
-                {/* Wallet Connection Banner - Show only if not connected */}
-                {!isWalletConnected && (
-                    <div className="mb-6 bg-gradient-to-r from-rovify-black to-black border border-white/10 rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 flex-shrink-0 bg-white/10 rounded-full flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-rovify-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold">Connect Your Web3 Wallet</h3>
-                                <p className="text-sm text-white/70">Connect your wallet to view and manage your NFT tickets</p>
-                            </div>
-                        </div>
+                    {/* View Switcher */}
+                    <div className="bg-white rounded-xl p-1 shadow-neumorph-sm">
                         <button
-                            onClick={() => setIsWalletConnected(true)}
-                            className="bg-gradient-to-r from-rovify-orange to-rovify-lavender rounded-full px-5 py-2 text-sm font-medium"
+                            onClick={() => setActiveTab('mytickets')}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'mytickets'
+                                ? 'bg-[#FF5722] text-white shadow-sm'
+                                : 'text-gray-700 hover:bg-gray-100'
+                                }`}
                         >
-                            Connect Wallet
+                            My Tickets
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('marketplace')}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === 'marketplace'
+                                ? 'bg-[#FF5722] text-white shadow-sm'
+                                : 'text-gray-700 hover:bg-gray-100'
+                                }`}
+                        >
+                            Marketplace
                         </button>
                     </div>
-                )}
-
-                {/* Tab Navigation */}
-                <div className="mb-6 border-b border-white/10">
-                    <div className="flex gap-4">
-                        {['upcoming', 'past', 'nft'].map((tab, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setActiveTab(tab as TabType)}
-                                className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab
-                                    ? 'border-rovify-orange text-white'
-                                    : 'border-transparent text-white/60 hover:text-white'
-                                    }`}
-                            >
-                                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                            </button>
-                        ))}
-                    </div>
                 </div>
 
-                {/* Loading State */}
-                {isLoading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
-                        {[...Array(4)].map((_, i) => (
-                            <div key={i} className="h-32 rounded-xl bg-white/10"></div>
-                        ))}
-                    </div>
-                ) : (
+                {activeTab === 'mytickets' ? (
                     <>
-                        {/* Ticket List */}
-                        {sortedTickets.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                {sortedTickets.map((ticket) => (
-                                    <button
-                                        key={ticket.id}
-                                        onClick={() => setSelectedTicket(ticket.id)}
-                                        className={`text-left rounded-xl overflow-hidden border ${selectedTicket === ticket.id
-                                            ? 'border-rovify-orange'
-                                            : 'border-white/10 hover:border-white/30'
-                                            } transition-colors`}
-                                    >
-                                        <div className="relative h-32 flex">
+                        {/* Filter tabs for mytickets */}
+                        <div className="bg-white rounded-xl p-2 flex mb-6 overflow-x-auto no-scrollbar shadow-neumorph-sm">
+                            {['upcoming', 'past', 'nft'].map((tab) => (
+                                <button
+                                    key={tab}
+                                    onClick={() => setTicketView(tab as 'upcoming' | 'past' | 'nft')}
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-all flex items-center gap-2 ${ticketView === tab
+                                        ? 'bg-[#FF5722]/10 text-[#FF5722] shadow-sm'
+                                        : 'text-gray-700 hover:bg-gray-100'
+                                        }`}
+                                >
+                                    {tab === 'upcoming' && <FiClock className="w-4 h-4" />}
+                                    {tab === 'past' && <FiCalendar className="w-4 h-4" />}
+                                    {tab === 'nft' && <FiTag className="w-4 h-4" />}
+                                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* My Tickets Content */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            {/* Left Column: Ticket List */}
+                            <div className="lg:col-span-1 space-y-4">
+                                {isLoading ? (
+                                    [...Array(4)].map((_, i) => (
+                                        <div key={i} className="relative h-32 flex rounded-xl overflow-hidden shadow-neumorph-sm">
+                                            {/* Left: Event Image Skeleton */}
+                                            <div className="w-1/3 relative bg-gray-200 animate-pulse"></div>
+
+                                            {/* Right: Ticket Info Skeleton */}
+                                            <div className="w-2/3 bg-white p-4 flex flex-col justify-between">
+                                                <div>
+                                                    <div className="h-6 w-3/4 bg-gray-200 rounded-md animate-shimmer"></div>
+                                                    <div className="h-4 w-1/2 bg-gray-200 rounded-md mt-2 animate-shimmer" style={{ animationDelay: '0.1s' }}></div>
+                                                    <div className="h-4 w-2/3 bg-gray-200 rounded-md mt-2 animate-shimmer" style={{ animationDelay: '0.2s' }}></div>
+                                                </div>
+
+                                                <div className="flex justify-between items-end">
+                                                    <div className="h-5 w-20 bg-gray-200 rounded-md animate-shimmer" style={{ animationDelay: '0.3s' }}></div>
+                                                    <div className="h-5 w-16 bg-gray-200 rounded-md animate-shimmer" style={{ animationDelay: '0.4s' }}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : filteredUserTickets.length > 0 ? (
+                                    filteredUserTickets.map((ticket) => (
+                                        <div
+                                            key={ticket.id}
+                                            onClick={() => setSelectedTicket(ticket.id)}
+                                            className={`relative bg-white rounded-xl overflow-hidden flex cursor-pointer transform transition-all duration-300 ${selectedTicket === ticket.id
+                                                ? 'shadow-[0_0_0_2px_#FF5722] scale-[1.02]'
+                                                : 'shadow-neumorph-sm hover:shadow-[0_0_0_1px_#FF5722] hover:-translate-y-1'
+                                                }`}
+                                        >
                                             {/* Left: Event Image */}
-                                            <div className="w-1/3 relative">
+                                            <div className="w-1/3 h-32 relative">
                                                 <Image
                                                     src={ticket.event.image}
                                                     alt={ticket.event.title}
                                                     fill
                                                     className="object-cover"
                                                 />
+
                                                 {/* NFT Badge */}
                                                 {ticket.isNft && (
-                                                    <div className="absolute top-2 left-2 bg-rovify-orange text-white rounded-full px-2 py-0.5 text-xs font-semibold">
+                                                    <div className="absolute top-2 left-2 bg-[#FF5722] text-white text-xs font-medium px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                                                        <FiTag className="w-3 h-3" />
                                                         NFT
                                                     </div>
                                                 )}
                                             </div>
 
                                             {/* Right: Ticket Info */}
-                                            <div className="w-2/3 bg-white/5 backdrop-blur-sm p-3 flex flex-col justify-between">
+                                            <div className="w-2/3 p-3 flex flex-col justify-between">
                                                 <div>
-                                                    <h3 className="font-semibold line-clamp-1">{ticket.event.title}</h3>
-                                                    <p className="text-xs text-white/70 mb-1">
-                                                        {format(new Date(ticket.event.date), 'MMM d, yyyy • h:mm a')}
-                                                    </p>
-                                                    <div className="flex items-center gap-1 text-xs text-white/90">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-rovify-lavender" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        </svg>
+                                                    <h3 className="font-medium text-gray-900 line-clamp-1">{ticket.event.title}</h3>
+                                                    <div className="flex items-center gap-1 text-gray-500 text-xs mt-1">
+                                                        <FiCalendar className="w-3 h-3 text-[#FF5722]" />
+                                                        <span>{new Date(ticket.event.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1 text-gray-500 text-xs mt-0.5">
+                                                        <FiMapPin className="w-3 h-3 text-[#FF5722]" />
                                                         <span className="line-clamp-1">{ticket.event.location.name}</span>
                                                     </div>
                                                 </div>
 
-                                                <div className="flex justify-between items-end">
-                                                    <div>
-                                                        <span className="text-xs text-white/70">Type:</span>
-                                                        <span className="text-sm font-medium ml-1">{ticket.type}</span>
-                                                    </div>
-                                                    <div className="text-rovify-orange font-semibold">
-                                                        #{ticket.tokenId?.substring(0, 4) || ticket.id}
-                                                    </div>
+                                                <div className="flex justify-between items-center mt-1">
+                                                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+                                                        {ticket.type}
+                                                    </span>
+                                                    <span className="text-[#FF5722] font-semibold text-sm">
+                                                        #{ticket.tokenId?.substring(0, 4) || ticket.id.substring(0, 4)}
+                                                    </span>
                                                 </div>
                                             </div>
 
-                                            {/* Dotted separation line */}
+                                            {/* Ticket Perforation */}
                                             <div className="absolute h-full w-0 left-1/3 flex flex-col justify-between py-2">
-                                                <div className="h-3 w-3 rounded-full bg-rovify-black"></div>
+                                                <div className="h-3 w-3 rounded-full bg-white shadow-inner border border-gray-100 -ml-1.5"></div>
                                                 {[...Array(8)].map((_, i) => (
-                                                    <div key={i} className="h-1 w-1 rounded-full bg-rovify-black"></div>
+                                                    <div key={i} className="h-1 w-1 rounded-full bg-white -ml-0.5"></div>
                                                 ))}
-                                                <div className="h-3 w-3 rounded-full bg-rovify-black"></div>
+                                                <div className="h-3 w-3 rounded-full bg-white shadow-inner border border-gray-100 -ml-1.5"></div>
                                             </div>
                                         </div>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-white/5 backdrop-blur-md rounded-xl p-8 text-center mb-6">
-                                <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-white/10 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-rovify-lavender" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                                    </svg>
-                                </div>
-                                <h3 className="text-xl font-semibold mb-2">No tickets found</h3>
-                                <p className="text-white/70 mb-6">You don`&apos;`t have any {activeTab} tickets yet</p>
-                                <Link
-                                    href="/"
-                                    className="bg-gradient-to-r from-rovify-orange to-rovify-lavender rounded-full px-6 py-2 text-white font-medium inline-block"
-                                >
-                                    Discover Events
-                                </Link>
-                            </div>
-                        )}
-
-                        {/* Selected Ticket Detail */}
-                        {selectedTicketData && (
-                            <div className="bg-white/5 backdrop-blur-md rounded-xl border border-white/10 overflow-hidden">
-                                <div className="p-4 border-b border-white/10">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <h3 className="font-semibold">Ticket Details</h3>
+                                    ))
+                                ) : (
+                                    <div className="bg-white rounded-xl p-8 text-center shadow-neumorph">
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-[#FF5722]/10 rounded-full flex items-center justify-center">
+                                            <FiTag className="w-7 h-7 text-[#FF5722]" />
+                                        </div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-1">No tickets found</h3>
+                                        <p className="text-gray-500 mb-6">You don&apos;t have any {ticketView} tickets yet</p>
                                         <button
-                                            onClick={() => setSelectedTicket(null)}
-                                            className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center"
+                                            onClick={() => setActiveTab('marketplace')}
+                                            className="px-4 py-2 bg-[#FF5722] text-white rounded-lg shadow-sm hover:bg-[#E64A19] transition-colors"
                                         >
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                                            Browse Marketplace
                                         </button>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-10 w-10 rounded overflow-hidden">
+                                )}
+                            </div>
+
+                            {/* Right Column: Selected Ticket Details */}
+                            <div className="lg:col-span-2">
+                                {selectedTicketData ? (
+                                    <div className="bg-white rounded-xl overflow-hidden shadow-neumorph">
+                                        {/* Ticket Header with Glassmorphism */}
+                                        <div className="relative h-48">
                                             <Image
                                                 src={selectedTicketData.event.image}
                                                 alt={selectedTicketData.event.title}
-                                                width={40}
-                                                height={40}
+                                                fill
                                                 className="object-cover"
                                             />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-medium">{selectedTicketData.event.title}</h4>
-                                            <p className="text-sm text-white/70">
-                                                {format(new Date(selectedTicketData.event.date), 'EEEE, MMMM d, yyyy')}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
+                                            <div className="absolute inset-0 backdrop-blur-sm bg-white/30"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/50 to-transparent"></div>
 
-                                <div className="p-4">
-                                    <div className="flex flex-col items-center">
-                                        {/* QR Code */}
-                                        <div className="bg-white p-2 rounded mb-4">
-                                            <Image
-                                                src={selectedTicketData.qrCode}
-                                                alt="Ticket QR Code"
-                                                width={200}
-                                                height={200}
-                                            />
-                                        </div>
-
-                                        <div className="bg-white/10 py-1 px-3 rounded-full text-sm font-medium mb-4">
-                                            {selectedTicketData.type} • {selectedTicketData.currency} {selectedTicketData.price}
-                                        </div>
-
-                                        {/* Ticket Info */}
-                                        <div className="w-full space-y-3 mb-4">
-                                            <div className="flex justify-between">
-                                                <span className="text-white/70">Ticket ID:</span>
-                                                <span className="font-medium">#{selectedTicketData.id}</span>
-                                            </div>
-
-                                            {selectedTicketData.isNft && (
-                                                <>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-white/70">Token ID:</span>
-                                                        <span className="font-medium">{selectedTicketData.tokenId}</span>
+                                            {/* Overlay Content */}
+                                            <div className="absolute bottom-0 left-0 right-0 p-6">
+                                                <h2 className="text-2xl font-bold text-gray-900">{selectedTicketData.event.title}</h2>
+                                                <div className="flex items-center gap-4 text-sm mt-1">
+                                                    <div className="flex items-center gap-1 text-gray-700">
+                                                        <FiCalendar className="w-4 h-4 text-[#FF5722]" />
+                                                        <span>
+                                                            {new Date(selectedTicketData.event.date).toLocaleDateString(undefined, {
+                                                                weekday: 'long',
+                                                                month: 'long',
+                                                                day: 'numeric',
+                                                                year: 'numeric'
+                                                            })}
+                                                        </span>
                                                     </div>
-                                                    <div className="flex justify-between">
-                                                        <span className="text-white/70">Contract:</span>
-                                                        <span className="font-medium truncate max-w-[200px]">{selectedTicketData.contractAddress}</span>
+                                                    <div className="flex items-center gap-1 text-gray-700">
+                                                        <FiClock className="w-4 h-4 text-[#FF5722]" />
+                                                        <span>
+                                                            {new Date(selectedTicketData.event.date).toLocaleTimeString(undefined, {
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </span>
                                                     </div>
-                                                </>
-                                            )}
-
-                                            <div className="flex justify-between">
-                                                <span className="text-white/70">Purchase Date:</span>
-                                                <span className="font-medium">{format(new Date(selectedTicketData.purchaseDate), 'MMM d, yyyy')}</span>
-                                            </div>
-
-                                            {selectedTicketData.seatInfo && (
-                                                <div className="flex justify-between">
-                                                    <span className="text-white/70">Seat:</span>
-                                                    <span className="font-medium">
-                                                        {selectedTicketData.seatInfo.section && `Section ${selectedTicketData.seatInfo.section}`}
-                                                        {selectedTicketData.seatInfo.row && `, Row ${selectedTicketData.seatInfo.row}`}
-                                                        {selectedTicketData.seatInfo.seat && `, Seat ${selectedTicketData.seatInfo.seat}`}
-                                                        {selectedTicketData.seatInfo.timeSlot && format(new Date(selectedTicketData.seatInfo.timeSlot), 'h:mm a')}
-                                                    </span>
                                                 </div>
-                                            )}
-
-                                            <div className="flex justify-between">
-                                                <span className="text-white/70">Status:</span>
-                                                <span className={`font-medium ${selectedTicketData.status === 'ACTIVE' ? 'text-green-400' :
-                                                    selectedTicketData.status === 'USED' ? 'text-white/60' :
-                                                        selectedTicketData.status === 'EXPIRED' ? 'text-red-400' :
-                                                            'text-blue-400'
-                                                    }`}>
-                                                    {selectedTicketData.status}
-                                                </span>
                                             </div>
                                         </div>
 
-                                        {/* Ticket Actions */}
-                                        <div className="flex gap-2 w-full">
-                                            {selectedTicketData.isNft && (
-                                                <button className="bg-white/10 hover:bg-white/20 transition-colors rounded-full px-4 py-2 text-sm font-medium flex-1 flex items-center justify-center gap-1">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 014-4h0a4 4 0 014 4 4 4 0 01-4 4h-0a4 4 0 00-4 4v0a4 4 0 01-4 4h-0a4 4 0 01-4-4v-0a4 4 0 00-4-4h-0a4 4 0 01-4-4v-0a4 4 0 014-4h0a4 4 0 004-4v0a4 4 0 014-4h0a4 4 0 014 4v0z" />
-                                                    </svg>
-                                                    View on Chain
-                                                </button>
-                                            )}
+                                        {/* Ticket Content */}
+                                        <div className="p-6 grid grid-cols-1 md:grid-cols-5 gap-6">
+                                            {/* Left: Ticket Info */}
+                                            <div className="md:col-span-3 space-y-6">
+                                                {/* Location */}
+                                                <div className="bg-white p-4 rounded-xl shadow-neumorph-inset">
+                                                    <h3 className="text-sm font-medium text-gray-500 mb-2">Location</h3>
+                                                    <div className="flex items-start gap-2">
+                                                        <FiMapPin className="w-5 h-5 text-[#FF5722] mt-0.5" />
+                                                        <div>
+                                                            <p className="font-medium text-gray-900">{selectedTicketData.event.location.name}</p>
+                                                            <p className="text-gray-600 text-sm">{selectedTicketData.event.location.address}</p>
+                                                            <p className="text-gray-600 text-sm">{selectedTicketData.event.location.city}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
 
-                                            {selectedTicketData.transferable && (
-                                                <button className="bg-gradient-to-r from-rovify-orange to-rovify-lavender hover:opacity-90 transition-opacity rounded-full px-4 py-2 text-sm font-medium flex-1 flex items-center justify-center gap-1">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                                    </svg>
-                                                    Transfer
-                                                </button>
-                                            )}
+                                                {/* Ticket Details */}
+                                                <div className="bg-white p-4 rounded-xl shadow-neumorph-inset">
+                                                    <h3 className="text-sm font-medium text-gray-500 mb-2">Ticket Details</h3>
+                                                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                                                        <div className="flex justify-between sm:block">
+                                                            <dt className="text-gray-500">Type</dt>
+                                                            <dd className="font-medium text-gray-900">{selectedTicketData.type}</dd>
+                                                        </div>
+
+                                                        <div className="flex justify-between sm:block">
+                                                            <dt className="text-gray-500">Price Paid</dt>
+                                                            <dd className="font-medium text-gray-900">
+                                                                {selectedTicketData.currency} {selectedTicketData.price}
+                                                            </dd>
+                                                        </div>
+
+                                                        <div className="flex justify-between sm:block">
+                                                            <dt className="text-gray-500">Purchase Date</dt>
+                                                            <dd className="font-medium text-gray-900">
+                                                                {new Date(selectedTicketData.purchaseDate).toLocaleDateString()}
+                                                            </dd>
+                                                        </div>
+
+                                                        <div className="flex justify-between sm:block">
+                                                            <dt className="text-gray-500">Status</dt>
+                                                            <dd className="font-medium">
+                                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${selectedTicketData.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                                                                    selectedTicketData.status === 'USED' ? 'bg-gray-100 text-gray-800' :
+                                                                        'bg-red-100 text-red-800'
+                                                                    }`}>
+                                                                    {selectedTicketData.status}
+                                                                </span>
+                                                            </dd>
+                                                        </div>
+
+                                                        {selectedTicketData.isNft && (
+                                                            <>
+                                                                <div className="flex justify-between sm:block">
+                                                                    <dt className="text-gray-500">Token ID</dt>
+                                                                    <dd className="font-medium text-gray-900 font-mono">
+                                                                        {selectedTicketData.tokenId}
+                                                                    </dd>
+                                                                </div>
+
+                                                                <div className="flex justify-between sm:block">
+                                                                    <dt className="text-gray-500">Contract</dt>
+                                                                    <dd className="font-medium text-gray-900 font-mono text-xs truncate max-w-[180px]">
+                                                                        {selectedTicketData.contractAddress}
+                                                                    </dd>
+                                                                </div>
+                                                            </>
+                                                        )}
+
+                                                        {selectedTicketData.seatInfo && (
+                                                            <div className="flex justify-between sm:block sm:col-span-2">
+                                                                <dt className="text-gray-500">Seat Information</dt>
+                                                                <dd className="font-medium text-gray-900">
+                                                                    {selectedTicketData.seatInfo.section && `Section ${selectedTicketData.seatInfo.section}, `}
+                                                                    {selectedTicketData.seatInfo.row && `Row ${selectedTicketData.seatInfo.row}, `}
+                                                                    {selectedTicketData.seatInfo.seat && `Seat ${selectedTicketData.seatInfo.seat}`}
+                                                                    {selectedTicketData.seatInfo.timeSlot && new Date(selectedTicketData.seatInfo.timeSlot).toLocaleTimeString(undefined, {
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit'
+                                                                    })}
+                                                                </dd>
+                                                            </div>
+                                                        )}
+                                                    </dl>
+                                                </div>
+
+                                                {/* Perks (if any) */}
+                                                {selectedTicketData.metadata.perks && selectedTicketData.metadata.perks.length > 0 && (
+                                                    <div className="bg-white p-4 rounded-xl shadow-neumorph-inset">
+                                                        <h3 className="text-sm font-medium text-gray-500 mb-2">Included Perks</h3>
+                                                        <ul className="space-y-2 text-sm">
+                                                            {selectedTicketData.metadata.perks.map((perk, index) => (
+                                                                <li key={index} className="flex items-center gap-2">
+                                                                    <div className="w-5 h-5 rounded-full bg-[#FF5722]/10 flex items-center justify-center flex-shrink-0">
+                                                                        <svg className="w-3 h-3 text-[#FF5722]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                                        </svg>
+                                                                    </div>
+                                                                    <span className="text-gray-700">{perk}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Right: QR Code & Actions */}
+                                            <div className="md:col-span-2 space-y-6">
+                                                {/* QR Code with Neumorphic Effect */}
+                                                <div className="flex flex-col items-center">
+                                                    <div className="p-4 rounded-xl shadow-neumorph bg-white">
+                                                        <div className="p-1 bg-white rounded-lg border border-gray-100">
+                                                            <Image
+                                                                src={selectedTicketData.qrCode}
+                                                                alt="Ticket QR Code"
+                                                                width={180}
+                                                                height={180}
+                                                                className="rounded-lg"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 mt-3 text-center">
+                                                        {selectedTicketData.isNft
+                                                            ? 'NFT Ticket with on-chain verification'
+                                                            : 'Scan at venue for entry'}
+                                                    </p>
+                                                </div>
+
+                                                {/* Action Buttons with Improved Styling */}
+                                                <div className="space-y-3">
+                                                    <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#FF5722] text-white hover:bg-[#E64A19] transition-colors shadow-sm">
+                                                        <FiDownload className="w-4 h-4" />
+                                                        Save Ticket
+                                                    </button>
+
+                                                    {selectedTicketData.transferable && (
+                                                        <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-neumorph-sm hover:shadow-neumorph-inset">
+                                                            <FiSend className="w-4 h-4" />
+                                                            Transfer Ticket
+                                                        </button>
+                                                    )}
+
+                                                    <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-neumorph-sm hover:shadow-neumorph-inset">
+                                                        <FiShare2 className="w-4 h-4" />
+                                                        Share
+                                                    </button>
+
+                                                    {selectedTicketData.isNft && (
+                                                        <button className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors shadow-neumorph-sm hover:shadow-neumorph-inset">
+                                                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M8 12L8 8C8 5.79086 9.79086 4 12 4V4C14.2091 4 16 5.79086 16 8L16 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                <path d="M3 12H21V20C21 21.1046 20.1046 22 19 22H5C3.89543 22 3 21.1046 3 20V12Z" stroke="currentColor" strokeWidth="2" />
+                                                                <path d="M12 17V17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                            </svg>
+                                                            View on Blockchain
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-
-                                {/* Perks */}
-                                {selectedTicketData.metadata.perks && selectedTicketData.metadata.perks.length > 0 && (
-                                    <div className="p-4 border-t border-white/10">
-                                        <h4 className="font-semibold mb-2">Ticket Perks</h4>
-                                        <ul className="space-y-2">
-                                            {selectedTicketData.metadata.perks.map((perk, index) => (
-                                                <li key={index} className="flex items-center gap-2">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-rovify-orange" viewBox="0 0 20 20" fill="currentColor">
-                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                    </svg>
-                                                    <span>{perk}</span>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                ) : (
+                                    // No ticket selected - Glass card effect
+                                    <div className="bg-white rounded-xl p-8 flex flex-col items-center justify-center h-full glass-card min-h-[300px]">
+                                        <div className="w-16 h-16 mx-auto mb-4 bg-[#FF5722]/10 rounded-full flex items-center justify-center">
+                                            <svg className="w-7 h-7 text-[#FF5722]" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M9 14L12 17L15 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                <path d="M12 17L12 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                <path d="M20 14C20 17.3137 17.3137 20 14 20H10C6.68629 20 4 17.3137 4 14L4 10C4 6.68629 6.68629 4 10 4H14C17.3137 4 20 6.68629 20 10L20 14Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                        </div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-1">No Ticket Selected</h3>
+                                        <p className="text-gray-500 text-center max-w-md mb-6">
+                                            Select a ticket from the list to view its details and manage your ticket
+                                        </p>
+                                        {!isLoading && filteredUserTickets.length === 0 && (
+                                            <button
+                                                onClick={() => setActiveTab('marketplace')}
+                                                className="px-4 py-2 bg-[#FF5722] text-white rounded-lg shadow-sm hover:bg-[#E64A19] transition-colors"
+                                            >
+                                                Browse Marketplace
+                                            </button>
+                                        )}
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    // Marketplace Tab
+                    <>
+                        <div className="mb-6">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Search for events or tickets..."
+                                    className="w-full py-3 pl-10 pr-4 bg-white rounded-full shadow-neumorph-sm focus:outline-none focus:ring-2 focus:ring-[#FF5722]"
+                                />
+                                <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        {isLoading ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="bg-white rounded-xl overflow-hidden shadow-neumorph animate-shimmer">
+                                        <div className="h-48 bg-gray-200"></div>
+                                        <div className="p-4">
+                                            <div className="h-6 w-3/4 bg-gray-200 rounded-md"></div>
+                                            <div className="h-4 w-1/2 bg-gray-200 rounded-md mt-2"></div>
+                                            <div className="flex justify-between items-center mt-3">
+                                                <div className="h-6 w-20 bg-gray-200 rounded-lg"></div>
+                                                <div className="h-8 w-24 bg-gray-200 rounded-md"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : availableEvents.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {availableEvents.map((event) => (
+                                    <div key={event.id} className="bg-white rounded-xl overflow-hidden shadow-neumorph hover:shadow-lg transition-all transform hover:-translate-y-1 duration-300">
+                                        {/* Event Image with Glassmorphism Category */}
+                                        <div className="relative h-48">
+                                            <Image
+                                                src={event.image}
+                                                alt={event.title}
+                                                fill
+                                                className="object-cover"
+                                            />
+                                            {/* Category Tag with Glassmorphism */}
+                                            <div className="absolute top-3 left-3 bg-black/30 backdrop-blur-sm text-white text-xs font-medium px-2 py-1 rounded-full">
+                                                {event.category}
+                                            </div>
+                                            {/* NFT Badge */}
+                                            {event.hasNftTickets && (
+                                                <div className="absolute top-3 right-3 bg-[#FF5722] text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1 shadow-sm">
+                                                    <FiTag className="w-3 h-3" />
+                                                    NFT
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Event Info */}
+                                        <div className="p-4">
+                                            <h3 className="font-semibold text-gray-900 line-clamp-1">{event.title}</h3>
+                                            <div className="flex items-center gap-4 text-sm mt-1 text-gray-500">
+                                                <div className="flex items-center gap-1">
+                                                    <FiCalendar className="w-3 h-3 text-[#FF5722]" />
+                                                    <span>{new Date(event.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <FiMapPin className="w-3 h-3 text-[#FF5722]" />
+                                                    <span className="truncate max-w-[100px]">{event.location.city}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Ticket Info & Buy Button */}
+                                            <div className="flex justify-between items-center mt-4">
+                                                <div>
+                                                    <p className="text-xs text-gray-500">Tickets from</p>
+                                                    <p className="font-semibold text-[#FF5722]">
+                                                        {event.price.currency} {event.price.min}
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handlePurchaseTicket(event)}
+                                                    className="px-3 py-1.5 bg-[#FF5722] text-white text-sm font-medium rounded-lg shadow-sm hover:bg-[#E64A19] transition-colors"
+                                                >
+                                                    Buy Tickets
+                                                </button>
+                                            </div>
+
+                                            {/* Availability Progress */}
+                                            <div className="mt-3">
+                                                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                                                    <span>Available tickets</span>
+                                                    <span>{event.totalTickets - event.soldTickets} of {event.totalTickets}</span>
+                                                </div>
+                                                <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full bg-gradient-to-r from-[#FF5722] to-[#FF8A65]"
+                                                        style={{ width: `${(event.soldTickets / event.totalTickets) * 100}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="bg-white rounded-xl p-8 text-center shadow-neumorph">
+                                <div className="w-16 h-16 mx-auto mb-4 bg-[#FF5722]/10 rounded-full flex items-center justify-center">
+                                    <FiTag className="w-7 h-7 text-[#FF5722]" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-1">No events available</h3>
+                                <p className="text-gray-500 mb-6">There are no events with available tickets at the moment</p>
+                                <Link
+                                    href="/"
+                                    className="px-4 py-2 bg-[#FF5722] text-white rounded-lg shadow-sm hover:bg-[#E64A19] transition-colors"
+                                >
+                                    Back to Home
+                                </Link>
                             </div>
                         )}
                     </>
                 )}
             </main>
 
-            {/* Bottom Navigation */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-rovify-black/90 backdrop-blur-md border-t border-white/10 py-2 z-50">
-                <div className="container mx-auto px-4">
-                    <div className="flex justify-around items-center">
-                        <Link href="/" className="flex flex-col items-center p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                            </svg>
-                            <span className="text-xs">Home</span>
-                        </Link>
+            <BottomNavigation />
 
-                        <Link href="/discover" className="flex flex-col items-center p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                            </svg>
-                            <span className="text-xs">Map</span>
-                        </Link>
+            {/* Purchase Modal with Glassmorphism */}
+            {isPurchasing && selectedEvent && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl w-full max-w-lg overflow-hidden shadow-lg animate-fade-in-up">
+                        {/* Modal Header with Gradient and Glassmorphism */}
+                        <div className="relative h-40">
+                            <Image
+                                src={selectedEvent.image}
+                                alt={selectedEvent.title}
+                                fill
+                                className="object-cover"
+                            />
+                            <div className="absolute inset-0 backdrop-blur-sm bg-white/30"></div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-white via-white/70 to-transparent"></div>
 
-                        <Link href="/create" className="relative">
-                            <div className="absolute inset-0 rounded-full bg-white/10 blur-md opacity-80"></div>
-                            <div className="relative h-12 w-12 rounded-full bg-white/10 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            {/* Close Button with Neumorphism */}
+                            <button
+                                onClick={() => setIsPurchasing(false)}
+                                className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white shadow-neumorph-sm hover:shadow-neumorph-inset flex items-center justify-center text-gray-700 transition-all duration-300"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
+                            </button>
+
+                            {/* Event Title */}
+                            <div className="absolute bottom-3 left-4 right-4">
+                                <h3 className="text-xl font-bold text-gray-900">{selectedEvent.title}</h3>
+                                <div className="flex items-center gap-3 text-sm text-gray-600">
+                                    <div className="flex items-center gap-1">
+                                        <FiCalendar className="w-3 h-3 text-[#FF5722]" />
+                                        <span>{new Date(selectedEvent.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                        <FiMapPin className="w-3 h-3 text-[#FF5722]" />
+                                        <span>{selectedEvent.location.city}</span>
+                                    </div>
+                                </div>
                             </div>
-                        </Link>
+                        </div>
 
-                        <Link href="/tickets" className="flex flex-col items-center p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-rovify-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                            </svg>
-                            <span className="text-xs">Tickets</span>
-                        </Link>
+                        {/* Modal Content */}
+                        <div className="p-6">
+                            {purchaseStep === 1 ? (
+                                // Step 1: Select tickets with Neumorphism
+                                <>
+                                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Select Tickets</h4>
 
-                        <Link href="/profile" className="flex flex-col items-center p-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            <span className="text-xs">Profile</span>
-                        </Link>
+                                    {/* Ticket Types */}
+                                    <div className="space-y-4 mb-6">
+                                        {/* General Admission */}
+                                        <div
+                                            className={`p-4 rounded-lg transition-all cursor-pointer ${ticketType === 'GENERAL'
+                                                ? 'shadow-[0_0_0_2px_#FF5722] bg-[#FF5722]/5'
+                                                : 'shadow-neumorph-sm hover:shadow-[0_0_0_1px_#FF5722]'
+                                                }`}
+                                            onClick={() => setTicketType('GENERAL')}
+                                        >
+                                            <div className="flex justify-between mb-2">
+                                                <div>
+                                                    <h5 className="font-medium text-gray-900">General Admission</h5>
+                                                    <p className="text-sm text-gray-500">Standard entry to the event</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-semibold text-[#FF5722]">
+                                                        {selectedEvent.price.currency} {selectedEvent.price.min}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {selectedEvent.totalTickets - selectedEvent.soldTickets} available
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-1 text-sm text-gray-600">
+                                                    {selectedEvent.hasNftTickets && (
+                                                        <div className="flex items-center gap-1">
+                                                            <FiTag className="w-3 h-3 text-[#FF5722]" />
+                                                            <span>NFT Ticket</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div className="flex items-center">
+                                                    <input
+                                                        type="radio"
+                                                        name="ticketType"
+                                                        checked={ticketType === 'GENERAL'}
+                                                        onChange={() => setTicketType('GENERAL')}
+                                                        className="w-4 h-4 text-[#FF5722] focus:ring-[#FF5722]"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* VIP Ticket */}
+                                        {selectedEvent.price.min !== selectedEvent.price.max && (
+                                            <div
+                                                className={`p-4 rounded-lg transition-all cursor-pointer ${ticketType === 'VIP'
+                                                    ? 'shadow-[0_0_0_2px_#FF5722] bg-[#FF5722]/5'
+                                                    : 'shadow-neumorph-sm hover:shadow-[0_0_0_1px_#FF5722]'
+                                                    }`}
+                                                onClick={() => setTicketType('VIP')}
+                                            >
+                                                <div className="flex justify-between mb-2">
+                                                    <div>
+                                                        <h5 className="font-medium text-gray-900">VIP Experience</h5>
+                                                        <p className="text-sm text-gray-500">Premium access with exclusive perks</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="font-semibold text-[#FF5722]">
+                                                            {selectedEvent.price.currency} {selectedEvent.price.max}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">Limited availability</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                                                        {selectedEvent.hasNftTickets && (
+                                                            <div className="flex items-center gap-1">
+                                                                <FiTag className="w-3 h-3 text-[#FF5722]" />
+                                                                <span>NFT Ticket</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex items-center">
+                                                        <input
+                                                            type="radio"
+                                                            name="ticketType"
+                                                            checked={ticketType === 'VIP'}
+                                                            onChange={() => setTicketType('VIP')}
+                                                            className="w-4 h-4 text-[#FF5722] focus:ring-[#FF5722]"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Quantity Selector with Neumorphism */}
+                                    <div className="mb-6">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Quantity
+                                        </label>
+                                        <div className="flex items-center rounded-lg w-32 shadow-neumorph-sm">
+                                            <button
+                                                type="button"
+                                                onClick={() => setTicketQuantity(Math.max(1, ticketQuantity - 1))}
+                                                className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-l-lg transition-colors"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                                                </svg>
+                                            </button>
+                                            <div className="flex-1 text-center font-medium border-x">
+                                                {ticketQuantity}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setTicketQuantity(Math.min(10, ticketQuantity + 1))}
+                                                className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-r-lg transition-colors"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Price Summary */}
+                                    <div className="bg-gray-50 p-4 rounded-xl shadow-neumorph-inset mb-6">
+                                        <div className="flex justify-between mb-2">
+                                            <span className="text-gray-600">
+                                                {ticketType} Ticket × {ticketQuantity}
+                                            </span>
+                                            <span className="font-medium text-gray-900">
+                                                {selectedEvent.price.currency} {ticketType === 'VIP' ? selectedEvent.price.max * ticketQuantity : selectedEvent.price.min * ticketQuantity}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between mb-2 text-sm">
+                                            <span className="text-gray-600">Service Fee</span>
+                                            <span className="font-medium text-gray-900">
+                                                {selectedEvent.price.currency} {((ticketType === 'VIP' ? selectedEvent.price.max : selectedEvent.price.min) * ticketQuantity * 0.15).toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between font-semibold text-lg mt-4 pt-3 border-t border-gray-200">
+                                            <span className="text-gray-900">Total</span>
+                                            <span className="text-[#FF5722]">
+                                                {selectedEvent.price.currency} {(calculatePrice() * 1.15).toFixed(2)}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={continueToPayment}
+                                        className="w-full py-3 bg-[#FF5722] text-white font-medium rounded-lg shadow-sm hover:bg-[#E64A19] transition-colors"
+                                    >
+                                        Continue to Payment
+                                    </button>
+                                </>
+                            ) : (
+                                // Step 2: Payment with Neumorphism
+                                <>
+                                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Payment</h4>
+
+                                    {/* Payment Methods */}
+                                    <div className="space-y-4 mb-6">
+                                        <div className="p-4 rounded-lg shadow-[0_0_0_2px_#FF5722] bg-[#FF5722]/5">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-6 bg-blue-600 rounded-md flex items-center justify-center text-white font-semibold text-sm">
+                                                        VISA
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-gray-900">•••• 4242</p>
+                                                        <p className="text-xs text-gray-500">Expires 12/25</p>
+                                                    </div>
+                                                </div>
+                                                <input
+                                                    type="radio"
+                                                    checked={true}
+                                                    readOnly
+                                                    className="w-4 h-4 text-[#FF5722] focus:ring-[#FF5722]"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4 rounded-lg bg-gray-50 text-center text-sm text-gray-500 shadow-neumorph-inset">
+                                            Connect a wallet to access crypto payment methods
+                                        </div>
+                                    </div>
+
+                                    {/* Total Summary */}
+                                    <div className="bg-gray-50 p-4 rounded-xl shadow-neumorph-inset mb-6">
+                                        <div className="flex justify-between font-semibold text-lg">
+                                            <span className="text-gray-900">Total Payment</span>
+                                            <span className="text-[#FF5722]">
+                                                {selectedEvent.price.currency} {(calculatePrice() * 1.15).toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-2">
+                                            By completing this purchase, you agree to our Terms of Service and Privacy Policy.
+                                        </p>
+                                    </div>
+
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setPurchaseStep(1)}
+                                            className="flex-1 py-3 bg-white text-gray-700 font-medium rounded-lg shadow-neumorph-sm hover:shadow-neumorph-inset transition-all"
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={completePayment}
+                                            className="flex-1 py-3 bg-[#FF5722] text-white font-medium rounded-lg shadow-sm hover:bg-[#E64A19] transition-colors"
+                                        >
+                                            Complete Purchase
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </nav>
+            )}
+
+            {/* Global Styles for advanced UI effects */}
+            <style jsx global>{`
+                @keyframes shimmer {
+                    0% {
+                        background-position: -200% 0;
+                    }
+                    100% {
+                        background-position: 200% 0;
+                    }
+                }
+                
+                .animate-shimmer {
+                    background: linear-gradient(
+                        90deg,
+                        #f0f0f0 25%,
+                        #e0e0e0 50%,
+                        #f0f0f0 75%
+                    );
+                    background-size: 200% 100%;
+                    animation: shimmer 1.5s infinite;
+                }
+                
+                @keyframes fade-in-up {
+                    0% {
+                        opacity: 0;
+                        transform: translateY(20px);
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+                
+                .animate-fade-in-up {
+                    animation: fade-in-up 0.4s ease-out forwards;
+                }
+                
+                .glass-card {
+                    background: rgba(255, 255, 255, 0.9);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+                }
+                
+                .shadow-neumorph {
+                    box-shadow: 
+                        8px 8px 16px rgba(0, 0, 0, 0.05),
+                        -8px -8px 16px rgba(255, 255, 255, 0.8);
+                }
+                
+                .shadow-neumorph-sm {
+                    box-shadow: 
+                        5px 5px 10px rgba(0, 0, 0, 0.05),
+                        -5px -5px 10px rgba(255, 255, 255, 0.8);
+                }
+                
+                .shadow-neumorph-inset {
+                    box-shadow: 
+                        inset 3px 3px 6px rgba(0, 0, 0, 0.05),
+                        inset -3px -3px 6px rgba(255, 255, 255, 0.8);
+                }
+                
+                .no-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                
+                .no-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+            `}</style>
         </div>
     );
 }

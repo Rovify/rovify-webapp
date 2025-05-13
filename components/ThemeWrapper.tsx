@@ -1,6 +1,6 @@
 'use client';
 
-import { useTheme } from '@/app/provider/ThemeProvider';
+import { useTheme } from '@/app/(protected)/provider/ThemeProvider';
 import { ReactNode, useEffect } from 'react';
 
 export default function ThemeWrapper({ children }: { children: ReactNode }) {

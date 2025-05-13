@@ -3,7 +3,7 @@ import { User } from '../../types';
 export const mockUsers: User[] = [
     {
         id: '1',
-        name: 'Alex Rivera',
+        name: 'Joe RKND',
         username: 'alexr',
         email: 'alex.rivera@example.com',
         image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=987&auto=format&fit=crop',
@@ -109,7 +109,7 @@ export const mockUsers: User[] = [
 ];
 
 export const getCurrentUser = (): User => {
-    return mockUsers[0]; // Returns Alex Rivera as current user
+    return mockUsers[0]; // Returns Joe RKND as current user
 };
 
 export const getUserById = (id: string): User | undefined => {

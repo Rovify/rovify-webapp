@@ -1,7 +1,10 @@
 'use client';
 
-// import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
+import { FiCalendar, FiTag, FiUser, FiCheck, FiChevronRight, FiShare2 } from 'react-icons/fi';
+import BottomNavigation from '@/components/BottomNavigation';
 
 type SuccessType = 'event' | 'ticket' | 'profile' | 'general';
 
@@ -10,18 +13,92 @@ interface SuccessPageProps {
 }
 
 export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
-    // Define content based on success type
+    const [animationStep, setAnimationStep] = useState(0);
+    const confettiRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const timers = [
+            setTimeout(() => setAnimationStep(1), 100),  // Circle appears
+            setTimeout(() => setAnimationStep(2), 600),  // Icon appears
+            setTimeout(() => setAnimationStep(3), 1000), // Checkmark appears
+            setTimeout(() => setAnimationStep(4), 1300), // Title and message appear
+            setTimeout(() => setAnimationStep(5), 1600)  // Buttons appear
+        ];
+
+        return () => timers.forEach(timer => clearTimeout(timer));
+    }, []);
+
+    const createConfettiEffect = useCallback(() => {
+        if (!confettiRef.current) return;
+
+        for (let i = 0; i < 100; i++) {
+            const particle = document.createElement('div');
+
+            const size = Math.random() * 8 + 4;
+            const left = Math.random() * 100;
+            const isSquare = Math.random() > 0.6;
+
+            let color;
+            if (type === 'event') {
+                color = i % 3 === 0 ? '#FF5722' : i % 3 === 1 ? '#FF8A65' : '#FFCCBC';
+            } else if (type === 'ticket') {
+                color = i % 3 === 0 ? '#FF5722' : i % 3 === 1 ? '#FFB74D' : '#FFF3E0';
+            } else if (type === 'profile') {
+                color = i % 3 === 0 ? '#FF5722' : i % 3 === 1 ? '#F06292' : '#FCE4EC';
+            } else {
+                color = i % 3 === 0 ? '#FF5722' : i % 3 === 1 ? '#4CAF50' : '#E8F5E9';
+            }
+
+            Object.assign(particle.style, {
+                position: 'absolute',
+                top: 0,
+                left: `${left}%`,
+                width: `${size}px`,
+                height: `${size}px`,
+                backgroundColor: color,
+                borderRadius: isSquare ? '2px' : '50%',
+                opacity: Math.random() * 0.8 + 0.2,
+                zIndex: 10,
+                transform: 'scale(0)',
+                transformOrigin: 'center center'
+            });
+
+            confettiRef.current.appendChild(particle);
+
+            setTimeout(() => {
+                // Random x-axis movement
+                const xMovement = (Math.random() - 0.5) * 200;
+
+                // Create and apply animation
+                Object.assign(particle.style, {
+                    animation: `confettiDrop 2s cubic-bezier(0.16, 1, 0.3, 1) forwards`,
+                    transform: `translateX(${xMovement}px) rotate(${Math.random() * 360}deg) scale(1)`
+                });
+
+                // Remove particle after animation
+                setTimeout(() => {
+                    if (confettiRef.current?.contains(particle)) {
+                        confettiRef.current.removeChild(particle);
+                    }
+                }, 2000);
+            }, Math.random() * 300);
+        }
+    }, [type]);
+
+    // Effect for confetti
+    useEffect(() => {
+        if (animationStep >= 3 && confettiRef.current) {
+            createConfettiEffect();
+        }
+    }, [animationStep, createConfettiEffect]);
+
     const getContent = () => {
         switch (type) {
             case 'event':
                 return {
                     title: 'Event Created Successfully!',
                     message: 'Your event has been published and is now live. Share it with your audience to start selling tickets.',
-                    icon: (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-rovify-lavender" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    ),
+                    icon: FiCalendar,
                     primaryAction: {
                         text: 'View Event',
                         link: '/'
@@ -29,17 +106,17 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
                     secondaryAction: {
                         text: 'Create Another Event',
                         link: '/create'
+                    },
+                    extraAction: {
+                        text: 'Share Event',
+                        icon: FiShare2
                     }
                 };
             case 'ticket':
                 return {
-                    title: 'Ticket Purchased Successfully!',
-                    message: 'Your ticket has been added to your wallet. You can view and manage it from your tickets page.',
-                    icon: (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-rovify-orange" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-                        </svg>
-                    ),
+                    title: 'Ticket Purchased!',
+                    message: 'Your ticket has been added to your wallet. View and manage it from your tickets page.',
+                    icon: FiTag,
                     primaryAction: {
                         text: 'View Ticket',
                         link: '/tickets'
@@ -53,11 +130,7 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
                 return {
                     title: 'Profile Updated!',
                     message: 'Your profile information has been successfully updated.',
-                    icon: (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-rovify-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                    ),
+                    icon: FiUser,
                     primaryAction: {
                         text: 'View Profile',
                         link: '/profile'
@@ -71,11 +144,7 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
                 return {
                     title: 'Success!',
                     message: 'Your action has been completed successfully.',
-                    icon: (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    ),
+                    icon: FiCheck,
                     primaryAction: {
                         text: 'Back to Home',
                         link: '/'
@@ -89,73 +158,190 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
     };
 
     const content = getContent();
+    const IconComponent = content.icon;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-rovify-black to-black text-white flex flex-col items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white/5 backdrop-blur-md rounded-2xl p-8 border border-white/10">
-                <div className="flex flex-col items-center text-center">
-                    {/* Success Animation */}
-                    <div className="mb-6 relative">
-                        <div className="absolute inset-0 rounded-full bg-white/10 animate-ping opacity-25"></div>
-                        <div className="relative">
-                            {content.icon}
-                        </div>
-                    </div>
-
-                    <h1 className="text-2xl font-bold mb-3">{content.title}</h1>
-                    <p className="text-white/70 mb-8">{content.message}</p>
-
-                    <div className="w-full space-y-3">
-                        <Link
-                            href={content.primaryAction.link}
-                            className="block w-full py-3 bg-gradient-to-r from-rovify-orange to-rovify-lavender hover:opacity-90 rounded-lg font-medium text-center transition-opacity"
-                        >
-                            {content.primaryAction.text}
-                        </Link>
-
-                        <Link
-                            href={content.secondaryAction.link}
-                            className="block w-full py-3 bg-white/10 hover:bg-white/20 rounded-lg font-medium text-center transition-colors"
-                        >
-                            {content.secondaryAction.text}
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-            {/* Confetti Effect */}
-            <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0">
-                {[...Array(20)].map((_, i) => (
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            {/* Animated background bubbles */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+                {[...Array(10)].map((_, i) => (
                     <div
-                        key={i}
-                        className="absolute top-0 w-2 h-2 rounded-full"
+                        key={`bubble-${i}`}
+                        className="absolute rounded-full"
                         style={{
+                            width: `${Math.random() * 120 + 80}px`,
+                            height: `${Math.random() * 120 + 80}px`,
+                            top: `${Math.random() * 100}%`,
                             left: `${Math.random() * 100}%`,
-                            backgroundColor: [
-                                '#FF1F00', // Neon Orange
-                                '#C281FF', // Lavender
-                                '#77A8FF', // Electric Blue
-                                '#FFFFFF'  // White
-                            ][Math.floor(Math.random() * 4)],
-                            animation: `confetti ${3 + Math.random() * 5}s linear infinite`,
-                            animationDelay: `${Math.random() * 5}s`
+                            background: `radial-gradient(circle at center, rgba(255,87,34,0.1) 0%, rgba(255,87,34,0) 70%)`,
+                            animation: `float ${Math.random() * 10 + 15}s infinite ease-in-out, fadeIn 0.8s ease-out forwards`,
+                            opacity: 0
                         }}
                     ></div>
                 ))}
-
-                <style jsx>{`
-          @keyframes confetti {
-            0% {
-              transform: translateY(-10px) rotate(0deg);
-              opacity: 1;
-            }
-            100% {
-              transform: translateY(100vh) rotate(720deg);
-              opacity: 0;
-            }
-          }
-        `}</style>
             </div>
+
+            {/* Confetti container */}
+            <div ref={confettiRef} className="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+            <motion.div
+                className="max-w-md w-full rounded-2xl overflow-hidden bg-white shadow-lg relative z-10"
+                initial={{ y: 40, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            >
+                <div className="p-8 flex flex-col items-center text-center">
+                    {/* Success icon animation */}
+                    <div className="mb-10 mt-4 relative flex items-center justify-center h-32 w-32">
+                        {/* Outer circle with animation */}
+                        <motion.div
+                            className="absolute inset-0 rounded-full"
+                            initial={{ scale: 0.7, opacity: 0 }}
+                            animate={{
+                                scale: animationStep >= 1 ? 1 : 0.7,
+                                opacity: animationStep >= 1 ? 1 : 0
+                            }}
+                            transition={{ duration: 0.6, ease: "easeOut" }}
+                        >
+                            <svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle
+                                    cx="64"
+                                    cy="64"
+                                    r="60"
+                                    stroke="#FF5722"
+                                    strokeWidth="5"
+                                    strokeDasharray="380"
+                                    strokeDashoffset={animationStep >= 1 ? "0" : "380"}
+                                    style={{
+                                        transition: "stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1)"
+                                    }}
+                                />
+                            </svg>
+                        </motion.div>
+
+                        {/* White circle background */}
+                        <motion.div
+                            className="h-24 w-24 bg-white rounded-full shadow-md flex items-center justify-center"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: animationStep >= 1 ? 1 : 0 }}
+                            transition={{ delay: 0.3, duration: 0.5, type: "spring" }}
+                        >
+                            {/* Icon */}
+                            <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{
+                                    scale: animationStep >= 2 ? 1 : 0,
+                                    opacity: animationStep >= 2 ? 1 : 0
+                                }}
+                                transition={{ delay: 0.1, duration: 0.3 }}
+                            >
+                                <IconComponent className="h-12 w-12 text-[#FF5722]" />
+                            </motion.div>
+                        </motion.div>
+
+                        {/* Checkmark badge */}
+                        <motion.div
+                            className="absolute -right-2 -bottom-2 bg-[#FF5722] rounded-full p-2 shadow-lg"
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{
+                                scale: animationStep >= 3 ? 1 : 0,
+                                opacity: animationStep >= 3 ? 1 : 0
+                            }}
+                            transition={{ delay: 0.2, duration: 0.4, type: "spring" }}
+                        >
+                            <FiCheck className="h-5 w-5 text-white" />
+                        </motion.div>
+
+                        {/* Pulse effect */}
+                        {animationStep >= 3 && (
+                            <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-[#FF5722]"></div>
+                        )}
+                    </div>
+
+                    {/* Content with staggered animation */}
+                    <motion.div
+                        className="space-y-4 mb-8 w-full"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{
+                            opacity: animationStep >= 4 ? 1 : 0,
+                            y: animationStep >= 4 ? 0 : 10
+                        }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <h1 className="text-2xl font-bold text-gray-800 text-gradient-orange">{content.title}</h1>
+                        <p className="text-gray-600 px-4">{content.message}</p>
+                    </motion.div>
+
+                    {/* Buttons with staggered animation */}
+                    <motion.div
+                        className="w-full space-y-4"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{
+                            opacity: animationStep >= 5 ? 1 : 0,
+                            y: animationStep >= 5 ? 0 : 20
+                        }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <Link href={content.primaryAction.link} className="block">
+                            <button className="w-full py-4 bg-gradient-to-r from-[#FF5722] to-[#FF7043] text-white rounded-xl font-medium shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:ring-opacity-50 flex items-center justify-center gap-2 group">
+                                {content.primaryAction.text}
+                                <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
+                            </button>
+                        </Link>
+
+                        <Link href={content.secondaryAction.link} className="block">
+                            <button className="w-full py-4 bg-white text-[#333] border border-gray-200 rounded-xl font-medium shadow-sm hover:shadow transition-all focus:outline-none flex items-center justify-center hover:bg-gray-50">
+                                {content.secondaryAction.text}
+                            </button>
+                        </Link>
+
+                        {content.extraAction && (
+                            <div className="pt-2 flex justify-center">
+                                <button className="text-[#FF5722] py-2 px-4 hover:bg-[#FF5722]/5 rounded-lg flex items-center gap-2 transition-colors">
+                                    <content.extraAction.icon className="w-4 h-4" />
+                                    {content.extraAction.text}
+                                </button>
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            </motion.div>
+
+            <div className="fixed bottom-5 w-full z-20">
+                <BottomNavigation />
+            </div>
+
+            <style jsx global>{`
+                @keyframes confettiDrop {
+                    0% {
+                        transform: translateY(0) translateX(0) rotate(0) scale(0);
+                    }
+                    10% {
+                        transform: translateY(-20px) translateX(var(--tx, 0)) rotate(45deg) scale(1);
+                    }
+                    100% {
+                        transform: translateY(calc(100vh - 150px)) translateX(var(--tx, 0)) rotate(720deg) scale(0.5);
+                        opacity: 0;
+                    }
+                }
+                
+                @keyframes float {
+                    0%, 100% { transform: translate(0, 0); }
+                    50% { transform: translate(var(--tx, 15px), var(--ty, -15px)); }
+                }
+                
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                .text-gradient-orange {
+                    background: linear-gradient(90deg, #FF5722, #FF7043);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    background-clip: text;
+                }
+            `}</style>
         </div>
     );
 }

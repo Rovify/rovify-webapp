@@ -1,4 +1,3 @@
-// app/success/page.tsx
 import SuccessPage from '@/components/SuccessPage';
 import { Metadata } from 'next';
 

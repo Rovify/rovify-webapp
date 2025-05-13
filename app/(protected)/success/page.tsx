@@ -10,13 +10,14 @@ function isValidSuccessType(type: string): type is 'event' | 'ticket' | 'profile
     return ['event', 'ticket', 'profile', 'general'].includes(type);
 }
 
-export default function Success({
-    searchParams,
-}: {
-    searchParams: { [key: string]: string | string[] | undefined };
-}) {
-    const typeParam = searchParams.type as string || 'general';
+interface Props {
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
 
+export default async function Success({ searchParams }: Props) {
+    const query = await searchParams;
+
+    const typeParam = (query.type as string) || 'general';
     const type = isValidSuccessType(typeParam) ? typeParam : 'general';
 
     return <SuccessPage type={type} />;

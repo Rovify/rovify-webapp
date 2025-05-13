@@ -2,17 +2,15 @@ import { Metadata } from 'next';
 import { getEventById } from '@/mocks/data/events';
 import EventDetailsPage from '@/components/EventDetailsPage';
 
-type Params = {
-    id: string;
-};
+type Params = Promise<{ id: string }>;
 
 export async function generateMetadata({
     params,
 }: {
     params: Params;
 }): Promise<Metadata> {
-    const eventId = params.id;
-    const event = getEventById(eventId);
+    const { id } = await params;
+    const event = getEventById(id);
 
     if (!event) {
         return { title: 'Event Not Found' };
@@ -29,10 +27,12 @@ export async function generateMetadata({
     };
 }
 
-export default function EventPage({
+export default async function EventPage({
     params,
 }: {
-    params: { id: string };
+    params: Params;
 }) {
-    return <EventDetailsPage id={params.id} />;
+    const { id } = await params;
+
+    return <EventDetailsPage id={id} />;
 }

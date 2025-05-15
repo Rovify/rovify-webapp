@@ -352,9 +352,9 @@ export default function RegisterPage() {
                             <button className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors">
                                 <Image src={GoogleIcon} alt="Google" width={20} height={20} />
                             </button>
-                            <button className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors">
+                            {/* <button className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors">
                                 <Image src={MetaMaskIcon} alt="MetaMask" width={20} height={20} />
-                            </button>
+                            </button> */}
                             {/* <button className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors">
                                 <Image src={AppleIcon} alt="Apple" width={20} height={20} />
                             </button> */}

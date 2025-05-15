@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 'use client';
 
@@ -43,7 +44,7 @@ export type AuthUser = {
     profilePicture?: string;
     walletAddress?: string;
     authMethod: 'email' | 'google' | 'metamask';
-    expiresAt: number; // timestamp when the session expires
+    expiresAt: number;
 };
 
 // Auth context
@@ -380,8 +381,8 @@ export default function LoginPage() {
                 throw new Error('Authentication configuration error');
             }
 
-            // Build the Google OAuth URL
-            const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || `${window.location.origin}/api/auth/callback/google`;
+            // Use consistent redirect URI - this is the key fix
+            const redirectUri = `${window.location.origin}/api/auth/callback/google`;
             console.log('Using redirect URI:', redirectUri);
 
             const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -392,7 +393,7 @@ export default function LoginPage() {
                 `&state=${oauthState}` +
                 `&code_challenge=${codeChallenge}` +
                 `&code_challenge_method=S256`;
-            // Log the OAuth URL (without the full client ID for security)
+
             console.log('Google OAuth URL generated (partial):',
                 googleOAuthUrl.substring(0, 100) + '...');
 
@@ -645,14 +646,14 @@ export default function LoginPage() {
                             >
                                 <Image src={GoogleIcon} alt="Google" width={20} height={20} />
                             </button>
-                            <button
+                            {/* <button
                                 onClick={handleMetaMaskLogin}
                                 disabled={isLoading || !isMetaMaskInstalled}
                                 className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                                 title={!isMetaMaskInstalled ? "MetaMask not installed" : "Login with MetaMask"}
                             >
                                 <Image src={MetaMaskIcon} alt="MetaMask" width={20} height={20} />
-                            </button>
+                            </button> */}
                         </div>
                     </div>
 

@@ -1,37 +1,489 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
 import GoogleIcon from '@/public/images/icons/google-logo.svg';
 import MetaMaskIcon from '@/public/images/icons/metamask-logo.svg';
-import AppleIcon from '@/public/images/icons/apple-logo.svg';
+
+// Define specific types instead of any
+type EncryptedData = string;
+type StoredUserData = Record<string, unknown>;
+
+// Crypto helper for secure storage
+const encryptData = (data: StoredUserData): EncryptedData => {
+    // In a production app, use the Web Crypto API for proper encryption
+    // This is a simplified version for demonstration
+    const encoded = btoa(JSON.stringify(data));
+    console.log('Data encrypted for storage');
+    return encoded;
+};
+
+const decryptData = (encrypted: EncryptedData): StoredUserData | null => {
+    try {
+        // In a production app, use the Web Crypto API for proper decryption
+        const decoded = JSON.parse(atob(encrypted)) as StoredUserData;
+        console.log('Data decrypted successfully');
+        return decoded;
+    } catch (error) {
+        console.error('Failed to decrypt data:', error);
+        return null;
+    }
+};
+
+// Auth types
+export type AuthUser = {
+    id: string;
+    email?: string;
+    name?: string;
+    profilePicture?: string;
+    walletAddress?: string;
+    authMethod: 'email' | 'google' | 'metamask';
+    expiresAt: number; // timestamp when the session expires
+};
+
+// Auth context
+type AuthContextType = {
+    user: AuthUser | null;
+    isLoading: boolean;
+    login: (user: AuthUser) => void;
+    logout: () => void;
+};
+
+// Create auth context
+const AuthContext = createContext<AuthContextType>({
+    user: null,
+    isLoading: false,
+    login: () => { },
+    logout: () => { },
+});
+
+// Auth provider component - export for use in _app.tsx or layout.tsx
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+    const [user, setUser] = useState<AuthUser | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Handle login and secure storage of auth data
+    const login = useCallback((userData: AuthUser) => {
+        // Set in-memory state
+        setUser(userData);
+
+        // Log user authentication
+        console.log('User authenticated:', {
+            id: userData.id,
+            authMethod: userData.authMethod,
+            email: userData.email || 'N/A',
+            walletAddress: userData.walletAddress || 'N/A'
+        });
+
+        // Encrypt and store in localStorage
+        const encrypted = encryptData(userData);
+        localStorage.setItem('rovify_session', encrypted);
+        console.log('Auth data saved to localStorage');
+    }, []);
+
+    // Handle secure logout
+    const logout = useCallback(() => {
+        console.log('Logging out user');
+        // Clear in-memory state
+        setUser(null);
+
+        // Clear storage
+        localStorage.removeItem('rovify_session');
+        console.log('Session data cleared from localStorage');
+    }, []);
+
+    // Initialize auth state from secure storage
+    useEffect(() => {
+        const initAuth = () => {
+            try {
+                console.log('Initializing auth state...');
+                // Check for encrypted session data in localStorage
+                const encryptedSession = localStorage.getItem('rovify_session');
+                if (encryptedSession) {
+                    console.log('Found existing session, decrypting...');
+                    const userData = decryptData(encryptedSession);
+
+                    // Validate session hasn't expired
+                    if (userData && typeof userData.expiresAt === 'number') {
+                        if (userData.expiresAt > Date.now()) {
+                            console.log('Valid session restored:', {
+                                authMethod: userData.authMethod,
+                                expiresIn: Math.round((userData.expiresAt - Date.now()) / 60000) + ' minutes'
+                            });
+                            setUser(userData as AuthUser);
+                        } else {
+                            console.log('Session expired, clearing localStorage');
+                            localStorage.removeItem('rovify_session');
+                        }
+                    }
+                } else {
+                    console.log('No existing session found');
+                }
+            } catch (error) {
+                console.error('Auth initialization error:', error);
+                // Clear potentially corrupted session
+                localStorage.removeItem('rovify_session');
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        initAuth();
+
+        // Session timeout handler
+        const checkSessionValidity = () => {
+            if (user && user.expiresAt < Date.now()) {
+                console.log('Session expired during active use, logging out');
+                logout();
+            }
+        };
+
+        // Check session validity every minute
+        const interval = setInterval(checkSessionValidity, 60000);
+        return () => clearInterval(interval);
+    }, [user, logout]); // Added logout to dependencies
+
+    return (
+        <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+// Custom hook for using auth context
+export const useAuth = () => useContext(AuthContext);
+
+// Generate a secure random string (for PKCE and nonce)
+const generateRandomString = (length = 32): string => {
+    const array = new Uint8Array(length);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+};
+
+// Hash string (for PKCE code challenge)
+const sha256 = async (plain: string): Promise<ArrayBuffer> => {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plain);
+    return await window.crypto.subtle.digest('SHA-256', data);
+};
+
+// Base64 URL encode from ArrayBuffer
+const base64UrlEncode = (buffer: ArrayBuffer): string => {
+    const bytes = new Uint8Array(buffer);
+    const binString = Array.from(bytes).map(byte => String.fromCharCode(byte)).join('');
+    return btoa(binString)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+};
 
 export default function LoginPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Use the auth context
+    const { login } = useAuth();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
 
+    // Store auth challenge state
+    const [metaMaskChallenge, setMetaMaskChallenge] = useState('');
+    const [oauthState, setOauthState] = useState('');
+    const [pkceVerifier, setPkceVerifier] = useState('');
+
+    // Define handleOAuthCallback as a useCallback function
+    const handleOAuthCallback = useCallback(async (code: string, stateParam: string) => {
+        console.log('Processing OAuth callback...');
+        setIsLoading(true);
+        try {
+            // Verify state matches to prevent CSRF
+            const savedState = localStorage.getItem('oauth_state');
+            console.log('Verifying OAuth state parameter...');
+
+            if (stateParam !== savedState) {
+                console.error('OAuth state mismatch', { received: stateParam, saved: savedState });
+                throw new Error('Invalid authentication state');
+            }
+
+            console.log('OAuth state verified successfully');
+
+            // Get stored PKCE verifier
+            const verifier = localStorage.getItem('pkce_verifier');
+            console.log('Retrieved PKCE verifier');
+
+            if (!verifier) {
+                console.error('PKCE verifier missing');
+                throw new Error('PKCE verifier missing');
+            }
+
+            // Exchange code for tokens using the backend
+            console.log('Exchanging authorization code for tokens...');
+            const response = await fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code,
+                    codeVerifier: verifier,
+                    redirectUri: window.location.origin + '/auth/callback'
+                })
+            });
+
+            // Clear oauth session data after exchange
+            localStorage.removeItem('oauth_state');
+            localStorage.removeItem('pkce_verifier');
+            console.log('Cleared OAuth session data from localStorage');
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('Token exchange failed:', errorData);
+                throw new Error(errorData.message || 'Failed to authenticate with Google');
+            }
+
+            const userData = await response.json();
+            console.log('User profile retrieved:', {
+                id: userData.id,
+                email: userData.email,
+                name: userData.name
+            });
+
+            // Set user data in context
+            login(userData);
+            console.log('Google authentication successful, redirecting to home');
+
+            // Clean URL and redirect
+            window.history.replaceState({}, document.title, window.location.pathname);
+            router.push('/');
+        } catch (error) {
+            console.error('OAuth callback error:', error);
+            setError(error instanceof Error ? error.message : 'Authentication failed. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    }, [login, router]);
+
+    // Check for OAuth callback parameters and handle MetaMask
+    useEffect(() => {
+        const initAuth = () => {
+            console.log('Initializing login page...');
+
+            if (typeof window !== 'undefined') {
+                // Check for MetaMask
+                const hasMetaMask = !!window.ethereum;
+                setIsMetaMaskInstalled(hasMetaMask);
+                console.log('MetaMask available:', hasMetaMask);
+
+                // Generate random values for auth security
+                const challenge = generateRandomString();
+                setMetaMaskChallenge(challenge);
+                console.log('Generated MetaMask challenge');
+
+                const oauthStateValue = generateRandomString();
+                setOauthState(oauthStateValue);
+                console.log('Generated OAuth state parameter');
+
+                // Generate PKCE verifier for Google OAuth
+                const verifier = generateRandomString(64);
+                setPkceVerifier(verifier);
+                console.log('Generated PKCE verifier');
+
+                // Handle OAuth callbacks
+                const code = searchParams?.get('code');
+                const stateParam = searchParams?.get('state');
+
+                if (code && stateParam) {
+                    console.log('OAuth callback parameters detected');
+                    handleOAuthCallback(code, stateParam);
+                }
+            }
+        };
+
+        initAuth();
+    }, [searchParams, handleOAuthCallback]);
+
+    // Handle email/password login
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        console.log('Processing email/password login...');
         setIsLoading(true);
         setError('');
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
+            console.log('Authenticating:', email);
 
-            // For demo, we'll just redirect to home
+            // In a real app, this would call your authentication API
+            // For demo purposes, we'll create a secure user object
+
+            // Simulate API call with artificial delay
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            console.log('Email/password authentication successful');
+
+            // Create secure user object
+            const user: AuthUser = {
+                id: 'user-' + Math.random().toString(36).substring(2),
+                email,
+                authMethod: 'email',
+                expiresAt: Date.now() + 3600000, // 1 hour from now
+            };
+
+            console.log('Email user created:', {
+                id: user.id,
+                email: user.email
+            });
+
+            // Use the context login function
+            login(user);
+            console.log('Email login successful, redirecting to home');
+
+            // Redirect to home
             router.push('/');
-        } catch (err) {
+        } catch (error) {
+            console.error('Email login error:', error);
             setError('Invalid email or password. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle Google login (PKCE flow)
+    const handleGoogleLogin = async () => {
+        try {
+            console.log('Starting Google authentication...');
+            setIsLoading(true);
+
+            // Generate and store PKCE code verifier
+            localStorage.setItem('pkce_verifier', pkceVerifier);
+            console.log('PKCE verifier stored in localStorage');
+
+            // Generate code challenge from verifier (SHA-256 hash + base64url encode)
+            const codeChallengeBuffer = await sha256(pkceVerifier);
+            const codeChallenge = base64UrlEncode(codeChallengeBuffer);
+            console.log('Code challenge generated:', codeChallenge.substring(0, 10) + '...');
+
+            // Store OAuth state to prevent CSRF
+            localStorage.setItem('oauth_state', oauthState);
+            console.log('OAuth state stored for CSRF protection');
+
+            // Get the proper client ID from environment variables
+            const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+            if (!clientId) {
+                console.error('Google OAuth client ID not found');
+                throw new Error('Authentication configuration error');
+            }
+
+            // Build the Google OAuth URL
+            const redirectUri = process.env.NEXT_PUBLIC_GOOGLE_REDIRECT_URI || `${window.location.origin}/api/auth/callback/google`;
+            console.log('Using redirect URI:', redirectUri);
+
+            const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+                `client_id=${clientId}` +
+                `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+                `&response_type=code` +
+                `&scope=openid email profile` +
+                `&state=${oauthState}` +
+                `&code_challenge=${codeChallenge}` +
+                `&code_challenge_method=S256`;
+            // Log the OAuth URL (without the full client ID for security)
+            console.log('Google OAuth URL generated (partial):',
+                googleOAuthUrl.substring(0, 100) + '...');
+
+            // Redirect to Google OAuth
+            window.location.href = googleOAuthUrl;
+        } catch (error) {
+            console.error('Google auth error:', error);
+            setError(error instanceof Error ? error.message : 'Google authentication failed. Please try again.');
+            setIsLoading(false);
+        }
+    };
+
+    // Handle MetaMask login with challenge-response pattern
+    const handleMetaMaskLogin = async () => {
+        if (!isMetaMaskInstalled) {
+            console.error('MetaMask not installed');
+            setError('MetaMask is not installed. Please install MetaMask extension first.');
+            return;
+        }
+
+        console.log('Starting MetaMask authentication...');
+        setIsLoading(true);
+        setError('');
+
+        try {
+            // Request account access
+            console.log('Requesting MetaMask accounts...');
+            const accounts = await window.ethereum.request({
+                method: 'eth_requestAccounts'
+            });
+
+            if (accounts && accounts.length > 0) {
+                const walletAddress = accounts[0];
+                console.log('MetaMask wallet connected:', walletAddress);
+
+                // Create a unique challenge message including a nonce
+                const message = `Sign this message to authenticate with Rovify: ${metaMaskChallenge}`;
+                console.log('Generated challenge message with nonce');
+
+                // Request signature to verify wallet ownership
+                console.log('Requesting signature to verify wallet ownership...');
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, walletAddress]
+                });
+
+                // Log signature (partial for security)
+                console.log('Signature received:',
+                    signature ? signature.toString().substring(0, 10) + '...' : 'null');
+
+                // In a real app, send the address, signature, and challenge to your backend for verification
+                if (!signature) {
+                    throw new Error('Signature required');
+                }
+
+                // Send to backend for verification
+                console.log('Verifying signature with backend...');
+                const response = await fetch('/api/auth/metamask', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        walletAddress,
+                        signature,
+                        message
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Signature verification failed');
+                }
+
+                // Get user data from response
+                const userData = await response.json();
+                console.log('MetaMask user created:', {
+                    id: userData.id,
+                    walletAddress: userData.walletAddress
+                });
+
+                // Store in auth context
+                login(userData);
+                console.log('MetaMask authentication successful, redirecting to home');
+
+                router.push('/');
+            } else {
+                console.error('No MetaMask accounts found');
+                throw new Error('No accounts found');
+            }
+        } catch (error) {
+            console.error('MetaMask login error:', error);
+            setError(error instanceof Error ? error.message : 'Failed to connect to MetaMask. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -39,12 +491,10 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen w-full bg-gradient-to-br from-white to-gray-100 flex items-center justify-center p-4">
-            {/* Animated background shapes */}
+            {/* Background elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-1/4 -left-24 w-96 h-96 bg-[#FF5722]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
                 <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-[#FF5722]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float-reverse"></div>
-
-                {/* Grid pattern */}
                 <div className="absolute inset-0 bg-grid-pattern opacity-[0.02]"></div>
             </div>
 
@@ -188,15 +638,21 @@ export default function LoginPage() {
                         </div>
 
                         <div className="mt-4 flex justify-center gap-3">
-                            <button className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors">
+                            <button
+                                onClick={handleGoogleLogin}
+                                disabled={isLoading}
+                                className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                            >
                                 <Image src={GoogleIcon} alt="Google" width={20} height={20} />
                             </button>
-                            <button className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors">
+                            <button
+                                onClick={handleMetaMaskLogin}
+                                disabled={isLoading || !isMetaMaskInstalled}
+                                className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                                title={!isMetaMaskInstalled ? "MetaMask not installed" : "Login with MetaMask"}
+                            >
                                 <Image src={MetaMaskIcon} alt="MetaMask" width={20} height={20} />
                             </button>
-                            {/* <button className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors">
-                                <Image src={AppleIcon} alt="Apple" width={20} height={20} />
-                            </button> */}
                         </div>
                     </div>
 
@@ -226,7 +682,7 @@ export default function LoginPage() {
                 </div>
             </div>
 
-            {/* Custom styles */}
+            {/* Custom styles - unchanged */}
             <style jsx global>{`
         .bg-grid-pattern {
           background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23000000' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
@@ -258,6 +714,19 @@ export default function LoginPage() {
         .neumorph-button:active {
           box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.05),
                      inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes float {
+          0%, 100% {
+            transform: translate(0, 0) rotate(0deg);
+          }
+          50% {
+            transform: translate(-20px, 20px) rotate(5deg);
+          }
+        }
+
+        .animate-float {
+          animation: float 15s ease-in-out infinite;
         }
 
         @keyframes float-reverse {

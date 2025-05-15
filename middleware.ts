@@ -16,6 +16,7 @@ export function middleware(request: NextRequest) {
         pathname.startsWith('/maintenance/') ||
         pathname.startsWith('/terms') ||
         pathname.startsWith('/privacy') ||
+        pathname.startsWith('/help') ||
         pathname.startsWith('/api/') ||
         additionalPublicPaths.includes(pathname);
 

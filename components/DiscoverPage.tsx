@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { mockEvents } from '@/mocks/data/events';
 import { EventCategory, Event } from '@/types';
 import EventCard from '@/components/EventCard';
 import EventCardSkeleton from '@/components/skeletons/EventCardSkeleton';
-import { FiSearch, FiMap, FiList, FiFilter, FiX, FiCalendar, FiDollarSign, FiTag, FiCheck, FiHash } from 'react-icons/fi';
+import {
+    FiSearch, FiMap, FiList, FiFilter, FiX, FiCalendar, FiDollarSign, FiTag, FiCheck, FiHash,
+    FiMapPin, FiNavigation, FiLayers, FiZoomIn, FiZoomOut, FiCrosshair
+} from 'react-icons/fi';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
@@ -80,140 +83,20 @@ export default function DiscoverPage() {
     const markers = useRef<mapboxgl.Marker[]>([]);
     const mapInitialized = useRef<boolean>(false);
     const filtersPanelRef = useRef<HTMLDivElement | null>(null);
+    const customControls = useRef<HTMLDivElement | null>(null);
 
-    // Function to update markers - defined outside useEffect to avoid dependency issues
-    const updateMapMarkers = useRef(() => {
-        if (!map.current || !events.length) return;
+    // Define available map styles
+    const mapStyles = [
+        { id: 'light', label: 'Light', url: 'mapbox://styles/mapbox/light-v11' },
+        { id: 'dark', label: 'Dark', url: 'mapbox://styles/mapbox/dark-v11' },
+        { id: 'streets', label: 'Streets', url: 'mapbox://styles/mapbox/streets-v12' },
+        { id: 'satellite', label: 'Satellite', url: 'mapbox://styles/mapbox/satellite-streets-v12' }
+    ];
 
-        // Remove existing markers
-        markers.current.forEach(marker => marker.remove());
-        markers.current = [];
+    // Current map style state
+    const [currentMapStyle, setCurrentMapStyle] = useState(mapStyles[0]);
 
-        // Filter events based on current filters
-        const eventsToShow = filteredEvents;
-
-        // Add new markers
-        const bounds = new mapboxgl.LngLatBounds();
-
-        eventsToShow.forEach((event) => {
-            // Add location to bounds
-            bounds.extend([
-                event.location.coordinates.lng,
-                event.location.coordinates.lat
-            ]);
-
-            // Create marker element
-            const el = document.createElement('div');
-            el.className = 'event-marker';
-            el.innerHTML = `
-                <div class="${selectedEvent?.id === event.id
-                    ? 'marker-pin selected'
-                    : event.hasNftTickets
-                        ? 'marker-pin nft'
-                        : 'marker-pin'}">
-                    <span class="marker-dot"></span>
-                </div>
-            `;
-
-            el.addEventListener('click', () => {
-                setSelectedEvent(event);
-            });
-
-            // Create and add marker
-            const marker = new mapboxgl.Marker(el)
-                .setLngLat([event.location.coordinates.lng, event.location.coordinates.lat])
-                .addTo(map.current!);
-
-            markers.current.push(marker);
-        });
-
-        // Only fit bounds if we have events
-        if (eventsToShow.length > 0) {
-            map.current.fitBounds(bounds, { padding: 50 });
-        }
-    });
-
-    // Fetch events
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            // Mock data - assuming mockEvents is cast as ExtendedEvent[]
-            setEvents(mockEvents as ExtendedEvent[]);
-            setIsLoading(false);
-        }, 800);
-
-        return () => clearTimeout(timer);
-    }, []);
-
-    // Handle clicks outside filter panel
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (
-                filtersPanelRef.current &&
-                !filtersPanelRef.current.contains(event.target as Node) &&
-                !(event.target as Element).closest('[data-filter-toggle]')
-            ) {
-                setShowFilters(false);
-            }
-        }
-
-        if (showFilters) {
-            document.addEventListener('mousedown', handleClickOutside);
-        } else {
-            document.removeEventListener('mousedown', handleClickOutside);
-        }
-
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [showFilters]);
-
-    // Update filter count
-    useEffect(() => {
-        const count =
-            dateFilters.filter(filter => filter.selected).length +
-            priceFilters.filter(filter => filter.selected).length +
-            featureFilters.filter(filter => filter.selected).length;
-
-        setActiveFilterCount(count);
-        setShowFilterCount(count > 0);
-    }, [dateFilters, priceFilters, featureFilters]);
-
-    // Toggle date filter
-    const toggleDateFilter = (index: number) => {
-        setDateFilters(prev => {
-            const updated = [...prev];
-            updated[index].selected = !updated[index].selected;
-            return updated;
-        });
-    };
-
-    // Toggle price filter
-    const togglePriceFilter = (index: number) => {
-        setPriceFilters(prev => {
-            const updated = [...prev];
-            updated[index].selected = !updated[index].selected;
-            return updated;
-        });
-    };
-
-    // Toggle feature filter
-    const toggleFeatureFilter = (index: number) => {
-        setFeatureFilters(prev => {
-            const updated = [...prev];
-            updated[index].selected = !updated[index].selected;
-            return updated;
-        });
-    };
-
-    // Reset all filters
-    const resetAllFilters = () => {
-        setActiveFilter('ALL');
-        setSearchQuery('');
-        setDateFilters(prev => prev.map(filter => ({ ...filter, selected: false })));
-        setPriceFilters(prev => prev.map(filter => ({ ...filter, selected: false })));
-        setFeatureFilters(prev => prev.map(filter => ({ ...filter, selected: false })));
-    };
-
+    // FIX 1: Define filteredEvents BEFORE updateMapMarkers
     // Filtered events using useMemo with advanced filtering
     const filteredEvents = useMemo(() => {
         // Start with category filter
@@ -320,6 +203,301 @@ export default function DiscoverPage() {
         return filtered;
     }, [events, activeFilter, searchQuery, dateFilters, priceFilters, featureFilters]);
 
+    // Helper function to get marker icon based on event category
+    const getMarkerIcon = (category: string) => {
+        switch (category.toUpperCase()) {
+            case 'MUSIC':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>';
+            case 'CONFERENCE':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>';
+            case 'ART':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>';
+            case 'GAMING':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="6" y1="11" x2="10" y2="11"></line><line x1="8" y1="9" x2="8" y2="13"></line><rect x="2" y="6" width="20" height="12" rx="2"></rect></svg>';
+            case 'FILM':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>';
+            case 'TECHNOLOGY':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>';
+            case 'WORKSHOP':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>';
+            case 'OUTDOOR':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+            case 'WELLNESS':
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>';
+            default:
+                return '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>';
+        }
+    };
+
+    // FIX 2: Wrap addCustomMapControls in useCallback
+    // Function to add custom map controls
+    const addCustomMapControls = useCallback(() => {
+        if (!map.current || customControls.current) return;
+
+        // Create container for controls
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'custom-map-controls';
+
+        // Style layer control
+        const styleControl = document.createElement('div');
+        styleControl.className = 'custom-control style-control';
+
+        // Style switcher button
+        const styleButton = document.createElement('button');
+        styleButton.className = 'control-button style-button';
+        styleButton.innerHTML = `<div class="control-icon"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg></div>`;
+        styleButton.title = 'Change map style';
+
+        // Style options dropdown
+        const styleOptions = document.createElement('div');
+        styleOptions.className = 'style-options';
+
+        // Create style option for each map style
+        mapStyles.forEach(style => {
+            const option = document.createElement('button');
+            option.textContent = style.label;
+            option.className = style.id === currentMapStyle.id ? 'active' : '';
+            option.addEventListener('click', () => {
+                // Update active style
+                Array.from(styleOptions.children).forEach(child =>
+                    (child as HTMLElement).className = (child as HTMLElement).textContent === style.label ? 'active' : ''
+                );
+
+                // Set new map style
+                const newStyle = mapStyles.find(s => s.id === style.id) || mapStyles[0];
+                setCurrentMapStyle(newStyle);
+
+                // Hide dropdown after selection
+                styleOptions.classList.remove('visible');
+            });
+            styleOptions.appendChild(option);
+        });
+
+        // Toggle style options visibility
+        styleButton.addEventListener('click', () => {
+            styleOptions.classList.toggle('visible');
+        });
+
+        // Add style control elements
+        styleControl.appendChild(styleButton);
+        styleControl.appendChild(styleOptions);
+        controlsContainer.appendChild(styleControl);
+
+        // Zoom controls
+        const zoomControl = document.createElement('div');
+        zoomControl.className = 'custom-control zoom-control';
+
+        // Zoom in button
+        const zoomInBtn = document.createElement('button');
+        zoomInBtn.className = 'control-button';
+        zoomInBtn.innerHTML = `<div class="control-icon"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>`;
+        zoomInBtn.addEventListener('click', () => {
+            if (map.current) map.current.zoomIn();
+        });
+        zoomInBtn.title = 'Zoom in';
+
+        // Zoom out button
+        const zoomOutBtn = document.createElement('button');
+        zoomOutBtn.className = 'control-button';
+        zoomOutBtn.innerHTML = `<div class="control-icon"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="8" y1="12" x2="16" y2="12"></line></svg></div>`;
+        zoomOutBtn.addEventListener('click', () => {
+            if (map.current) map.current.zoomOut();
+        });
+        zoomOutBtn.title = 'Zoom out';
+
+        // Add zoom buttons to control
+        zoomControl.appendChild(zoomInBtn);
+        zoomControl.appendChild(zoomOutBtn);
+        controlsContainer.appendChild(zoomControl);
+
+        // 3D tilt control (pitch)
+        const tiltControl = document.createElement('div');
+        tiltControl.className = 'custom-control tilt-control';
+
+        // Tilt button
+        const tiltButton = document.createElement('button');
+        tiltButton.className = 'control-button';
+        tiltButton.innerHTML = `<div class="control-icon"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg></div>`;
+        tiltButton.title = 'Toggle 3D view';
+
+        let is3DView = false;
+        tiltButton.addEventListener('click', () => {
+            if (!map.current) return;
+
+            is3DView = !is3DView;
+
+            if (is3DView) {
+                // Animate to 3D view with a 60-degree pitch
+                map.current.easeTo({
+                    pitch: 60,
+                    bearing: 30,
+                    duration: 1000
+                });
+                tiltButton.classList.add('active');
+            } else {
+                // Return to 2D view
+                map.current.easeTo({
+                    pitch: 0,
+                    bearing: 0,
+                    duration: 1000
+                });
+                tiltButton.classList.remove('active');
+            }
+        });
+
+        tiltControl.appendChild(tiltButton);
+        controlsContainer.appendChild(tiltControl);
+
+        // Reset view button
+        const resetControl = document.createElement('div');
+        resetControl.className = 'custom-control reset-control';
+
+        const resetButton = document.createElement('button');
+        resetButton.className = 'control-button';
+        resetButton.innerHTML = `<div class="control-icon"><svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg></div>`;
+        resetButton.title = 'Reset view';
+
+        resetButton.addEventListener('click', () => {
+            updateMapMarkers.current();
+        });
+
+        resetControl.appendChild(resetButton);
+        controlsContainer.appendChild(resetControl);
+
+        // Add the custom controls container to the map
+        mapContainer.current?.appendChild(controlsContainer);
+        customControls.current = controlsContainer;
+    }, [currentMapStyle, mapStyles, setCurrentMapStyle]); // Add dependencies
+
+    // Now define updateMapMarkers after filteredEvents is defined
+    // Function to update markers with enhanced styling
+    const updateMapMarkers = useRef(() => {
+        if (!map.current || !events.length) return;
+
+        // Remove existing markers
+        markers.current.forEach(marker => marker.remove());
+        markers.current = [];
+
+        // Filter events based on current filters
+        const eventsToShow = filteredEvents;
+
+        // Create bounds object to fit all markers
+        const bounds = new mapboxgl.LngLatBounds();
+
+        // Add markers with enhanced styling
+        eventsToShow.forEach((event) => {
+            // Add location to bounds
+            bounds.extend([
+                event.location.coordinates.lng,
+                event.location.coordinates.lat
+            ]);
+
+            // Create marker element with enhanced styling
+            const el = document.createElement('div');
+            el.className = 'event-marker';
+
+            // Set marker HTML with more detailed styling based on event type
+            el.innerHTML = `
+                <div class="marker-container ${selectedEvent?.id === event.id ? 'selected' : ''}">
+                    <div class="marker-pin-shadow"></div>
+                    <div class="marker-pin ${selectedEvent?.id === event.id ? 'selected' : ''} ${event.category.toLowerCase()}">
+                        <div class="marker-icon">
+                            ${getMarkerIcon(event.category)}
+                        </div>
+                        <div class="marker-dot"></div>
+                    </div>
+                    ${event.hasNftTickets ? '<div class="marker-badge">NFT</div>' : ''}
+                    ${selectedEvent?.id === event.id ? `
+                        <div class="marker-label">
+                            <span>${event.title}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+
+            // Add click event
+            el.addEventListener('click', () => {
+                setSelectedEvent(event);
+
+                // Zoom in slightly and center on the clicked marker
+                if (map.current) {
+                    map.current.flyTo({
+                        center: [event.location.coordinates.lng, event.location.coordinates.lat],
+                        zoom: Math.max(map.current.getZoom(), 14), // Don't zoom out if already zoomed in
+                        offset: [0, -100], // Offset to account for the event card
+                        duration: 800,
+                        essential: true
+                    });
+                }
+            });
+
+            // Create and add the enhanced marker
+            const marker = new mapboxgl.Marker({
+                element: el,
+                anchor: 'bottom'
+            })
+                .setLngLat([event.location.coordinates.lng, event.location.coordinates.lat])
+                .addTo(map.current!);
+
+            markers.current.push(marker);
+        });
+
+        // Only fit bounds if we have events
+        if (eventsToShow.length > 0) {
+            map.current.fitBounds(bounds, {
+                padding: { top: 100, bottom: 200, left: 50, right: 50 },
+                maxZoom: 15,
+                duration: 1000
+            });
+        }
+    });
+
+    // Fetch events
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            // Mock data - assuming mockEvents is cast as ExtendedEvent[]
+            setEvents(mockEvents as ExtendedEvent[]);
+            setIsLoading(false);
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Handle clicks outside filter panel
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (
+                filtersPanelRef.current &&
+                !filtersPanelRef.current.contains(event.target as Node) &&
+                !(event.target as Element).closest('[data-filter-toggle]')
+            ) {
+                setShowFilters(false);
+            }
+        }
+
+        if (showFilters) {
+            document.addEventListener('mousedown', handleClickOutside);
+        } else {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showFilters]);
+
+    // Update filter count
+    useEffect(() => {
+        const count =
+            dateFilters.filter(filter => filter.selected).length +
+            priceFilters.filter(filter => filter.selected).length +
+            featureFilters.filter(filter => filter.selected).length;
+
+        setActiveFilterCount(count);
+        setShowFilterCount(count > 0);
+    }, [dateFilters, priceFilters, featureFilters]);
+
+    // FIX 3: Add addCustomMapControls to the dependency array
     // Initialize map when map view is activated
     useEffect(() => {
         // Only create map if in map view and container exists
@@ -331,32 +509,86 @@ export default function DiscoverPage() {
         if (!map.current) {
             map.current = new mapboxgl.Map({
                 container: mapContainer.current,
-                style: 'mapbox://styles/mapbox/light-v11',
+                style: currentMapStyle.url,
                 center: [-74.5, 40],
-                zoom: 9
+                zoom: 9,
+                pitchWithRotate: true,
+                attributionControl: false
             });
 
-            map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
-            mapInitialized.current = true;
+            // Add standard navigation controls but don't add them yet
+            // We'll create our own custom UI controls
+            map.current.addControl(new mapboxgl.AttributionControl({ compact: true }), 'bottom-right');
 
+            // Add geolocation control
+            map.current.addControl(
+                new mapboxgl.GeolocateControl({
+                    positionOptions: {
+                        enableHighAccuracy: true
+                    },
+                    trackUserLocation: true,
+                    showUserHeading: true
+                }),
+                'bottom-right'
+            );
+
+            // Add event for when map loads
             map.current.on('load', () => {
                 if (!map.current) return;
 
+                // Add a sky layer for 3D effect if using satellite view
+                if (currentMapStyle.id === 'satellite') {
+                    map.current.addLayer({
+                        'id': 'sky',
+                        'type': 'sky',
+                        'paint': {
+                            'sky-type': 'atmosphere',
+                            'sky-atmosphere-sun': [0.0, 0.0],
+                            'sky-atmosphere-sun-intensity': 15
+                        }
+                    });
+                }
+
                 // Add markers once map is loaded
                 updateMapMarkers.current();
+
+                // Add terrain if on satellite view
+                if (currentMapStyle.id === 'satellite') {
+                    map.current.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+                }
             });
+
+            // Add map move event to update markers when panning
+            map.current.on('moveend', () => {
+                // We could implement performance optimizations here
+                // Only update markers in view, etc.
+            });
+
+            mapInitialized.current = true;
         } else {
-            // Map already exists, just update markers
+            // Map already exists, just update markers and style
             map.current.resize();
+            map.current.setStyle(currentMapStyle.url);
             updateMapMarkers.current();
+        }
+
+        // Add custom controls when map is in view
+        if (map.current && !customControls.current) {
+            addCustomMapControls();
         }
 
         return () => {
             // Clean up markers but don't destroy map
             markers.current.forEach(marker => marker.remove());
             markers.current = [];
+
+            // Remove custom controls when switching away from map
+            if (customControls.current) {
+                customControls.current.remove();
+                customControls.current = null;
+            }
         };
-    }, [isMapView]);
+    }, [isMapView, currentMapStyle, addCustomMapControls]); // Add addCustomMapControls here
 
     // Update markers when events or filters change
     useEffect(() => {
@@ -376,6 +608,42 @@ export default function DiscoverPage() {
             }
         };
     }, []);
+
+    // Toggle date filter
+    const toggleDateFilter = (index: number) => {
+        setDateFilters(prev => {
+            const updated = [...prev];
+            updated[index].selected = !updated[index].selected;
+            return updated;
+        });
+    };
+
+    // Toggle price filter
+    const togglePriceFilter = (index: number) => {
+        setPriceFilters(prev => {
+            const updated = [...prev];
+            updated[index].selected = !updated[index].selected;
+            return updated;
+        });
+    };
+
+    // Toggle feature filter
+    const toggleFeatureFilter = (index: number) => {
+        setFeatureFilters(prev => {
+            const updated = [...prev];
+            updated[index].selected = !updated[index].selected;
+            return updated;
+        });
+    };
+
+    // Reset all filters
+    const resetAllFilters = () => {
+        setActiveFilter('ALL');
+        setSearchQuery('');
+        setDateFilters(prev => prev.map(filter => ({ ...filter, selected: false })));
+        setPriceFilters(prev => prev.map(filter => ({ ...filter, selected: false })));
+        setFeatureFilters(prev => prev.map(filter => ({ ...filter, selected: false })));
+    };
 
     // Categories for filter - ensure WELLNESS is included in EventCategory
     const categories: Array<EventCategory | 'ALL'> = ['ALL', 'MUSIC', 'CONFERENCE', 'ART', 'GAMING', 'FILM', 'TECHNOLOGY', 'WORKSHOP', 'OUTDOOR', 'WELLNESS'];
@@ -641,40 +909,118 @@ export default function DiscoverPage() {
                         </div>
                     ) : (
                         <>
-                            {/* Map View - Only render when active */}
+                            {/* Enhanced Map View */}
                             {isMapView && (
                                 <div className="absolute inset-0 z-0 h-[calc(100vh-200px)]">
+                                    {/* Map Container */}
                                     <div
                                         ref={mapContainer}
-                                        className="h-full w-full"
+                                        className="h-full w-full map-container"
                                     />
 
-                                    {/* Selected Event Overlay */}
+                                    {/* Selected Event Overlay - Enhanced with better animations & UI */}
                                     {selectedEvent && (
-                                        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-sm px-4 z-10">
+                                        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-md px-4 z-10 animate-slideUp">
                                             <div className="relative">
-                                                <button
-                                                    onClick={() => setSelectedEvent(null)}
-                                                    className="absolute -top-2 -right-2 h-7 w-7 rounded-full bg-white flex items-center justify-center z-10 shadow-md"
-                                                >
-                                                    <FiX className="h-4 w-4" />
-                                                </button>
-                                                <div className="bg-white rounded-xl shadow-xl overflow-hidden transition-all">
+                                                <div className="absolute -top-2 -right-2 z-20">
+                                                    <button
+                                                        onClick={() => setSelectedEvent(null)}
+                                                        className="h-8 w-8 rounded-full bg-white flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors"
+                                                    >
+                                                        <FiX className="h-4 w-4 text-gray-600" />
+                                                    </button>
+                                                </div>
+
+                                                <div className="bg-white rounded-xl shadow-xl overflow-hidden transition-all border border-gray-100">
                                                     <EventCard event={selectedEvent} disableLink={true} />
+
+                                                    {/* Directions button */}
+                                                    <div className="p-4 pt-0 flex justify-between items-center gap-3">
+                                                        <a
+                                                            href={`https://www.google.com/maps/dir/?api=1&destination=${selectedEvent.location.coordinates.lat},${selectedEvent.location.coordinates.lng}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex-1 py-2.5 px-4 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                        >
+                                                            <FiNavigation className="w-4 h-4" />
+                                                            <span>Directions</span>
+                                                        </a>
+
+                                                        <Link
+                                                            href={`/events/${selectedEvent.id}`}
+                                                            className="flex-1 py-2.5 px-4 bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                                                        >
+                                                            <span>View Details</span>
+                                                        </Link>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Active filter count badge */}
-                                    {showFilterCount && (
-                                        <div className="absolute top-4 left-4 px-3 py-1.5 bg-white rounded-full shadow-md text-sm font-medium">
-                                            <span className="flex items-center">
-                                                <FiFilter className="w-4 h-4 mr-1.5 text-[#FF5722]" />
-                                                {activeFilterCount} {activeFilterCount === 1 ? 'filter' : 'filters'} applied
-                                            </span>
+                                    {/* Map Overlays - Event Count & Active Filters */}
+                                    <div className="absolute top-4 left-4 right-4 flex flex-col sm:flex-row justify-between gap-2 z-10">
+                                        <div className="bg-white rounded-full shadow-md py-2 px-4 text-sm font-medium flex items-center gap-2">
+                                            <FiMapPin className="text-[#FF5722] w-4 h-4" />
+                                            <span>{filteredEvents.length} {filteredEvents.length === 1 ? 'Event' : 'Events'} Found</span>
                                         </div>
-                                    )}
+
+                                        {showFilterCount && (
+                                            <div className="bg-white rounded-full shadow-md py-2 px-4 text-sm font-medium flex items-center gap-2">
+                                                <FiFilter className="text-[#FF5722] w-4 h-4" />
+                                                <span>{activeFilterCount} {activeFilterCount === 1 ? 'Filter' : 'Filters'} Applied</span>
+                                                <button
+                                                    onClick={resetAllFilters}
+                                                    className="ml-1 w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors"
+                                                >
+                                                    <FiX className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Event Quick Navigation - Horizontal pill indicators for different categories */}
+                                    <div className="absolute bottom-28 left-4 right-4 z-10">
+                                        <div className="bg-white/90 backdrop-blur-sm rounded-full shadow-md py-2 px-2 overflow-x-auto hide-scrollbar">
+                                            <div className="flex gap-1">
+                                                {/* Current view indicator - shows which category has most events on screen */}
+                                                {categories
+                                                    .filter(cat => cat !== 'ALL')
+                                                    .map(category => {
+                                                        const count = filteredEvents.filter(e => e.category === category).length;
+                                                        if (count === 0) return null;
+
+                                                        return (
+                                                            <button
+                                                                key={category}
+                                                                onClick={() => {
+                                                                    setActiveFilter(category);
+                                                                    // Find first event of this category and focus on it
+                                                                    const firstEvent = filteredEvents.find(e => e.category === category);
+                                                                    if (firstEvent && map.current) {
+                                                                        map.current.flyTo({
+                                                                            center: [firstEvent.location.coordinates.lng, firstEvent.location.coordinates.lat],
+                                                                            zoom: 14,
+                                                                            duration: 1000
+                                                                        });
+                                                                    }
+                                                                }}
+                                                                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${activeFilter === category
+                                                                    ? 'bg-[#FF5722] text-white'
+                                                                    : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                                                                    }`}
+                                                            >
+                                                                <span dangerouslySetInnerHTML={{ __html: getMarkerIcon(category) }} className="h-3.5 w-3.5" />
+                                                                <span>{category.charAt(0) + category.slice(1).toLowerCase()}</span>
+                                                                <span className="bg-gray-200/50 text-gray-700 rounded-full h-4 w-4 inline-flex items-center justify-center text-[10px]">
+                                                                    {count}
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -828,51 +1174,265 @@ export default function DiscoverPage() {
                     margin: 0;
                 }
                 
-                /* Map markers */
-                .event-marker {
-                    cursor: pointer;
-                }
-                
-                .marker-pin {
-                    width: 30px;
-                    height: 30px;
-                    position: relative;
-                    transform: translateY(-50%);
-                }
-                
-                .marker-dot {
-                    width: 16px;
-                    height: 16px;
-                    background: #FF5722;
-                    border: 2px solid white;
-                    border-radius: 50%;
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-                    transition: all 0.2s ease;
-                }
-                
-                .marker-pin.selected .marker-dot {
-                    background: #FF5722;
-                    width: 20px;
-                    height: 20px;
-                    box-shadow: 0 0 0 4px rgba(255, 87, 34, 0.2);
-                }
-                
-                .marker-pin.nft .marker-dot {
-                    background: linear-gradient(135deg, #FF5722, #FF9800);
-                }
-                
-                /* Filter panel animations */
-                .filter-group {
+                /* Map Container Styles */
+                .map-container {
                     transition: all 0.3s ease;
                 }
                 
-                /* Ensure content doesn't overflow screen */
-                body {
-                    overflow-x: hidden;
+                .map-container .mapboxgl-canvas {
+                    outline: none;
+                }
+                
+                /* Enhanced Marker Styles */
+                .event-marker {
+                    cursor: pointer;
+                    z-index: 1;
+                    transition: all 0.2s ease;
+                }
+                
+                .event-marker:hover {
+                    z-index: 2;
+                }
+                
+                .marker-container {
+                    position: relative;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    transform: translate(-50%, -50%);
+                }
+                
+                .marker-pin {
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: white;
+                    border-radius: 50%;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    border: 2px solid #FF5722;
+                    transition: all 0.3s ease;
+                    position: relative;
+                    z-index: 1;
+                }
+                
+                .marker-container:hover .marker-pin {
+                    transform: scale(1.1);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                }
+                
+                .marker-pin.selected {
+                    background: #FF5722;
+                    transform: scale(1.2);
+                    box-shadow: 0 4px 10px rgba(255, 87, 34, 0.3);
+                    z-index: 10;
+                }
+                
+                .marker-icon {
+                    color: #FF5722;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    width: 24px;
+                    height: 24px;
+                    transition: all 0.2s ease;
+                }
+                
+                .marker-pin.selected .marker-icon {
+                    color: white;
+                }
+                
+                /* Category-specific marker colors */
+                .marker-pin.music { border-color: #FF5722; }
+                .marker-pin.music .marker-icon { color: #FF5722; }
+                .marker-pin.music.selected { background: #FF5722; }
+                
+                .marker-pin.conference { border-color: #2196F3; }
+                .marker-pin.conference .marker-icon { color: #2196F3; }
+                .marker-pin.conference.selected { background: #2196F3; }
+                
+                .marker-pin.art { border-color: #9C27B0; }
+                .marker-pin.art .marker-icon { color: #9C27B0; }
+                .marker-pin.art.selected { background: #9C27B0; }
+                
+                .marker-pin.gaming { border-color: #4CAF50; }
+                .marker-pin.gaming .marker-icon { color: #4CAF50; }
+                .marker-pin.gaming.selected { background: #4CAF50; }
+                
+                .marker-pin.film { border-color: #795548; }
+                .marker-pin.film .marker-icon { color: #795548; }
+                .marker-pin.film.selected { background: #795548; }
+                
+                .marker-pin.technology { border-color: #607D8B; }
+                .marker-pin.technology .marker-icon { color: #607D8B; }
+                .marker-pin.technology.selected { background: #607D8B; }
+                
+                .marker-pin.workshop { border-color: #FFC107; }
+                .marker-pin.workshop .marker-icon { color: #FFC107; }
+                .marker-pin.workshop.selected { background: #FFC107; }
+                
+                .marker-pin.outdoor { border-color: #8BC34A; }
+                .marker-pin.outdoor .marker-icon { color: #8BC34A; }
+                .marker-pin.outdoor.selected { background: #8BC34A; }
+                
+                .marker-pin.wellness { border-color: #00BCD4; }
+                .marker-pin.wellness .marker-icon { color: #00BCD4; }
+                .marker-pin.wellness.selected { background: #00BCD4; }
+                
+                /* Marker shadow */
+                .marker-pin-shadow {
+                    width: 36px;
+                    height: 4px;
+                    background: rgba(0,0,0,0.1);
+                    border-radius: 50%;
+                    position: absolute;
+                    bottom: -6px;
+                    filter: blur(2px);
+                    transition: all 0.3s ease;
+                }
+                
+                .marker-container:hover .marker-pin-shadow {
+                    transform: scale(1.2);
+                    filter: blur(3px);
+                }
+                
+                /* Marker badge for NFT events */
+                .marker-badge {
+                    position: absolute;
+                    top: -5px;
+                    right: -5px;
+                    background: linear-gradient(135deg, #FF5722, #FF9800);
+                    color: white;
+                    font-size: 8px;
+                    font-weight: bold;
+                    padding: 2px 4px;
+                    border-radius: 6px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                    z-index: 2;
+                }
+                
+                /* Label for selected marker */
+                .marker-label {
+                    position: absolute;
+                    top: -30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0,0,0,0.7);
+                    color: white;
+                    font-size: 10px;
+                    font-weight: medium;
+                    padding: 3px 8px;
+                    border-radius: 12px;
+                    white-space: nowrap;
+                    max-width: 150px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    animation: fadeIn 0.3s ease;
+                    z-index: 3;
+                }
+                
+                /* Custom controls */
+                .custom-map-controls {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    z-index: 10;
+                }
+                
+                .custom-control {
+                    background: white;
+                    border-radius: 8px;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+                    overflow: hidden;
+                }
+                
+                .control-button {
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: white;
+                    color: #666;
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                
+                .control-button:hover, .control-button.active {
+                    background: #f1f1f1;
+                    color: #FF5722;
+                }
+                
+                .control-icon {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .style-options {
+                    display: none;
+                    flex-direction: column;
+                    width: 120px;
+                    background: white;
+                    border-top: 1px solid #eee;
+                }
+                
+                .style-options.visible {
+                    display: flex;
+                }
+                
+                .style-options button {
+                    padding: 8px;
+                    text-align: left;
+                    border: none;
+                    background: white;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    font-size: 12px;
+                }
+                
+                .style-options button:hover {
+                    background: #f5f5f5;
+                }
+                
+                .style-options button.active {
+                    background: #f1f1f1;
+                    color: #FF5722;
+                    font-weight: 500;
+                }
+                
+                .zoom-control {
+                    display: flex;
+                    flex-direction: column;
+                }
+                
+                .zoom-control .control-button:first-child {
+                    border-bottom: 1px solid #eee;
+                }
+                
+                /* Animations */
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                
+                @keyframes slideUp {
+                    from { opacity: 0; transform: translate(-50%, 20px); }
+                    to { opacity: 1; transform: translate(-50%, 0); }
+                }
+                
+                .animate-slideUp {
+                    animation: slideUp 0.3s ease-out forwards;
+                }
+                
+                /* Hide Mapbox branding */
+                .mapboxgl-ctrl-attrib-inner {
+                    display: none;
                 }
             `}</style>
         </div>

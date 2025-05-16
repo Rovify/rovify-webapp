@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        console.log('Processing token exchange with redirect URI:', redirectUri);
+
         // Get environment variables
         const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
         const clientSecret = process.env.GOOGLE_CLIENT_SECRET;

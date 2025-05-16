@@ -102,7 +102,7 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
                     icon: FiCalendar,
                     primaryAction: {
                         text: 'View Event',
-                        link: '/'
+                        link: '/discover'
                     },
                     secondaryAction: {
                         text: 'Create Another Event',
@@ -124,7 +124,7 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
                     },
                     secondaryAction: {
                         text: 'Browse More Events',
-                        link: '/'
+                        link: '/discover'
                     }
                 };
             case 'profile':
@@ -138,7 +138,7 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
                     },
                     secondaryAction: {
                         text: 'Back to Home',
-                        link: '/'
+                        link: '/home'
                     }
                 };
             default:
@@ -148,7 +148,7 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
                     icon: FiCheck,
                     primaryAction: {
                         text: 'Back to Home',
-                        link: '/'
+                        link: '/home'
                     },
                     secondaryAction: {
                         text: 'My Account',

@@ -393,7 +393,7 @@ export default function Header() {
                     <div className="container mx-auto py-4 px-4">
                         <nav className="flex flex-col space-y-2">
                             {[
-                                { href: '/', label: 'Home' },
+                                { href: '/home', label: 'Home' },
                                 { href: '/discover', label: 'Discover' },
                                 { href: '/tickets', label: 'Tickets' },
                                 { href: '/profile', label: 'Profile' },

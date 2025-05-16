@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getCurrentUser } from '@/mocks/data/users';
@@ -17,6 +17,7 @@ import { FiEdit2, FiLogOut, FiCheck, FiX, FiCalendar, FiMessageSquare, FiClock, 
 import { FaBell, FaEthereum, FaCamera } from "react-icons/fa";
 import { IoTicket } from "react-icons/io5";
 
+// Define Ethereum types without modifying global Window interface
 interface EthereumProviderEvent {
     accountsChanged: string[];
     chainChanged: string;
@@ -27,15 +28,9 @@ interface EthereumProviderEvent {
 
 interface EthereumProvider {
     isMetaMask?: boolean;
-    request<T>(request: { method: string; params?: unknown[] }): Promise<T>;
+    request(request: { method: string; params?: unknown[] }): Promise<unknown>;
     on<K extends keyof EthereumProviderEvent>(event: K, listener: (event: EthereumProviderEvent[K]) => void): void;
     removeListener<K extends keyof EthereumProviderEvent>(event: K, listener: (event: EthereumProviderEvent[K]) => void): void;
-}
-
-declare global {
-    interface Window {
-        ethereum?: EthereumProvider;
-    }
 }
 
 interface Notification {
@@ -73,11 +68,75 @@ export default function ProfilePage() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
 
     const tabs: TabType[] = ['events', 'tickets', 'notifications', 'settings'];
-    // Add these function handlers to your ProfilePage component:
 
     // New state variables to add
     const [uploadingProfile, setUploadingProfile] = useState(false);
     const [uploadingCover, setUploadingCover] = useState(false);
+
+    // Create mockNotifications with useMemo and explicit type annotation to match Notification[]
+    const mockNotifications = useMemo<Notification[]>(() => [
+        {
+            id: '1',
+            type: 'event', // Now explicitly using the literal type
+            title: 'Tech Summit 2025 is tomorrow!',
+            content: 'Don\'t forget your tickets. The event starts at 10:00 AM.',
+            image: '/images/events/tech-summit.jpg',
+            time: '2 hours ago',
+            read: false,
+            link: '/events/tech-summit-2025',
+            action: 'View Ticket'
+        },
+        {
+            id: '2',
+            type: 'message', // Now explicitly using the literal type
+            title: 'New message from Sarah',
+            content: 'Hey! Are you going to the Culinary Masterclass next week? I just got my tickets!',
+            time: '1 day ago',
+            read: true,
+            link: '/messages/sarah',
+            action: 'Reply'
+        },
+        {
+            id: '3',
+            type: 'system', // Now explicitly using the literal type
+            title: 'NFT Tickets Confirmed',
+            content: 'Your NFT tickets for Neon Nights have been minted and transferred to your wallet.',
+            time: '2 days ago',
+            read: false,
+            link: '/tickets/neon-nights',
+            action: 'View in Wallet'
+        },
+        {
+            id: '4',
+            type: 'reminder', // Now explicitly using the literal type
+            title: 'Mindfulness Retreat starts soon',
+            content: 'Your event begins in 48 hours. Don\'t forget to bring your yoga mat!',
+            time: '3 days ago',
+            read: true,
+            link: '/events/mindfulness-retreat',
+            action: 'View Details'
+        },
+        {
+            id: '5',
+            type: 'event', // Now explicitly using the literal type
+            title: 'Price Drop Alert!',
+            content: 'Tickets for Urban Art Exhibition have been discounted by 20%.',
+            time: '4 days ago',
+            read: false,
+            link: '/events/urban-art-exhibition',
+            action: 'Buy Now'
+        },
+        {
+            id: '6',
+            type: 'system', // Now explicitly using the literal type
+            title: 'Wallet Connected',
+            content: 'Your Ethereum wallet has been successfully connected to your Rovify account.',
+            time: '1 week ago',
+            read: true,
+            link: '/settings',
+            action: 'Manage Wallet'
+        }
+    ], []);
 
     // Handler for profile image upload
     const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,104 +222,22 @@ export default function ProfilePage() {
         }
     };
 
-    // Update your User type to include coverImage:
-    // In your types.ts file:
-    /*
-    export interface User {
-      id: string;
-      name: string;
-      username: string;
-      email: string;
-      bio: string;
-      image: string;
-      coverImage?: string; // Add this property
-      verified: boolean;
-      followers: number;
-      following: number;
-      savedEvents: string[];
-      attendedEvents: string[];
-      interests: string[];
-    }
-    */
-
-    const mockNotifications: Notification[] = [
-        {
-            id: '1',
-            type: 'event',
-            title: 'Tech Summit 2025 is tomorrow!',
-            content: 'Don\'t forget your tickets. The event starts at 10:00 AM.',
-            image: '/images/events/tech-summit.jpg',
-            time: '2 hours ago',
-            read: false,
-            link: '/events/tech-summit-2025',
-            action: 'View Ticket'
-        },
-        {
-            id: '2',
-            type: 'message',
-            title: 'New message from Sarah',
-            content: 'Hey! Are you going to the Culinary Masterclass next week? I just got my tickets!',
-            time: '1 day ago',
-            read: true,
-            link: '/messages/sarah',
-            action: 'Reply'
-        },
-        {
-            id: '3',
-            type: 'system',
-            title: 'NFT Tickets Confirmed',
-            content: 'Your NFT tickets for Neon Nights have been minted and transferred to your wallet.',
-            time: '2 days ago',
-            read: false,
-            link: '/tickets/neon-nights',
-            action: 'View in Wallet'
-        },
-        {
-            id: '4',
-            type: 'reminder',
-            title: 'Mindfulness Retreat starts soon',
-            content: 'Your event begins in 48 hours. Don\'t forget to bring your yoga mat!',
-            time: '3 days ago',
-            read: true,
-            link: '/events/mindfulness-retreat',
-            action: 'View Details'
-        },
-        {
-            id: '5',
-            type: 'event',
-            title: 'Price Drop Alert!',
-            content: 'Tickets for Urban Art Exhibition have been discounted by 20%.',
-            time: '4 days ago',
-            read: false,
-            link: '/events/urban-art-exhibition',
-            action: 'Buy Now'
-        },
-        {
-            id: '6',
-            type: 'system',
-            title: 'Wallet Connected',
-            content: 'Your Ethereum wallet has been successfully connected to your Rovify account.',
-            time: '1 week ago',
-            read: true,
-            link: '/settings',
-            action: 'Manage Wallet'
-        }
-    ];
-
-    const checkWalletConnection = async () => {
+    // Wrapped in useCallback to avoid recreations
+    const checkWalletConnection = useCallback(async () => {
         if (typeof window !== 'undefined' && window.ethereum) {
             try {
-                const accounts = await window.ethereum.request<string[]>({
+                const ethereum = window.ethereum as EthereumProvider;
+                const accounts = await ethereum.request({
                     method: 'eth_accounts'
-                });
+                }) as string[];
 
                 if (accounts && accounts.length > 0) {
                     setWalletAddress(accounts[0]);
                     setIsWalletConnected(true);
 
-                    const chainId = await window.ethereum.request<string>({
+                    const chainId = await ethereum.request({
                         method: 'eth_chainId'
-                    });
+                    }) as string;
                     setChainId(chainId);
 
                     await updateWalletBalance(accounts[0]);
@@ -269,7 +246,7 @@ export default function ProfilePage() {
                 console.error("Error checking wallet connection:", error);
             }
         }
-    };
+    }, []);
 
     const handleAccountsChanged = useCallback((accounts: string[]) => {
         if (accounts.length === 0) {
@@ -292,10 +269,9 @@ export default function ProfilePage() {
 
     const initEthereumProvider = useCallback(() => {
         if (typeof window !== 'undefined' && window.ethereum) {
-            window.ethereum.on('accountsChanged', handleAccountsChanged);
-
-            window.ethereum.on('chainChanged', handleChainChanged);
-
+            const ethereum = window.ethereum as EthereumProvider;
+            ethereum.on('accountsChanged', handleAccountsChanged);
+            ethereum.on('chainChanged', handleChainChanged);
             checkWalletConnection();
         }
     }, [handleAccountsChanged, handleChainChanged, checkWalletConnection]);
@@ -306,17 +282,18 @@ export default function ProfilePage() {
 
         if (typeof window !== 'undefined' && window.ethereum) {
             try {
-                const accounts = await window.ethereum.request<string[]>({
+                const ethereum = window.ethereum as EthereumProvider;
+                const accounts = await ethereum.request({
                     method: 'eth_requestAccounts'
-                });
+                }) as string[];
 
                 if (accounts && accounts.length > 0) {
                     setIsWalletConnected(true);
                     setWalletAddress(accounts[0]);
 
-                    const chainId = await window.ethereum.request<string>({
+                    const chainId = await ethereum.request({
                         method: 'eth_chainId'
-                    });
+                    }) as string;
                     setChainId(chainId);
 
                     await updateWalletBalance(accounts[0]);
@@ -339,10 +316,11 @@ export default function ProfilePage() {
     const updateWalletBalance = async (address: string) => {
         if (typeof window !== 'undefined' && window.ethereum) {
             try {
-                const balance = await window.ethereum.request<string>({
+                const ethereum = window.ethereum as EthereumProvider;
+                const balance = await ethereum.request({
                     method: 'eth_getBalance',
                     params: [address, 'latest']
-                });
+                }) as string;
 
                 if (balance) {
                     const ethBalance = (parseInt(balance, 16) / 1e18).toFixed(4);
@@ -420,8 +398,9 @@ export default function ProfilePage() {
 
         return () => {
             if (typeof window !== 'undefined' && window.ethereum) {
-                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-                window.ethereum.removeListener('chainChanged', handleChainChanged);
+                const ethereum = window.ethereum as EthereumProvider;
+                ethereum.removeListener('accountsChanged', handleAccountsChanged);
+                ethereum.removeListener('chainChanged', handleChainChanged);
             }
             clearTimeout(timer);
         };
@@ -482,7 +461,7 @@ export default function ProfilePage() {
                                 {/* Cover Image */}
                                 {currentUser?.coverImage ? (
                                     <Image
-                                        src={currentUser.coverImage}
+                                        src={currentUser.coverImage as string}
                                         alt="Cover"
                                         fill
                                         className="object-cover"
@@ -518,7 +497,12 @@ export default function ProfilePage() {
                                 {/* Cover Image Upload Button */}
                                 <button
                                     className="absolute top-4 right-4 bg-white/80 hover:bg-white shadow-md rounded-full p-2 backdrop-blur-sm group transition-all"
-                                    onClick={() => document.getElementById('cover-image-upload').click()}
+                                    onClick={() => {
+                                        const uploadElement = document.getElementById('cover-image-upload');
+                                        if (uploadElement) {
+                                            uploadElement.click();
+                                        }
+                                    }}
                                 >
                                     <FaCamera className="w-4 h-4 text-gray-700 group-hover:text-[#FF5722]" />
                                     <span className="sr-only">Upload cover image</span>
@@ -545,7 +529,12 @@ export default function ProfilePage() {
                                     {/* Profile Image Upload Button */}
                                     <div
                                         className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                                        onClick={() => document.getElementById('profile-image-upload').click()}
+                                        onClick={() => {
+                                            const uploadElement = document.getElementById('profile-image-upload');
+                                            if (uploadElement) {
+                                                uploadElement.click();
+                                            }
+                                        }}
                                     >
                                         <FaCamera className="w-6 h-6 text-white" />
                                         <span className="sr-only">Upload profile picture</span>
@@ -585,7 +574,7 @@ export default function ProfilePage() {
                                                     <div className="inline-flex bg-gray-100 text-gray-700 rounded-full px-2 py-0.5 text-xs font-medium items-center gap-1 cursor-pointer hover:bg-gray-200 transition-all" onClick={copyWalletAddress}>
                                                         <FaEthereum className="text-[#627EEA] text-xs" />
                                                         <span className="truncate max-w-[80px]">
-                                                            {`${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`}
+                                                            {walletAddress && `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`}
                                                         </span>
                                                         {walletCopied ? (
                                                             <FiCheck className="w-3 h-3 text-green-500" />
@@ -664,7 +653,7 @@ export default function ProfilePage() {
 
                                         <StatCard
                                             icon={<FiCalendar className="h-6 w-6 text-[#FF5722]" />}
-                                            value={currentUser?.attendedEvents.length || 0}
+                                            value={currentUser?.attendedEvents?.length || 0}
                                             label="Events"
                                         />
 

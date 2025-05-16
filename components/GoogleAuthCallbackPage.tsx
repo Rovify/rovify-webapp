@@ -151,7 +151,7 @@ export default function AuthCallbackPage() {
             // Redirect to home
             console.log('Authentication successful, redirecting to home');
             window.history.replaceState({}, document.title, window.location.pathname);
-            router.push('/');
+            router.push('/home');
         } catch (error) {
             // Password verification failed, throw error to be handled by the modal
             throw error;

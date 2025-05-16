@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -105,9 +106,27 @@ interface PaymentDetails {
     total: number;
 }
 
+// New interfaces to fix the "any" issues
+interface BookingData {
+    eventId: string;
+    ticketType: string | null;
+    quantity: number;
+    paymentMethod: 'card' | 'crypto';
+    total: number;
+    timestamp: Date;
+}
+
+interface Attendee {
+    id: string;
+    name: string;
+    image: string;
+    username: string;
+    verified: boolean;
+}
+
 interface EventBookingProps {
     event: Event;
-    onBookingComplete?: (data: any) => void;
+    onBookingComplete?: (data: BookingData) => void; // Fixed any to BookingData
     currentUserId?: string; // For comment functionality
     currentUserName?: string;
     currentUserImage?: string;
@@ -143,7 +162,7 @@ const EventBooking: React.FC<EventBookingProps> = ({
     const [newComment, setNewComment] = useState('');
     const [replyingTo, setReplyingTo] = useState<string | null>(null);
     const [isSubmittingComment, setIsSubmittingComment] = useState(false);
-    const [attendees, setAttendees] = useState<any[]>([]);
+    const [attendees, setAttendees] = useState<Attendee[]>([]); // Fixed any[] to Attendee[]
     const [paymentDetails, setPaymentDetails] = useState<PaymentDetails>({
         subtotal: 0,
         fees: 0,
@@ -202,43 +221,49 @@ const EventBooking: React.FC<EventBookingProps> = ({
     }, []);
 
     // Initialize map
+    // Initialize map
     useEffect(() => {
         if (!mapRef.current || mapLoaded) return;
 
         // Create map
         const initializeMap = () => {
-            mapInstance.current = new mapboxgl.Map({
-                container: mapRef.current!,
+            if (!mapRef.current) return;
+
+            const map = new mapboxgl.Map({
+                container: mapRef.current,
                 style: 'mapbox://styles/mapbox/light-v11',
                 center: [event.location.coordinates.lng, event.location.coordinates.lat],
                 zoom: 14,
                 interactive: true
             });
 
+            // Store the map instance
+            mapInstance.current = map;
+
             // Add controls
-            mapInstance.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+            map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
             // Add marker for event location
             const markerElement = document.createElement('div');
             markerElement.className = 'custom-marker event-marker';
             markerElement.innerHTML = `
-        <div class="marker-pin">
-          <span class="marker-dot"></span>
-        </div>
-      `;
+          <div class="marker-pin">
+            <span class="marker-dot"></span>
+          </div>
+        `;
 
             const popup = new mapboxgl.Popup({ offset: 25 })
                 .setHTML(`
-          <div class="p-2">
-            <h3 class="font-semibold text-gray-900">${event.location.name}</h3>
-            <p class="text-sm text-gray-700">${event.location.address}</p>
-          </div>
-        `);
+              <div class="p-2">
+                <h3 class="font-semibold text-gray-900">${event.location.name}</h3>
+                <p class="text-sm text-gray-700">${event.location.address}</p>
+              </div>
+            `);
 
             new mapboxgl.Marker(markerElement)
                 .setLngLat([event.location.coordinates.lng, event.location.coordinates.lat])
                 .setPopup(popup)
-                .addTo(mapInstance.current);
+                .addTo(map); // Use local variable instead of mapInstance.current
 
             // Add markers for amenities if they exist
             if (event.amenities && event.amenities.length > 0) {
@@ -255,28 +280,28 @@ const EventBooking: React.FC<EventBookingProps> = ({
                                     '#9C27B0'; // transport
 
                     amenityMarkerEl.innerHTML = `
-            <div class="amenity-marker-pin" style="background-color: ${markerColor}">
-              <span class="amenity-marker-icon"></span>
-            </div>
-          `;
+                  <div class="amenity-marker-pin" style="background-color: ${markerColor}">
+                    <span class="amenity-marker-icon"></span>
+                  </div>
+                `;
 
                     const amenityPopup = new mapboxgl.Popup({ offset: 20 })
                         .setHTML(`
-              <div class="p-2">
-                <h3 class="font-semibold text-gray-900">${amenity.name}</h3>
-                <p class="text-sm text-gray-700">${amenity.type} · ${amenity.distance}</p>
-              </div>
-            `);
+                      <div class="p-2">
+                        <h3 class="font-semibold text-gray-900">${amenity.name}</h3>
+                        <p class="text-sm text-gray-700">${amenity.type} · ${amenity.distance}</p>
+                      </div>
+                    `);
 
                     new mapboxgl.Marker(amenityMarkerEl)
                         .setLngLat([amenity.coordinates.lng, amenity.coordinates.lat])
                         .setPopup(amenityPopup)
-                        .addTo(mapInstance.current);
+                        .addTo(map); // Use local variable instead of mapInstance.current
                 });
             }
 
             // Set map loaded after initialization
-            mapInstance.current.on('load', () => {
+            map.on('load', () => {
                 setMapLoaded(true);
             });
         };
@@ -562,7 +587,20 @@ const EventBooking: React.FC<EventBookingProps> = ({
 
         const confettiCount = 200;
         const confettiColors = ['#FF5722', '#FF9800', '#4CAF50', '#2196F3', '#9C27B0'];
-        const confetti: any[] = [];
+
+        // Fixed the any[] to a proper type
+        interface ConfettiParticle {
+            x: number;
+            y: number;
+            size: number;
+            color: string;
+            speed: number;
+            angle: number;
+            rotation: number;
+            rotationSpeed: number;
+        }
+
+        const confetti: ConfettiParticle[] = [];
 
         // Create confetti particles
         for (let i = 0; i < confettiCount; i++) {
@@ -1078,7 +1116,7 @@ const EventBooking: React.FC<EventBookingProps> = ({
                                             ) : (
                                                 <div className="bg-green-50 text-green-600 p-3 rounded-lg inline-flex items-center">
                                                     <FiCheck className="mr-2" />
-                                                    You're on the waitlist!
+                                                    You&apos;re on the waitlist!
                                                 </div>
                                             )}
                                         </div>
@@ -1214,7 +1252,7 @@ const EventBooking: React.FC<EventBookingProps> = ({
                                 <div>
                                     <div className="flex justify-between items-center mb-4">
                                         <h3 className="text-lg font-semibold text-gray-900">
-                                            Who's Going <span className="text-[#FF5722]">({attendees.length})</span>
+                                            Who&apos;s Going <span className="text-[#FF5722]">({attendees.length})</span>
                                         </h3>
 
                                         {attendees.length > 6 && (
@@ -1322,8 +1360,8 @@ const EventBooking: React.FC<EventBookingProps> = ({
                                                             onClick={handleAddComment}
                                                             disabled={!newComment.trim() || isSubmittingComment}
                                                             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${newComment.trim() && !isSubmittingComment
-                                                                    ? 'bg-[#FF5722] text-white hover:bg-[#E64A19] shadow-sm'
-                                                                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                                ? 'bg-[#FF5722] text-white hover:bg-[#E64A19] shadow-sm'
+                                                                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                                                 }`}
                                                         >
                                                             {isSubmittingComment ? 'Posting...' : replyingTo ? 'Reply' : 'Post Comment'}
@@ -1560,8 +1598,8 @@ const EventBooking: React.FC<EventBookingProps> = ({
                                 onClick={handleJoinWaitlist}
                                 disabled={joinedWaitlist}
                                 className={`px-6 py-3 rounded-full text-white font-medium transition-all ${joinedWaitlist
-                                        ? 'bg-green-500 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-[#FF5722] to-[#FF7A50] hover:shadow-lg active:shadow-inner'
+                                    ? 'bg-green-500 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-[#FF5722] to-[#FF7A50] hover:shadow-lg active:shadow-inner'
                                     }`}
                             >
                                 {joinedWaitlist ? 'Joined Waitlist ✓' : 'Join Waitlist'}
@@ -1800,8 +1838,8 @@ const EventBooking: React.FC<EventBookingProps> = ({
                                                         <button
                                                             onClick={() => setPaymentMethod('card')}
                                                             className={`p-3 rounded-lg border flex items-center justify-center transition-all ${paymentMethod === 'card'
-                                                                    ? 'border-[#FF5722] bg-[#FF5722]/5'
-                                                                    : 'border-gray-200 hover:border-gray-300'
+                                                                ? 'border-[#FF5722] bg-[#FF5722]/5'
+                                                                : 'border-gray-200 hover:border-gray-300'
                                                                 }`}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#FF5722]" viewBox="0 0 20 20" fill="currentColor">
@@ -1814,8 +1852,8 @@ const EventBooking: React.FC<EventBookingProps> = ({
                                                         <button
                                                             onClick={() => setPaymentMethod('crypto')}
                                                             className={`p-3 rounded-lg border flex items-center justify-center transition-all ${paymentMethod === 'crypto'
-                                                                    ? 'border-[#FF5722] bg-[#FF5722]/5'
-                                                                    : 'border-gray-200 hover:border-gray-300'
+                                                                ? 'border-[#FF5722] bg-[#FF5722]/5'
+                                                                : 'border-gray-200 hover:border-gray-300'
                                                                 }`}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#FF5722]" viewBox="0 0 20 20" fill="currentColor">
@@ -2054,7 +2092,7 @@ const EventBooking: React.FC<EventBookingProps> = ({
                         <div className="bg-orange-100 border-l-4 border-orange-500 text-orange-700 p-4 rounded-lg shadow-lg max-w-md">
                             <div className="flex items-center">
                                 <FiAlertCircle className="flex-shrink-0 mr-2" />
-                                <span>Maximum available tickets selected. We've adjusted your quantity to match availability.</span>
+                                <span>Maximum available tickets selected. We&apos;ve adjusted your quantity to match availability.</span>
                             </div>
                         </div>
                     </motion.div>

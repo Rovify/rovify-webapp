@@ -31,7 +31,7 @@ export default function PageLayout({ children }: { children: ReactNode }) {
                 {children}
             </main>
 
-            <BottomNavigation />
+            <BottomNavigation isOrganizer={false} />
         </div>
     );
 }

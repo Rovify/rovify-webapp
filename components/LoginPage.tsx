@@ -12,6 +12,7 @@ import RoviLogo from '@/public/images/contents/rovi-logo.png';
 import GoogleIcon from '@/public/images/icons/google-logo.svg';
 import BaseIcon from '@/public/images/icons/base-logo.png';
 import MetaMaskIcon from '@/public/images/icons/metamask-logo.svg';
+import { getOAuthRedirectUri } from '@/utils/env';
 
 // Define specific types instead of any
 type EncryptedData = string;
@@ -237,13 +238,16 @@ export default function LoginPage() {
 
             // Exchange code for tokens using the backend
             console.log('Exchanging authorization code for tokens...');
+
+            const redirectUri = getOAuthRedirectUri('google');
+
             const response = await fetch('/api/auth/google', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     code,
                     codeVerifier: verifier,
-                    redirectUri: window.location.origin + '/auth/callback'
+                    redirectUri: redirectUri
                 })
             });
 
@@ -271,7 +275,7 @@ export default function LoginPage() {
 
             // Clean URL and redirect
             window.history.replaceState({}, document.title, window.location.pathname);
-            router.push('/');
+            router.push('/home');
         } catch (error) {
             console.error('OAuth callback error:', error);
             setError(error instanceof Error ? error.message : 'Authentication failed. Please try again.');
@@ -359,7 +363,7 @@ export default function LoginPage() {
             console.log('Email login successful, redirecting to home');
 
             // Redirect to home
-            router.push('/');
+            router.push('/home');
         } catch (error) {
             console.error('Email login error:', error);
             setError('Invalid email or password. Please try again.');
@@ -505,7 +509,7 @@ export default function LoginPage() {
                 login(userData);
                 console.log('MetaMask authentication successful, redirecting to home');
 
-                router.push('/');
+                router.push('/home');
             } else {
                 console.error('No MetaMask accounts found');
                 throw new Error('No accounts found');

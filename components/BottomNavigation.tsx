@@ -4,8 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FiHome, FiCompass, FiPlus, FiUser } from 'react-icons/fi';
+import { IoTicket } from "react-icons/io5";
 
-export default function BottomNavigation() {
+interface BottomNavigationProps {
+    isOrganizer?: boolean;
+}
+
+export default function BottomNavigation({ isOrganizer = false }: BottomNavigationProps) {
     const pathname = usePathname();
     const [activeTab, setActiveTab] = useState(pathname);
     const [isVisible, setIsVisible] = useState(true);
@@ -80,6 +85,23 @@ export default function BottomNavigation() {
         }
     }, [pathname]);
 
+    // Calculate tab positions for indicator based on whether create button is shown
+    const getIndicatorPosition = () => {
+        if (isOrganizer) {
+            // With create button (5 items with gap in middle)
+            return activeTab === '/home' ? '10%' :
+                activeTab.includes('/discover') ? '30%' :
+                    activeTab.includes('/tickets') ? '70%' :
+                        activeTab.includes('/profile') ? '90%' : '50%';
+        } else {
+            // Without create button (4 evenly distributed items)
+            return activeTab === '/home' ? '12.5%' :
+                activeTab.includes('/discover') ? '37.5%' :
+                    activeTab.includes('/tickets') ? '62.5%' :
+                        activeTab.includes('/profile') ? '87.5%' : '50%';
+        }
+    };
+
     return (
         <div
             className={`fixed bottom-5 left-0 right-0 z-40 px-3 flex justify-center transition-all duration-300 ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'
@@ -91,20 +113,17 @@ export default function BottomNavigation() {
                 <div
                     className="absolute h-1 w-16 bg-[#FF5722] top-0 rounded-b-md transition-all duration-300"
                     style={{
-                        left: activeTab === '/' ? '10%' :
-                            activeTab.includes('/discover') ? '30%' :
-                                activeTab.includes('/tickets') ? '70%' :
-                                    activeTab.includes('/profile') ? '90%' : '50%',
+                        left: getIndicatorPosition(),
                         transform: 'translateX(-50%)',
                     }}
                 />
 
                 {/* Home */}
                 <Link
-                    href="/"
+                    href="/home"
                     className="flex flex-col items-center justify-center py-3 w-full relative"
                 >
-                    <div className={`p-2 rounded-full transition-all ${activeTab === '/'
+                    <div className={`p-2 rounded-full transition-all ${activeTab === '/home'
                         ? 'text-[#FF5722] bg-[#FF5722]/10'
                         : 'text-gray-500 hover:text-[#FF5722] hover:bg-[#FF5722]/5'
                         }`}>
@@ -131,9 +150,12 @@ export default function BottomNavigation() {
                     </span>
                 </Link>
 
-                <div className="w-full py-3">
-                    <div className="h-14"></div>
-                </div>
+                {/* Middle gap - only shown for organizers */}
+                {isOrganizer && (
+                    <div className="w-full py-3">
+                        <div className="h-14"></div>
+                    </div>
+                )}
 
                 {/* Tickets */}
                 <Link
@@ -144,7 +166,7 @@ export default function BottomNavigation() {
                         ? 'text-[#FF5722] bg-[#FF5722]/10'
                         : 'text-gray-500 hover:text-[#FF5722] hover:bg-[#FF5722]/5'
                         }`}>
-                        <FiCompass className={`w-5 h-5 ${activeTab.includes('/tickets') ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
+                        <IoTicket className={`w-5 h-5 ${activeTab.includes('/tickets') ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
                     </div>
                     <span className={`text-xs mt-1 ${activeTab.includes('/tickets') ? 'font-medium text-[#FF5722]' : 'text-gray-500'}`}>
                         Tickets
@@ -168,30 +190,32 @@ export default function BottomNavigation() {
                 </Link>
             </div>
 
-            {/* Elevated Create Button */}
-            <Link
-                href="/create"
-                className={`absolute z-50 top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
-                    } transition-all duration-300`}
-                aria-label="Create new event"
-            >
-                {/* Shadow/glow effect */}
-                <div className="absolute inset-0 rounded-full bg-[#FF5722]/20 blur-md opacity-80 group-hover:opacity-100 transition-opacity"></div>
+            {/* Elevated Create Button - only shown for organizers */}
+            {isOrganizer && (
+                <Link
+                    href="/create"
+                    className={`absolute z-50 top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-90'
+                        } transition-all duration-300`}
+                    aria-label="Create new event"
+                >
+                    {/* Shadow/glow effect */}
+                    <div className="absolute inset-0 rounded-full bg-[#FF5722]/20 blur-md opacity-80 group-hover:opacity-100 transition-opacity"></div>
 
-                {/* Button bg with gradient */}
-                <div className="relative w-16 h-16 rounded-full bg-gradient-to-r from-[#FF5722] to-[#FF7A50] flex items-center justify-center shadow-lg overflow-hidden group-hover:scale-105 transition-transform">
-                    {/* Subtle animated background */}
-                    <div className="absolute inset-0 opacity-30">
-                        <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 rounded-full bg-white/30 animate-pulse"></div>
+                    {/* Button bg with gradient */}
+                    <div className="relative w-16 h-16 rounded-full bg-gradient-to-r from-[#FF5722] to-[#FF7A50] flex items-center justify-center shadow-lg overflow-hidden group-hover:scale-105 transition-transform">
+                        {/* Subtle animated background */}
+                        <div className="absolute inset-0 opacity-30">
+                            <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 rounded-full bg-white/30 animate-pulse"></div>
+                        </div>
+
+                        {/* Icon */}
+                        <FiPlus className="w-8 h-8 text-white group-hover:rotate-90 transition-transform duration-300" />
                     </div>
 
-                    {/* Icon */}
-                    <FiPlus className="w-8 h-8 text-white group-hover:rotate-90 transition-transform duration-300" />
-                </div>
-
-                {/* Tap effect */}
-                <div className="tap-effect"></div>
-            </Link>
+                    {/* Tap effect */}
+                    <div className="tap-effect"></div>
+                </Link>
+            )}
 
             {/* Custom styles */}
             <style jsx global>{`

@@ -1,8 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import { FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
 import Image from 'next/image';
+import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
 interface PasswordConfirmModalProps {
     email: string;
@@ -71,15 +73,15 @@ export default function PasswordConfirmModal({ email, onConfirmAction, onCancelA
                     <div className="relative">
                         {/* Logo and header */}
                         <div className="flex items-center justify-center mb-6">
-                            <div className="h-12 w-12 bg-[#FF5722] rounded-xl flex items-center justify-center shadow-sm mr-3">
+                            {/* <div className="h-12 w-12 bg-[#FF5722] rounded-xl flex items-center justify-center shadow-sm mr-3">
                                 <Image
-                                    src="/images/contents/rovi-logo.png"
+                                    src={RoviLogo}
                                     alt="Rovify Logo"
                                     width={32}
                                     height={32}
                                     className="object-contain"
                                 />
-                            </div>
+                            </div> */}
                             <div className="text-center">
                                 <h2 className="text-xl font-bold text-gray-800">Security Verification</h2>
                                 <p className="text-sm text-gray-500">One more step to secure your account</p>

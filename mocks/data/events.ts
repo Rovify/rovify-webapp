@@ -25,7 +25,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 75,
             max: 250,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: true,
         totalTickets: 2000,
@@ -60,7 +61,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 299,
             max: 999,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: true,
         totalTickets: 5000,
@@ -95,7 +97,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 150,
             max: 150,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: false,
         totalTickets: 30,
@@ -130,7 +133,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 15,
             max: 25,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: true,
         totalTickets: 1000,
@@ -165,7 +169,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 199,
             max: 599,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: true,
         totalTickets: 1500,
@@ -200,7 +205,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 350,
             max: 650,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: false,
         totalTickets: 50,
@@ -235,7 +241,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 45,
             max: 120,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: true,
         totalTickets: 3000,
@@ -270,7 +277,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 30,
             max: 150,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: true,
         totalTickets: 2500,
@@ -285,7 +293,7 @@ export const mockEvents: Event[] = [
         id: '9',
         title: 'Vintage Car Show',
         description: 'Marvel at pristine classic automobiles from the golden age of motoring at this prestigious exhibition of vintage vehicles.',
-        image: 'https://images.unsplash.com/photo-1532994059561-77629166471a?q=80&w=2070&auto=format&fit=crop',
+        image: 'https://images.unsplash.com/photo-1591293835940-934a7c4f2d9b?q=80&w=2000&auto=format&fit=crop',
         date: new Date('2025-06-28T09:00:00'),
         endDate: new Date('2025-06-29T17:00:00'),
         location: {
@@ -305,7 +313,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 25,
             max: 40,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: false,
         totalTickets: 1200,
@@ -340,7 +349,8 @@ export const mockEvents: Event[] = [
         price: {
             min: 35,
             max: 60,
-            currency: 'USD'
+            currency: 'USD',
+            amount: 0
         },
         hasNftTickets: true,
         totalTickets: 4000,

@@ -1,32 +1,76 @@
-// ⚠️ SECURITY NOTICE: 
-// This localStorage implementation is NOT secure for production:
-// - Vulnerable to XSS attacks (any JS on the page can access tokens)
-// - No automatic expiration without manual checks
-// - No httpOnly flag support (which would prevent JS access)
-// See commented secure implementation below for future reference
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// utils/auth.ts
+'use client';
 
-const TOKEN_KEY = 'rovify-auth-token';
+// Use the same User interface as in AuthContext
+interface User {
+    id: string;
+    name?: string;          // Made optional
+    email?: string;         // Made optional
+    image?: string;
+    walletAddress?: string;
+    baseName?: string;
+    ethName?: string;
+    authMethod: 'email' | 'password' | 'google' | 'base'; // Required enum
+    [key: string]: unknown;
+}
+
+const USER_DATA_KEY = 'rovify-user';
 
 export const authService = {
-    // Check if user is authenticated
+    /**
+     * Check if user is authenticated
+     */
     isAuthenticated(): boolean {
         if (typeof window === 'undefined') return false;
-        return !!localStorage.getItem(TOKEN_KEY);
+        return !!localStorage.getItem(USER_DATA_KEY);
     },
 
-    // Get the auth token
-    getToken(): string | null {
+    /**
+     * Get the user data
+     */
+    getUser(): User | null {
         if (typeof window === 'undefined') return null;
-        return localStorage.getItem(TOKEN_KEY);
+        const userData = localStorage.getItem(USER_DATA_KEY);
+        if (!userData) return null;
+
+        try {
+            const parsedUser = JSON.parse(userData) as User;
+
+            // Validate essential user properties
+            if (!parsedUser.id || !parsedUser.authMethod) {
+                console.error('🔐 AUTH ERROR: Invalid user data structure');
+                this.logout();
+                return null;
+            }
+
+            return parsedUser;
+        } catch (error) {
+            console.error('🔐 AUTH ERROR: Failed to parse user data');
+            this.logout();
+            return null;
+        }
     },
 
-    // Set the auth token
-    login(token: string): void {
-        localStorage.setItem(TOKEN_KEY, token);
+    /**
+     * Login - store user data
+     */
+    login(userData: User): void {
+        // Ensure required fields are present
+        if (!userData.id || !userData.authMethod) {
+            console.error('🔐 AUTH ERROR: Missing required user data fields');
+            throw new Error('Invalid user data');
+        }
+
+        console.log('🔐 AUTH: Storing user data', userData.email || userData.walletAddress || userData.id);
+        localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
     },
 
-    // Remove the auth token
+    /**
+     * Logout - remove user data
+     */
     logout(): void {
-        localStorage.removeItem(TOKEN_KEY);
+        console.log('🔐 AUTH: Clearing user data');
+        localStorage.removeItem(USER_DATA_KEY);
     }
 };

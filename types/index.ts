@@ -9,7 +9,9 @@ export type EventCategory =
     | 'FILM'
     | 'AUTOMOTIVE'
     | 'TECHNOLOGY'
-    | 'FOOD';
+    | 'FOOD'
+    | 'OUTDOOR'
+    | 'WELLNESS';
 
 export interface Location {
     name: string;
@@ -29,6 +31,7 @@ export interface Organizer {
 }
 
 export interface Price {
+    amount: number;
     min: number;
     max: number;
     currency: string;
@@ -50,7 +53,7 @@ export interface Event {
     totalTickets: number;
     soldTickets: number;
     tags: string[];
-    attendees: string[]; // User IDs
+    attendees: string[];
     likes: number;
     comments: number;
     shares: number;
@@ -72,15 +75,16 @@ export interface User {
     email: string;
     image: string;
     bio: string;
-    interests: string[]; // Event categories
+    interests: string[];
     followers: number;
     following: number;
     walletAddress: string;
-    savedEvents: string[]; // Event IDs
-    attendedEvents: string[]; // Event IDs
-    createdEvents: string[]; // Event IDs
+    savedEvents: string[];
+    attendedEvents: string[];
+    createdEvents: string[];
     preferences: UserPreferences;
     verified: boolean;
+    [key: string]: unknown; // Allowing additional properties
 }
 
 // Ticket Types
@@ -146,4 +150,24 @@ export interface Web3Config {
     contractAddress: string;
     rpcUrl: string;
     explorer: string;
+}
+
+export type BasicUser = Pick<User, 'id' | 'name' | 'email' | 'image'>;
+
+export interface Session {
+    user: BasicUser;
+    expires: string;
+    accessToken?: string;
+}
+
+export interface Window {
+    ethereum?: {
+        isMetaMask?: boolean;
+        isCoinbaseWallet?: boolean;
+        isBase?: boolean;
+        request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+        on: (eventName: string, callback: (...args: unknown[]) => void) => void;
+        removeListener: (eventName: string, callback: (...args: unknown[]) => void) => void;
+        chainId?: string;
+    }
 }

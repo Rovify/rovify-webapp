@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+import RoviLogo from '@/public/images/contents/rovi-logo.png';
 import { useAuth } from '@/components/LoginPage';
 import PasswordConfirmModal from '@/components/PasswordConfirmModal';
 
@@ -190,7 +191,7 @@ export default function AuthCallbackPage() {
                         <div className="absolute inset-0 bg-gradient-to-br from-[#FF5722] to-[#FF7A50]"></div>
                         <div className="relative z-10">
                             <Image
-                                src="/images/contents/rovi-logo.png"
+                                src={RoviLogo}
                                 alt="Rovify Logo"
                                 width={40}
                                 height={40}

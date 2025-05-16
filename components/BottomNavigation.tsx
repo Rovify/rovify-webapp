@@ -108,9 +108,9 @@ export default function BottomNavigation() {
                         ? 'text-[#FF5722] bg-[#FF5722]/10'
                         : 'text-gray-500 hover:text-[#FF5722] hover:bg-[#FF5722]/5'
                         }`}>
-                        <FiHome className={`w-5 h-5 ${activeTab === '/' ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
+                        <FiHome className={`w-5 h-5 ${activeTab === '/home' ? 'stroke-[2.5]' : 'stroke-[1.5]'}`} />
                     </div>
-                    <span className={`text-xs mt-1 ${activeTab === '/' ? 'font-medium text-[#FF5722]' : 'text-gray-500'}`}>
+                    <span className={`text-xs mt-1 ${activeTab === '/home' ? 'font-medium text-[#FF5722]' : 'text-gray-500'}`}>
                         Home
                     </span>
                 </Link>

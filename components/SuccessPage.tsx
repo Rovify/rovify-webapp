@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -307,9 +308,9 @@ export default function SuccessPage({ type = 'general' }: SuccessPageProps) {
                 </div>
             </motion.div>
 
-            <div className="fixed bottom-5 w-full z-20">
+            {/* <div className="fixed bottom-5 w-full z-20">
                 <BottomNavigation />
-            </div>
+            </div> */}
 
             <style jsx global>{`
                 @keyframes confettiDrop {

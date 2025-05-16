@@ -3,14 +3,18 @@
 
 import { useEffect } from 'react';
 import Image from 'next/image';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuthOptions } from '@/hooks/useAuthOptions';
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
 export default function RootPage() {
-  const { isLoading } = useAuth({
-    redirectIfAuthenticated: '/discover',
+  const { isLoading } = useAuthOptions({
+    redirectIfAuthenticated: '/home',
     redirectIfUnauthenticated: '/auth/login'
   });
+
+  useEffect(() => {
+    console.log('ROOT: Page rendered');
+  }, []);
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white">

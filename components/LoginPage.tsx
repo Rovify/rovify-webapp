@@ -7,8 +7,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useBaseAuth } from '@/hooks/useBaseAuth';
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
 import GoogleIcon from '@/public/images/icons/google-logo.svg';
+import BaseIcon from '@/public/images/icons/base-logo.png';
 import MetaMaskIcon from '@/public/images/icons/metamask-logo.svg';
 
 // Define specific types instead of any
@@ -43,7 +45,8 @@ export type AuthUser = {
     name?: string;
     profilePicture?: string;
     walletAddress?: string;
-    authMethod: 'email' | 'google' | 'metamask';
+    baseName?: string;
+    authMethod: 'email' | 'google' | 'metamask' | 'base';
     expiresAt: number;
 };
 
@@ -78,7 +81,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: userData.id,
             authMethod: userData.authMethod,
             email: userData.email || 'N/A',
-            walletAddress: userData.walletAddress || 'N/A'
+            walletAddress: userData.walletAddress || 'N/A',
+            baseName: userData.baseName || 'N/A'
         });
 
         // Encrypt and store in localStorage
@@ -190,12 +194,16 @@ export default function LoginPage() {
     // Use the auth context
     const { login } = useAuth();
 
+    // Use Base authentication hook
+    const { authenticateWithBase, isLoading: isBaseLoading, error: baseError } = useBaseAuth();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
+    const [walletAvailable, setWalletAvailable] = useState(false);
 
     // Store auth challenge state
     const [metaMaskChallenge, setMetaMaskChallenge] = useState('');
@@ -272,14 +280,19 @@ export default function LoginPage() {
         }
     }, [login, router]);
 
-    // Check for OAuth callback parameters and handle MetaMask
+    // Check for OAuth callback parameters and handle wallet detection
     useEffect(() => {
         const initAuth = () => {
             console.log('Initializing login page...');
 
             if (typeof window !== 'undefined') {
-                // Check for MetaMask
-                const hasMetaMask = !!window.ethereum;
+                // Check for wallet availability
+                const hasWallet = !!window.ethereum;
+                setWalletAvailable(hasWallet);
+                console.log('Wallet available:', hasWallet);
+
+                // Check for MetaMask specifically
+                const hasMetaMask = !!window.ethereum?.isMetaMask;
                 setIsMetaMaskInstalled(hasMetaMask);
                 console.log('MetaMask available:', hasMetaMask);
 
@@ -403,6 +416,21 @@ export default function LoginPage() {
             console.error('Google auth error:', error);
             setError(error instanceof Error ? error.message : 'Google authentication failed. Please try again.');
             setIsLoading(false);
+        }
+    };
+
+    // Handle Base login
+    const handleBaseLogin = async () => {
+        try {
+            // Use the hook for Base authentication
+            const result = await authenticateWithBase('/home');
+
+            if (!result.success && baseError) {
+                setError(baseError);
+            }
+        } catch (error) {
+            console.error('Base authentication error:', error);
+            setError(error instanceof Error ? error.message : 'Failed to authenticate with Base');
         }
     };
 
@@ -610,10 +638,10 @@ export default function LoginPage() {
                             {/* Submit button */}
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isLoading || isBaseLoading}
                                 className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-[#FF5722] to-[#FF7A50] text-white font-medium shadow-lg hover:shadow-xl transform transition-all hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:ring-opacity-50 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
-                                {isLoading ? (
+                                {isLoading || isBaseLoading ? (
                                     <>
                                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -639,16 +667,36 @@ export default function LoginPage() {
                         </div>
 
                         <div className="mt-4 flex justify-center gap-3">
+                            {/* Google login button */}
                             <button
                                 onClick={handleGoogleLogin}
-                                disabled={isLoading}
+                                disabled={isLoading || isBaseLoading}
                                 className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 <Image src={GoogleIcon} alt="Google" width={20} height={20} />
                             </button>
+
+                            {/* Base login button - only show if wallet is available */}
+                            {walletAvailable && (
+                                <button
+                                    onClick={handleBaseLogin}
+                                    disabled={isLoading || isBaseLoading}
+                                    className="neumorph-button flex justify-center items-center gap-2 py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    {/* <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20Z" fill="#0052FF" />
+                                        <path d="M12 7L7 12L12 17L17 12L12 7Z" fill="#0052FF" />
+                                    </svg>
+                                    <span className="ml-1 text-sm font-medium">Base</span> */}
+                                    <Image src={BaseIcon} alt="Base" width={20} height={20} />
+                                    <span className="ml-1 text-sm font-medium">Base</span>
+                                </button>
+                            )}
+
+                            {/* You can uncomment the MetaMask button if you want to keep it */}
                             {/* <button
                                 onClick={handleMetaMaskLogin}
-                                disabled={isLoading || !isMetaMaskInstalled}
+                                disabled={isLoading || isBaseLoading || !isMetaMaskInstalled}
                                 className="neumorph-button flex justify-center items-center py-2.5 px-6 rounded-xl bg-white hover:bg-gray-50 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
                                 title={!isMetaMaskInstalled ? "MetaMask not installed" : "Login with MetaMask"}
                             >

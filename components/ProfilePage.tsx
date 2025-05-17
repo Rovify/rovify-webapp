@@ -12,7 +12,7 @@ import EventCard from './EventCard';
 import EventCardSkeleton from './skeletons/EventCardSkeleton';
 import ProfileSkeleton from './skeletons/ProfileSkeleton';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
+import BottomNavigation from '@/components/SideNavigation';
 import { FiEdit2, FiLogOut, FiCheck, FiX, FiCalendar, FiMessageSquare, FiClock, FiAlertCircle, FiRefreshCcw, FiExternalLink, FiCopy, FiArrowRight, FiSettings, FiBell, FiHeart, FiUser, FiLink } from 'react-icons/fi';
 import { FaBell, FaEthereum, FaCamera } from "react-icons/fa";
 import { IoTicket } from "react-icons/io5";

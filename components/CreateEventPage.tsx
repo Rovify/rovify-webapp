@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { getCurrentUser } from '@/mocks/data/users';
 import { EventCategory, User } from '@/types';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
+import BottomNavigation from '@/components/SideNavigation';
 import { FiChevronLeft } from 'react-icons/fi';
 
 // Form types

@@ -1,10 +1,18 @@
+// context/UIContext.tsx
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface UIContextType {
     isBottomNavVisible: boolean;
     setBottomNavVisible: (visible: boolean) => void;
+    isMobile: boolean;
+    isTablet: boolean;
+    isDesktop: boolean;
+    showSideNav: boolean;
+    showHeader: boolean;
+    toggleSideNav: () => void;
+    toggleHeader: () => void;
     isModalOpen: boolean;
     setModalOpen: (open: boolean) => void;
     activeModal: string | null;
@@ -15,9 +23,43 @@ interface UIContextType {
 const UIContext = createContext<UIContextType | undefined>(undefined);
 
 export function UIProvider({ children }: { children: ReactNode }) {
+    // Device detection
+    const [isMobile, setIsMobile] = useState(false);
+    const [isTablet, setIsTablet] = useState(false);
+    const [isDesktop, setIsDesktop] = useState(true);
+
+    // Navigation visibility states
+    const [showSideNav, setShowSideNav] = useState(true);
+    const [showHeader, setShowHeader] = useState(true);
+
     const [isBottomNavVisible, setBottomNavVisible] = useState(true);
     const [isModalOpen, setModalOpen] = useState(false);
     const [activeModal, setActiveModal] = useState<string | null>(null);
+
+    // Handle screen resize and detect device type
+    useEffect(() => {
+        const handleResize = () => {
+            const width = window.innerWidth;
+            setIsMobile(width < 768);
+            setIsTablet(width >= 768 && width < 1024);
+            setIsDesktop(width >= 1024);
+
+            // Auto-adjust navigation based on screen size
+            // On mobile, we might want to hide the side nav by default
+            setShowSideNav(width >= 768);
+        };
+
+        // Set initial values
+        handleResize();
+
+        // Add event listener
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // Toggle functions
+    const toggleSideNav = () => setShowSideNav(prev => !prev);
+    const toggleHeader = () => setShowHeader(prev => !prev);
 
     const openModal = (modalId: string) => {
         setActiveModal(modalId);
@@ -33,6 +75,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
     return (
         <UIContext.Provider value={{
+            isMobile, isTablet, isDesktop,
+            showSideNav, showHeader,
+            toggleSideNav, toggleHeader,
             isBottomNavVisible,
             setBottomNavVisible,
             isModalOpen,
@@ -46,10 +91,11 @@ export function UIProvider({ children }: { children: ReactNode }) {
     );
 }
 
-export const useUI = () => {
+// Hook for using the UI context
+export function useUI() {
     const context = useContext(UIContext);
     if (context === undefined) {
         throw new Error('useUI must be used within a UIProvider');
     }
     return context;
-};
+}

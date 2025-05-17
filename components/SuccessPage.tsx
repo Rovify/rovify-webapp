@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FiCalendar, FiTag, FiUser, FiCheck, FiChevronRight, FiShare2 } from 'react-icons/fi';
-import BottomNavigation from '@/components/BottomNavigation';
+import BottomNavigation from '@/components/SideNavigation';
 
 type SuccessType = 'event' | 'ticket' | 'profile' | 'general';
 

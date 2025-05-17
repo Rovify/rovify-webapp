@@ -1,3 +1,5 @@
+import { StaticImport } from "next/dist/shared/lib/get-img-props";
+
 // Event Types
 export type EventCategory =
     | 'MUSIC'
@@ -38,6 +40,9 @@ export interface Price {
 }
 
 export interface Event {
+    popularity?: any;
+    venue?: any;
+    imageUrl?: string | StaticImport;
     id: string;
     title: string;
     description: string;

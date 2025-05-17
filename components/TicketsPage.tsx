@@ -11,7 +11,7 @@ import { getUserTickets } from '@/mocks/data/tickets';
 import { getEventById } from '@/mocks/data/events';
 import { getCurrentUser } from '@/mocks/data/users';
 import { Ticket, Event, User } from '@/types';
-import BottomNavigation from '@/components/BottomNavigation';
+import BottomNavigation from '@/components/SideNavigation';
 import Header from '@/components/Header';
 
 export default function TicketsPage() {

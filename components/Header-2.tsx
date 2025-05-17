@@ -9,19 +9,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     FiSearch, FiBell, FiMenu, FiX, FiCalendar, FiMapPin,
     FiClock, FiArrowRight, FiHash, FiBookmark, FiChevronRight,
-    FiHome, FiCompass, FiUser, FiHeart, FiMessageSquare
+    FiHome, FiCompass, FiUser, FiHeart, FiMessageSquare,
+    FiGlobe, FiWifi, FiZap, FiShield, FiAlertCircle
 } from 'react-icons/fi';
-import { BsCameraVideoFill, BsMusicNote } from "react-icons/bs";
+import { BsCameraVideoFill, BsMusicNote, BsLightningCharge } from "react-icons/bs";
 import { IoTicket } from "react-icons/io5";
+import { MdCelebration } from "react-icons/md";
+import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { usePathname } from 'next/navigation';
 import { getCurrentUser } from '@/mocks/data/users';
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
 interface LiveNotification {
     id: string;
-    type: 'event' | 'friend' | 'message' | 'like' | 'ticket' | 'reminder';
+    type: 'event' | 'friend' | 'message' | 'like' | 'ticket' | 'reminder' | 'nearby' | 'trending' | 'exclusive';
     content: string;
     timestamp: number;
+    actionUrl?: string;
+    actionLabel?: string;
 }
 
 interface User {
@@ -31,11 +36,20 @@ interface User {
     verified: boolean;
 }
 
-interface HeaderProps {
-    isSidebarExpanded?: boolean;
+interface GeoLocation {
+    city: string;
+    region: string;
+    country: string;
+    loading: boolean;
+    error: string | null;
 }
 
-export default function Header({ isSidebarExpanded = false }: HeaderProps) {
+interface HeaderProps {
+    isSidebarExpanded?: boolean;
+    onLocationUpdate?: (location: string) => void;
+}
+
+export default function Header({ isSidebarExpanded = false, onLocationUpdate }: HeaderProps) {
     const [scrolled, setScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
@@ -43,6 +57,15 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobile, setIsMobile] = useState(false);
     const [activeTab, setActiveTab] = useState('for-you');
+
+    // Geolocation state
+    const [userLocation, setUserLocation] = useState<GeoLocation>({
+        city: 'Nairobi',
+        region: 'Nairobi',
+        country: 'KE',
+        loading: true,
+        error: null
+    });
 
     // Live notification center state
     const [liveNotifications, setLiveNotifications] = useState<LiveNotification[]>([
@@ -54,6 +77,7 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
         }
     ]);
     const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
+    const [notificationHovered, setNotificationHovered] = useState(false);
     const notificationIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -67,16 +91,76 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
 
     // Sample incoming notifications for simulation
     const possibleNotifications: Omit<LiveNotification, 'id' | 'timestamp'>[] = [
-        { type: 'friend', content: 'Chloe just arrived to the party' },
-        { type: 'friend', content: 'Alex is now attending Tech Summit 2025' },
-        { type: 'event', content: 'Summer Festival 2025 starts in 3 hours' },
-        { type: 'message', content: 'New message from Sarah about the event' },
-        { type: 'like', content: 'Jamie liked your RSVP to Crypto Meetup' },
-        { type: 'ticket', content: 'Your NFT tickets for Neon Nights are ready' },
-        { type: 'event', content: 'Startup pitch competition is trending now' },
-        { type: 'reminder', content: 'Mindfulness Retreat starts tomorrow' },
-        { type: 'friend', content: 'Miguel and 3 others joined Web3 Hackathon' },
-        { type: 'message', content: 'Event organizer sent you important details' }
+        {
+            type: 'friend',
+            content: 'Chloe just arrived to the party'
+        },
+        {
+            type: 'friend',
+            content: 'Alex is now attending Tech Summit 2025'
+        },
+        {
+            type: 'event',
+            content: 'Summer Festival 2025 starts in 3 hours',
+            actionUrl: '/events/summer-festival-2025',
+            actionLabel: 'View Details'
+        },
+        {
+            type: 'message',
+            content: 'New message from Sarah about the event',
+            actionUrl: '/messages/sarah',
+            actionLabel: 'Reply'
+        },
+        {
+            type: 'like',
+            content: 'Jamie liked your RSVP to Crypto Meetup'
+        },
+        {
+            type: 'ticket',
+            content: 'Your NFT tickets for Neon Nights are ready',
+            actionUrl: '/tickets/neon-nights',
+            actionLabel: 'View Tickets'
+        },
+        {
+            type: 'event',
+            content: 'Startup pitch competition is trending now',
+            actionUrl: '/events/startup-pitch',
+            actionLabel: 'Get Tickets'
+        },
+        {
+            type: 'reminder',
+            content: 'Mindfulness Retreat starts tomorrow',
+            actionUrl: '/events/mindfulness-retreat',
+            actionLabel: 'Set Reminder'
+        },
+        {
+            type: 'friend',
+            content: 'Miguel and 3 others joined Web3 Hackathon'
+        },
+        {
+            type: 'message',
+            content: 'Event organizer sent you important details',
+            actionUrl: '/messages/organizer',
+            actionLabel: 'Read Message'
+        },
+        {
+            type: 'nearby',
+            content: 'New jazz event happening near you tonight',
+            actionUrl: '/events/jazz-night',
+            actionLabel: 'View Event'
+        },
+        {
+            type: 'trending',
+            content: 'Crypto Workshop is trending in your area',
+            actionUrl: '/events/crypto-workshop',
+            actionLabel: 'Learn More'
+        },
+        {
+            type: 'exclusive',
+            content: 'Exclusive NFT drop for premium members',
+            actionUrl: '/nft/premium-drop',
+            actionLabel: 'Claim Now'
+        }
     ];
 
     // Mock notifications data for the dropdown
@@ -138,22 +222,107 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
 
     const navigationTabs = [
         { id: 'for-you', label: 'For you', href: '/home' },
-        { id: 'nearby', label: 'Nearby', href: '/near-me' },
-        { id: 'friends', label: 'Friends', href: '/rovies' }
+        { id: 'nearby', label: 'Nearby', href: '/discover?filter=nearby' },
+        { id: 'friends', label: 'Friends', href: '/discover?filter=friends' }
     ];
 
-    // Add this useEffect to synchronize activeTab with the current pathname
+    // Get browser location
     useEffect(() => {
-        if (pathname === '/home') {
-            setActiveTab('for-you');
-        } else if (pathname.includes('/near-me')
-            // && pathname.includes('filter=nearby')
-        ) {
-            setActiveTab('nearby');
-        } else if (pathname === '/rovies') {
-            setActiveTab('friends');
-        }
-    }, [pathname]);
+        const getUserLocation = async () => {
+            // First try to get user location via browser geolocation
+            if (navigator.geolocation) {
+                try {
+                    navigator.geolocation.getCurrentPosition(
+                        async (position) => {
+                            try {
+                                // Reverse geocode the coordinates to get city/region
+                                const { latitude, longitude } = position.coords;
+                                const response = await fetch(
+                                    `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                                );
+
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    setUserLocation({
+                                        city: data.city || data.locality || 'Unknown',
+                                        region: data.principalSubdivision || '',
+                                        country: data.countryCode || 'Unknown',
+                                        loading: false,
+                                        error: null
+                                    });
+
+                                    // Pass location up to parent component if needed
+                                    if (onLocationUpdate) {
+                                        onLocationUpdate(data.city || data.locality || 'Unknown');
+                                    }
+
+                                    // Add a location-based notification
+                                    const locationNotification = {
+                                        id: `location-${Date.now()}`,
+                                        type: 'nearby' as const,
+                                        content: `Discovered events near ${data.city || data.locality || 'your location'}`,
+                                        timestamp: Date.now(),
+                                        actionUrl: '/discover?filter=nearby',
+                                        actionLabel: 'Explore Nearby'
+                                    };
+
+                                    setLiveNotifications(prev => [locationNotification, ...prev]);
+                                } else {
+                                    fallbackToIPLocation();
+                                }
+                            } catch (error) {
+                                fallbackToIPLocation();
+                            }
+                        },
+                        (error) => {
+                            console.log("Geolocation error:", error);
+                            fallbackToIPLocation();
+                        }
+                    );
+                } catch (error) {
+                    fallbackToIPLocation();
+                }
+            } else {
+                fallbackToIPLocation();
+            }
+        };
+
+        // Fallback to IP-based geolocation
+        const fallbackToIPLocation = async () => {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                if (response.ok) {
+                    const data = await response.json();
+                    setUserLocation({
+                        city: data.city || 'Unknown',
+                        region: data.region || '',
+                        country: data.country_code || 'Unknown',
+                        loading: false,
+                        error: null
+                    });
+
+                    // Pass location up to parent component if needed
+                    if (onLocationUpdate) {
+                        onLocationUpdate(data.city || 'Unknown');
+                    }
+                } else {
+                    setUserLocation(prev => ({
+                        ...prev,
+                        loading: false,
+                        error: 'Could not determine location'
+                    }));
+                }
+            } catch (error) {
+                setUserLocation(prev => ({
+                    ...prev,
+                    loading: false,
+                    error: 'Could not determine location'
+                }));
+            }
+        };
+
+        getUserLocation();
+    }, [onLocationUpdate]);
 
     // Add a simulated notification at random intervals
     useEffect(() => {
@@ -181,12 +350,12 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
         const timeout = setupNextNotification();
 
         return () => clearTimeout(timeout);
-    }, [liveNotifications, possibleNotifications]);
+    }, [liveNotifications]);
 
-    // Rotate through notifications every few seconds
+    // Rotate through notifications every few seconds, but pause on hover
     useEffect(() => {
-        // Only rotate if we have multiple notifications
-        if (liveNotifications.length > 1) {
+        // Only rotate if we have multiple notifications and not being hovered
+        if (liveNotifications.length > 1 && !notificationHovered) {
             notificationIntervalRef.current = setInterval(() => {
                 setCurrentNotificationIndex(prev =>
                     prev === liveNotifications.length - 1 ? 0 : prev + 1
@@ -199,7 +368,7 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                 clearInterval(notificationIntervalRef.current);
             }
         };
-    }, [liveNotifications.length]);
+    }, [liveNotifications.length, notificationHovered]);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -293,6 +462,12 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                 return <IoTicket className="w-4 h-4 text-amber-500" />;
             case 'reminder':
                 return <FiClock className="w-4 h-4 text-indigo-500" />;
+            case 'nearby':
+                return <FiMapPin className="w-4 h-4 text-emerald-500" />;
+            case 'trending':
+                return <BsLightningCharge className="w-4 h-4 text-orange-500" />;
+            case 'exclusive':
+                return <MdCelebration className="w-4 h-4 text-violet-500" />;
             default:
                 return <FiBell className="w-4 h-4 text-gray-500" />;
         }
@@ -313,6 +488,12 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                 return 'bg-amber-50 border-amber-100';
             case 'reminder':
                 return 'bg-indigo-50 border-indigo-100';
+            case 'nearby':
+                return 'bg-emerald-50 border-emerald-100';
+            case 'trending':
+                return 'bg-orange-50 border-orange-100';
+            case 'exclusive':
+                return 'bg-violet-50 border-violet-100';
             default:
                 return 'bg-gray-50 border-gray-100';
         }
@@ -333,8 +514,40 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                 return 'text-amber-700';
             case 'reminder':
                 return 'text-indigo-700';
+            case 'nearby':
+                return 'text-emerald-700';
+            case 'trending':
+                return 'text-orange-700';
+            case 'exclusive':
+                return 'text-violet-700';
             default:
                 return 'text-gray-700';
+        }
+    };
+
+    // Get notification gradient based on type (for visual flourish)
+    const getNotificationGradient = (type: LiveNotification['type']) => {
+        switch (type) {
+            case 'event':
+                return 'from-blue-500/10 to-blue-500/5';
+            case 'friend':
+                return 'from-green-500/10 to-green-500/5';
+            case 'message':
+                return 'from-purple-500/10 to-purple-500/5';
+            case 'like':
+                return 'from-red-500/10 to-red-500/5';
+            case 'ticket':
+                return 'from-amber-500/10 to-amber-500/5';
+            case 'reminder':
+                return 'from-indigo-500/10 to-indigo-500/5';
+            case 'nearby':
+                return 'from-emerald-500/10 to-emerald-500/5';
+            case 'trending':
+                return 'from-orange-500/10 to-orange-500/5';
+            case 'exclusive':
+                return 'from-violet-500/10 to-violet-500/5';
+            default:
+                return 'from-gray-500/10 to-gray-500/5';
         }
     };
 
@@ -348,6 +561,13 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
 
     // Get the current notification to display
     const currentNotification = liveNotifications[currentNotificationIndex];
+
+    // Format location for display
+    const formattedLocation = userLocation.loading
+        ? 'Locating...'
+        : userLocation.error
+            ? 'Location'
+            : userLocation.city;
 
     return (
         <header
@@ -404,7 +624,7 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                     </div>
                 </div>
 
-                {/* Notification Center - Desktop Only */}
+                {/* Advanced Notification Center - Desktop Only */}
                 <div className="hidden lg:block absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 min-w-[240px] z-10">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -418,24 +638,61 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                 damping: 30,
                                 duration: 0.4
                             }}
-                            className={`px-3 py-1.5 ${getNotificationBgColor(currentNotification.type)} border rounded-full flex items-center shadow-sm`}
+                            onHoverStart={() => setNotificationHovered(true)}
+                            onHoverEnd={() => setNotificationHovered(false)}
+                            className={`px-4 py-2 ${getNotificationBgColor(currentNotification.type)} border rounded-xl flex items-center shadow-sm overflow-hidden relative group`}
                         >
-                            <div className="w-5 h-5 rounded-full flex items-center justify-center mr-2">
-                                {getNotificationIcon(currentNotification.type)}
-                            </div>
-                            <span className={`text-xs font-medium ${getNotificationTextColor(currentNotification.type)}`}>
-                                {currentNotification.content}
-                            </span>
+                            {/* Subtle background gradient */}
+                            <div className={`absolute inset-0 bg-gradient-to-r ${getNotificationGradient(currentNotification.type)} group-hover:opacity-75 transition-opacity`}></div>
 
-                            {/* Animated progress bar */}
-                            <div className="ml-2 w-8 h-1 bg-gray-200 rounded-full overflow-hidden">
-                                <motion.div
-                                    className="h-full bg-gray-400"
-                                    initial={{ width: "0%" }}
-                                    animate={{ width: "100%" }}
-                                    transition={{ duration: 6, ease: "linear" }}
-                                />
+                            {/* Icon with glow effect */}
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center mr-3 relative z-10">
+                                <div className="absolute inset-0 rounded-full blur-sm opacity-30 group-hover:opacity-60 transition-opacity" style={{ backgroundColor: getNotificationTextColor(currentNotification.type).replace('text-', 'bg-').replace('-700', '-400') }}></div>
+                                <div className="relative">
+                                    {getNotificationIcon(currentNotification.type)}
+                                </div>
                             </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0 relative z-10">
+                                <span className={`text-sm font-medium ${getNotificationTextColor(currentNotification.type)}`}>
+                                    {currentNotification.content}
+                                </span>
+
+                                {/* Action button that appears on hover if available */}
+                                <AnimatePresence>
+                                    {notificationHovered && currentNotification.actionUrl && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 5 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="mt-1"
+                                        >
+                                            <Link
+                                                href={currentNotification.actionUrl}
+                                                className={`text-xs font-medium inline-flex items-center ${getNotificationTextColor(currentNotification.type)}`}
+                                            >
+                                                {currentNotification.actionLabel || 'View'}
+                                                <FiChevronRight className="w-3 h-3 ml-1" />
+                                            </Link>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Animated progress bar (only visible when not hovered) */}
+                            {!notificationHovered && (
+                                <div className="ml-2 w-10 h-1 bg-gray-200 rounded-full overflow-hidden relative z-10">
+                                    <motion.div
+                                        className="h-full"
+                                        style={{ backgroundColor: getNotificationTextColor(currentNotification.type).replace('text-', 'bg-').replace('-700', '-500') }}
+                                        initial={{ width: "0%" }}
+                                        animate={{ width: "100%" }}
+                                        transition={{ duration: 6, ease: "linear" }}
+                                    />
+                                </div>
+                            )}
                         </motion.div>
                     </AnimatePresence>
 
@@ -536,6 +793,39 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                             </div>
                                         </div>
 
+                                        {/* Location-based searches */}
+                                        {!userLocation.loading && !userLocation.error && (
+                                            <div className="mt-4 pt-3 border-t border-gray-100">
+                                                <h3 className="text-sm font-medium text-gray-700 mb-2">Near {userLocation.city}</h3>
+                                                <div className="space-y-2">
+                                                    <Link
+                                                        href={`/discover?location=${userLocation.city}&category=music`}
+                                                        className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-50 text-left text-sm text-gray-700 transition-colors"
+                                                        onClick={() => setShowSearch(false)}
+                                                    >
+                                                        <BsMusicNote className="w-4 h-4 mr-2 text-[#FF5722]" />
+                                                        <span>Music events in {userLocation.city}</span>
+                                                    </Link>
+                                                    <Link
+                                                        href={`/discover?location=${userLocation.city}&free=true`}
+                                                        className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-50 text-left text-sm text-gray-700 transition-colors"
+                                                        onClick={() => setShowSearch(false)}
+                                                    >
+                                                        <RiMoneyDollarCircleLine className="w-4 h-4 mr-2 text-[#FF5722]" />
+                                                        <span>Free events near me</span>
+                                                    </Link>
+                                                    <Link
+                                                        href={`/discover?location=${userLocation.city}&filter=this-weekend`}
+                                                        className="flex items-center w-full px-3 py-2 rounded-lg hover:bg-gray-50 text-left text-sm text-gray-700 transition-colors"
+                                                        onClick={() => setShowSearch(false)}
+                                                    >
+                                                        <FiCalendar className="w-4 h-4 mr-2 text-[#FF5722]" />
+                                                        <span>Events this weekend</span>
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        )}
+
                                         {/* Advanced Search Link */}
                                         <div className="mt-4 pt-3 border-t border-gray-100">
                                             <Link
@@ -551,6 +841,37 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                 </motion.div>
                             )}
                         </AnimatePresence>
+                    </div>
+
+                    {/* Location Indicator */}
+                    <div className="relative">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`h-10 hidden sm:flex items-center gap-2 px-3 rounded-lg border transition-all duration-200 ${userLocation.loading
+                                ? 'bg-gray-50 border-gray-200 text-gray-400'
+                                : userLocation.error
+                                    ? 'bg-red-50 border-red-100 text-red-600'
+                                    : 'bg-emerald-50 border-emerald-100 text-emerald-600'
+                                }`}
+                        >
+                            {userLocation.loading ? (
+                                <>
+                                    <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                                    <span className="text-sm font-medium">Locating...</span>
+                                </>
+                            ) : userLocation.error ? (
+                                <>
+                                    <FiAlertCircle className="w-4 h-4" />
+                                    <span className="text-sm font-medium">Location</span>
+                                </>
+                            ) : (
+                                <>
+                                    <FiMapPin className="w-4 h-4" />
+                                    <span className="text-sm font-medium">{userLocation.city}</span>
+                                </>
+                            )}
+                        </motion.button>
                     </div>
 
                     {isLoading ? (
@@ -591,8 +912,53 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                                 </Link>
                                             </div>
 
+                                            {/* Live Notifications Stream */}
+                                            <div className="bg-gray-50 border-b border-gray-100 p-3">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wider">Live Updates</h4>
+                                                    <span className="flex items-center text-xs text-green-600">
+                                                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                                                        Active
+                                                    </span>
+                                                </div>
+
+                                                <div className="h-16 overflow-hidden relative">
+                                                    <AnimatePresence>
+                                                        {liveNotifications.slice(0, 3).map((notification, index) => (
+                                                            <motion.div
+                                                                key={notification.id}
+                                                                initial={{ opacity: 0, y: 20 }}
+                                                                animate={{
+                                                                    opacity: 1,
+                                                                    y: index * 22,
+                                                                    scale: 1 - (index * 0.05)
+                                                                }}
+                                                                exit={{ opacity: 0, y: -20 }}
+                                                                className={`absolute left-0 right-0 ${index > 0 ? 'pointer-events-none' : ''}`}
+                                                                style={{ zIndex: 10 - index }}
+                                                            >
+                                                                <div className={`flex items-center text-xs py-1 px-2 rounded ${index === 0
+                                                                    ? getNotificationBgColor(notification.type)
+                                                                    : 'bg-white/80 border border-gray-100'
+                                                                    }`}>
+                                                                    <span className="w-4 h-4 flex-shrink-0 mr-1.5">
+                                                                        {getNotificationIcon(notification.type)}
+                                                                    </span>
+                                                                    <span className={`truncate ${index === 0
+                                                                        ? getNotificationTextColor(notification.type)
+                                                                        : 'text-gray-500'
+                                                                        }`}>
+                                                                        {notification.content}
+                                                                    </span>
+                                                                </div>
+                                                            </motion.div>
+                                                        ))}
+                                                    </AnimatePresence>
+                                                </div>
+                                            </div>
+
                                             {/* Notifications List */}
-                                            <div className="max-h-[400px] overflow-y-auto">
+                                            <div className="max-h-[350px] overflow-y-auto">
                                                 {notifications.length === 0 ? (
                                                     <div className="p-6 text-center">
                                                         <p className="text-gray-500 text-sm">No notifications yet</p>
@@ -658,7 +1024,7 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                 whileTap={{ scale: 0.95 }}
                                 className="hidden sm:block"
                             >
-                                <Link href="#">
+                                <Link href="/wallet">
                                     <button className="h-10 px-4 items-center justify-center bg-[#FF5722] rounded-lg shadow-sm text-white hover:bg-[#E64A19] transition-colors flex gap-1">
                                         <span className="font-medium text-sm whitespace-nowrap">Connect Wallet</span>
                                     </button>
@@ -762,6 +1128,27 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                 </AnimatePresence>
                             </div>
 
+                            {/* User Location (Mobile Only) */}
+                            {!userLocation.loading && !userLocation.error && (
+                                <div className="mb-4 bg-emerald-50 border border-emerald-100 rounded-lg p-3 flex items-center">
+                                    <FiMapPin className="w-5 h-5 text-emerald-600 mr-2" />
+                                    <div>
+                                        <div className="text-sm font-medium text-emerald-700">
+                                            Events near {userLocation.city}
+                                        </div>
+                                        <div className="text-xs text-emerald-600">
+                                            {userLocation.region}, {userLocation.country}
+                                        </div>
+                                    </div>
+                                    <Link
+                                        href={`/discover?location=${userLocation.city}`}
+                                        className="ml-auto bg-white rounded-lg px-2 py-1 text-xs font-medium text-emerald-700 border border-emerald-200"
+                                    >
+                                        Explore
+                                    </Link>
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-3 gap-2 mb-4">
                                 {/* Main Navigation Icons */}
                                 <NavButton icon={<FiHome />} label="Home" href="/home" />
@@ -775,13 +1162,13 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                             {/* Actions */}
                             <div className="space-y-2 mt-4">
                                 <Link href="/dao" onClick={() => setIsMenuOpen(false)}>
-                                    <div className="bg-gray-50 hover:bg-gray-100 w-full py-3 px-4 rounded-xl text-gray-900 font-medium text-sm transition-colors flex items-center justify-between mb-2">
+                                    <div className="bg-gray-50 hover:bg-gray-100 w-full py-3 px-4 rounded-xl text-gray-900 font-medium text-sm transition-colors flex items-center justify-between">
                                         <span>DAO</span>
                                         <FiChevronRight className="w-4 h-4 text-gray-400" />
                                     </div>
                                 </Link>
 
-                                <Link href="#" onClick={() => setIsMenuOpen(false)}>
+                                <Link href="/wallet" onClick={() => setIsMenuOpen(false)}>
                                     <div className="bg-[#FF5722]/10 hover:bg-[#FF5722]/15 w-full py-3 px-4 rounded-xl text-[#FF5722] font-medium text-sm transition-colors flex items-center justify-between">
                                         <span>Connect Wallet</span>
                                         <FiChevronRight className="w-4 h-4" />

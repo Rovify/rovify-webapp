@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/Header';
-import BottomNavigation from '@/components/BottomNavigation';
+import BottomNavigation from '@/components/SideNavigation';
 
 export default function AuthAwareLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();

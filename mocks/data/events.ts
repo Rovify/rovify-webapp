@@ -35,7 +35,10 @@ export const mockEvents: Event[] = [
         attendees: ['2', '3', '5', '7'],
         likes: 342,
         comments: 56,
-        shares: 89
+        shares: 89,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '2',
@@ -71,7 +74,10 @@ export const mockEvents: Event[] = [
         attendees: ['1', '4', '6', '8'],
         likes: 520,
         comments: 148,
-        shares: 276
+        shares: 276,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '3',
@@ -107,7 +113,10 @@ export const mockEvents: Event[] = [
         attendees: ['2', '5', '9'],
         likes: 87,
         comments: 23,
-        shares: 14
+        shares: 14,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '4',
@@ -143,7 +152,10 @@ export const mockEvents: Event[] = [
         attendees: ['1', '3', '7', '10'],
         likes: 215,
         comments: 47,
-        shares: 83
+        shares: 83,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '5',
@@ -179,7 +191,10 @@ export const mockEvents: Event[] = [
         attendees: ['2', '4', '6', '8'],
         likes: 412,
         comments: 97,
-        shares: 156
+        shares: 156,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '6',
@@ -215,7 +230,10 @@ export const mockEvents: Event[] = [
         attendees: ['3', '5', '9'],
         likes: 176,
         comments: 41,
-        shares: 28
+        shares: 28,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '7',
@@ -251,7 +269,10 @@ export const mockEvents: Event[] = [
         attendees: ['1', '4', '8', '10'],
         likes: 890,
         comments: 320,
-        shares: 415
+        shares: 415,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '8',
@@ -287,7 +308,10 @@ export const mockEvents: Event[] = [
         attendees: ['2', '5', '7', '9'],
         likes: 310,
         comments: 86,
-        shares: 124
+        shares: 124,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '9',
@@ -323,7 +347,10 @@ export const mockEvents: Event[] = [
         attendees: ['1', '3', '6'],
         likes: 245,
         comments: 52,
-        shares: 73
+        shares: 73,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     },
     {
         id: '10',
@@ -359,7 +386,10 @@ export const mockEvents: Event[] = [
         attendees: ['2', '4', '7', '9'],
         likes: 615,
         comments: 183,
-        shares: 267
+        shares: 267,
+        venue: undefined,
+        imageUrl: undefined,
+        popularity: undefined
     }
 ];
 

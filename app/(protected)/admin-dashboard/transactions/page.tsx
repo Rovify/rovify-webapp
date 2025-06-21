@@ -70,7 +70,7 @@ const mockTransactions: Transaction[] = [
         status: 'completed',
         timestamp: '2024-12-14T15:45:00Z',
         user: {
-            name: 'Sarah Chen',
+            name: 'Joe Rover',
             email: 'sarah@example.com',
             avatar: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=40&h=40&fit=crop&crop=face'
         },
@@ -114,8 +114,8 @@ const mockTransactions: Transaction[] = [
         status: 'completed',
         timestamp: '2024-12-12T14:20:00Z',
         user: {
-            name: 'Event Organizer LLC',
-            email: 'organizer@events.com',
+            name: 'Event Organiser LLC',
+            email: 'organiser@events.com',
             avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face'
         },
         event: {
@@ -125,7 +125,7 @@ const mockTransactions: Transaction[] = [
         paymentMethod: 'bank',
         fee: 12.50,
         netAmount: -1237.50,
-        description: 'Weekly payout to event organizer'
+        description: 'Weekly payout to event organiser'
     }
 ];
 

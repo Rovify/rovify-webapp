@@ -69,7 +69,7 @@ const mockTickets: Ticket[] = [
         eventTitle: 'Neon Nights Festival',
         eventDate: '2025-08-20',
         eventImage: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=100&h=100&fit=crop',
-        buyerName: 'Sarah Chen',
+        buyerName: 'Joe Rover',
         buyerEmail: 'sarah@example.com',
         buyerAvatar: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=40&h=40&fit=crop&crop=face',
         ticketType: 'General Admission',

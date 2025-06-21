@@ -3,17 +3,17 @@ import nodemailer from 'nodemailer';
 
 // Gmail SMTP configuration
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-    },
-    secure: true,
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD,
+  },
+  secure: true,
 });
 
 // Beautiful HTML email template
 const createEmailTemplate = (email: string) => {
-    return `
+  return `
     <!DOCTYPE html>
     <html>
     <head>
@@ -215,7 +215,7 @@ const createEmailTemplate = (email: string) => {
               <div class="feature-icon">🚀</div>
               <div class="feature-text">
                 <p class="feature-title">Creator Tools</p>
-                <p class="feature-desc">Powerful platform for event organizers</p>
+                <p class="feature-desc">Powerful platform for event organisers</p>
               </div>
             </div>
           </div>
@@ -262,47 +262,47 @@ const createEmailTemplate = (email: string) => {
 };
 
 export async function POST(request: NextRequest) {
-    try {
-        const { email } = await request.json();
+  try {
+    const { email } = await request.json();
 
-        // Simple validation
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return NextResponse.json({
-                success: false,
-                message: 'Please provide a valid email address'
-            }, { status: 400 });
-        }
-
-        // Store in database (mock)
-        console.log(`Email subscribed: ${email}`);
-
-        // Send welcome email
-        const mailOptions = {
-            from: {
-                name: 'Rovify',
-                address: process.env.EMAIL_USER as string
-            },
-            to: email,
-            subject: 'Welcome to Rovify! 🎟️ Your NFT Event Journey Begins',
-            html: createEmailTemplate(email),
-        };
-
-        await transporter.sendMail(mailOptions);
-
-        // Add the email to your newsletter service (mock)
-        // In production, you'd use your email marketing provider's API
-        // e.g., Mailchimp, ConvertKit, etc.
-
-        return NextResponse.json({
-            success: true,
-            message: 'Subscription successful'
-        });
-    } catch (error) {
-        console.error('Subscription error:', error);
-
-        return NextResponse.json({
-            success: false,
-            message: 'Failed to process subscription'
-        }, { status: 500 });
+    // Simple validation
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({
+        success: false,
+        message: 'Please provide a valid email address'
+      }, { status: 400 });
     }
+
+    // Store in database (mock)
+    console.log(`Email subscribed: ${email}`);
+
+    // Send welcome email
+    const mailOptions = {
+      from: {
+        name: 'Rovify',
+        address: process.env.EMAIL_USER as string
+      },
+      to: email,
+      subject: 'Welcome to Rovify! 🎟️ Your NFT Event Journey Begins',
+      html: createEmailTemplate(email),
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    // Add the email to your newsletter service (mock)
+    // In production, you'd use your email marketing provider's API
+    // e.g., Mailchimp, ConvertKit, etc.
+
+    return NextResponse.json({
+      success: true,
+      message: 'Subscription successful'
+    });
+  } catch (error) {
+    console.error('Subscription error:', error);
+
+    return NextResponse.json({
+      success: false,
+      message: 'Failed to process subscription'
+    }, { status: 500 });
+  }
 }

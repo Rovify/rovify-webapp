@@ -270,7 +270,7 @@ const FEATURED_CREATORS: Creator[] = [
         avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
         verified: true,
         followers: 42500,
-        bio: "Music producer & event organizer",
+        bio: "Music producer & event organiser",
         eventsCount: 23,
         rating: 4.9
     },
@@ -292,7 +292,7 @@ const FEATURED_CREATORS: Creator[] = [
         avatarUrl: "https://images.unsplash.com/photo-1614283233556-f35b0c801ef1?w=100&h=100&fit=crop&crop=face",
         verified: true,
         followers: 27800,
-        bio: "Tech conference organizer",
+        bio: "Tech conference organiser",
         eventsCount: 31,
         rating: 4.9
     },

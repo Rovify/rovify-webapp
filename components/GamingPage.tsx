@@ -32,7 +32,7 @@ const FEATURED_EVENTS = [
         category: 'Tournament',
         verified: true,
         game: 'Apex Legends',
-        organizer: 'EFG Esports',
+        organiser: 'EFG Esports',
         tags: ['competitive', 'battle-royale']
     },
     {
@@ -46,7 +46,7 @@ const FEATURED_EVENTS = [
         category: 'Community',
         verified: true,
         game: 'Minecraft',
-        organizer: 'BlockBuilders',
+        organiser: 'BlockBuilders',
         tags: ['creative', 'building']
     },
     {
@@ -60,7 +60,7 @@ const FEATURED_EVENTS = [
         category: 'Tournament',
         verified: true,
         game: 'Valorant',
-        organizer: 'Riot Games',
+        organiser: 'Riot Games',
         tags: ['fps', 'esports']
     },
     {
@@ -74,7 +74,7 @@ const FEATURED_EVENTS = [
         category: 'Tournament',
         verified: false,
         game: 'Super Smash Bros',
-        organizer: 'Smash Community JP',
+        organiser: 'Smash Community JP',
         tags: ['fighting', 'nintendo']
     }
 ];

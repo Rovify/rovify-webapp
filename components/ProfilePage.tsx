@@ -112,7 +112,7 @@ const mockUser = {
 const mockFriends = [
     {
         id: '1',
-        name: 'Sarah Chen',
+        name: 'Joe Rover',
         username: 'sarahc',
         image: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=50&h=50&fit=crop&crop=face',
         status: 'online',
@@ -180,7 +180,7 @@ const mockEventHistory = [
         location: 'San Francisco, CA',
         ticketType: 'VIP',
         description: 'Amazing conference with industry leaders',
-        friendsAttended: ['Sarah Chen', 'Marcus Reid'],
+        friendsAttended: ['Joe Rover', 'Marcus Reid'],
         highlights: ['Networking', 'Keynote Speeches', 'Workshop'],
         checkInTime: '9:00 AM',
         photos: 12
@@ -340,7 +340,7 @@ const mockUpcomingEvents = [
 ];
 
 const mockRecentActivity = [
-    { id: '1', type: 'event_joined', user: 'Sarah Chen', event: 'AI Summit', time: '10 min ago', icon: FiCalendar },
+    { id: '1', type: 'event_joined', user: 'Joe Rover', event: 'AI Summit', time: '10 min ago', icon: FiCalendar },
     { id: '2', type: 'friend_added', user: 'Marcus Reid', event: '', time: '1 hour ago', icon: FiUserPlus },
     { id: '3', type: 'event_shared', user: 'Emma Wilson', event: 'Music Festival', time: '2 hours ago', icon: FiShare2 },
     { id: '4', type: 'ticket_purchased', user: 'You', event: 'Food Expo', time: '1 day ago', icon: IoTicket },

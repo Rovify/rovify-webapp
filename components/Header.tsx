@@ -84,7 +84,7 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
         { type: 'event', content: 'Startup pitch competition is trending now' },
         { type: 'reminder', content: 'Mindfulness Retreat starts tomorrow' },
         { type: 'friend', content: 'Miguel and 3 others joined Web3 Hackathon' },
-        { type: 'message', content: 'Event organizer sent you important details' }
+        { type: 'message', content: 'Event organiser sent you important details' }
     ];
 
     // Enhanced notifications data

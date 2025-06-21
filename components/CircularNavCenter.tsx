@@ -20,7 +20,7 @@ interface NavigationItem {
 }
 
 interface OrbitalNavigationProps {
-    isOrganizer?: boolean;
+    isOrganiser?: boolean;
     className?: string;
 }
 
@@ -35,7 +35,7 @@ const PHYSICS_CONFIG = {
     MAGNETIC_FORCE: 0.3,
 } as const;
 
-export default function OrbitalNavigation({ isOrganizer = false, className = '' }: OrbitalNavigationProps) {
+export default function OrbitalNavigation({ isOrganiser = false, className = '' }: OrbitalNavigationProps) {
     const pathname = usePathname();
     const [isExpanded, setIsExpanded] = useState(false);
     const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -362,8 +362,8 @@ export default function OrbitalNavigation({ isOrganizer = false, className = '' 
                     })}
                 </AnimatePresence>
 
-                {/* Create Button for Organizers */}
-                {isOrganizer && (
+                {/* Create Button for Organisers */}
+                {isOrganiser && (
                     <AnimatePresence>
                         {isExpanded && (
                             <motion.div
@@ -422,7 +422,7 @@ export default function OrbitalNavigation({ isOrganizer = false, className = '' 
                         );
                     })}
 
-                    {isOrganizer && (
+                    {isOrganiser && (
                         <Link href="/create">
                             <motion.div
                                 className="w-12 h-12 rounded-full bg-gradient-to-r from-[#FF5722] to-[#FF7A50] flex items-center justify-center ml-2"

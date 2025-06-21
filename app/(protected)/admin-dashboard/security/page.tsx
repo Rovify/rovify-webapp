@@ -109,10 +109,10 @@ const mockSecurityEvents: SecurityEvent[] = [
         timestamp: '2024-12-14T16:45:00Z',
         user: {
             id: 'user_789',
-            name: 'Sarah Chen',
+            name: 'Joe Rover',
             email: 'sarah@example.com',
             avatar: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=40&h=40&fit=crop&crop=face',
-            role: 'organizer'
+            role: 'organiser'
         },
         details: {
             ipAddress: '198.51.100.1',

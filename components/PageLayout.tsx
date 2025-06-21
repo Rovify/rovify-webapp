@@ -33,7 +33,7 @@ export default function PageLayout({ children }: { children: ReactNode }) {
                 {children}
             </main>
 
-            {showSideNav && <SideNavigation isOrganizer={false} />}
+            {showSideNav && <SideNavigation isOrganiser={false} />}
         </div>
     );
 }

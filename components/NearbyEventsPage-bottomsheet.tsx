@@ -35,7 +35,7 @@ interface NearbyEvent {
     isBookmarked?: boolean;
     coordinates?: { lat: number; lng: number };
     tags?: string[];
-    organizer?: string;
+    organiser?: string;
     description?: string;
     slug?: string;
     phone?: string;
@@ -158,7 +158,7 @@ const mockEvents: NearbyEvent[] = [
         isBookmarked: false,
         coordinates: { lat: -1.286389, lng: 36.817223 },
         tags: ['outdoor', 'live music', 'festival'],
-        organizer: 'MusicEvents Inc.',
+        organiser: 'MusicEvents Inc.',
         description: 'An amazing outdoor music festival featuring top artists',
         slug: 'summer-music-festival-2025',
         phone: '+1-555-0123',
@@ -181,7 +181,7 @@ const mockEvents: NearbyEvent[] = [
         isBookmarked: true,
         coordinates: { lat: -1.28395, lng: 36.823654 },
         tags: ['networking', 'startups', 'innovation'],
-        organizer: 'TechEvents Ltd.',
+        organiser: 'TechEvents Ltd.',
         description: 'Connect with innovative minds in the tech industry',
         slug: 'tech-innovation-summit',
         phone: '+1-555-0456',
@@ -204,7 +204,7 @@ const mockEvents: NearbyEvent[] = [
         isBookmarked: false,
         coordinates: { lat: -1.291634, lng: 36.812202 },
         tags: ['cooking', 'chef', 'gourmet'],
-        organizer: 'Culinary Arts Academy',
+        organiser: 'Culinary Arts Academy',
         description: 'Learn from renowned chefs in an intimate setting',
         slug: 'culinary-masterclass',
         phone: '+1-555-0789',
@@ -227,7 +227,7 @@ const mockEvents: NearbyEvent[] = [
         isBookmarked: false,
         coordinates: { lat: -1.279824, lng: 36.824726 },
         tags: ['digital art', 'exhibition', 'contemporary'],
-        organizer: 'Modern Art Collective',
+        organiser: 'Modern Art Collective',
         description: 'Explore the future of digital creativity',
         slug: 'digital-art-exhibition',
         phone: '+1-555-0101',
@@ -250,7 +250,7 @@ const mockEvents: NearbyEvent[] = [
         isBookmarked: false,
         coordinates: { lat: -1.28023, lng: 36.809914 },
         tags: ['fitness', 'outdoor', 'health'],
-        organizer: 'FitLife Community',
+        organiser: 'FitLife Community',
         description: 'Start your day with an energizing workout',
         slug: 'fitness-bootcamp',
         phone: '+1-555-0112',
@@ -273,7 +273,7 @@ const mockEvents: NearbyEvent[] = [
         isBookmarked: false,
         coordinates: { lat: -1.263987, lng: 36.80102 },
         tags: ['nightlife', 'rooftop', 'drinks'],
-        organizer: 'Night Events Co.',
+        organiser: 'Night Events Co.',
         description: 'Experience the city from above with great food and drinks',
         slug: 'rooftop-night-market',
         phone: '+1-555-0131',

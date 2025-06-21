@@ -29,7 +29,7 @@ interface Location {
     };
 }
 
-interface Organizer {
+interface Organiser {
     id: string;
     name: string;
     image: string;
@@ -72,7 +72,7 @@ interface Event {
     date: string;
     endDate: string;
     location: Location;
-    organizer: Organizer;
+    organiser: Organiser;
     price: Price;
     category: string;
     tags: string[];
@@ -674,7 +674,7 @@ const EventBooking: React.FC<EventBookingProps> = ({
                         userName: 'Marcus Johnson',
                         userImage: 'https://images.unsplash.com/photo-1504257432389-52343af06ae3?q=80&w=1974&auto=format&fit=crop',
                         verified: false,
-                        text: 'Yes, the organizer confirmed there will be at least 5 food vendors with options for vegetarians!',
+                        text: 'Yes, the organiser confirmed there will be at least 5 food vendors with options for vegetarians!',
                         timestamp: new Date(Date.now() - 3600000 * 3), // 3 hours ago
                         likes: 4,
                         liked: false,
@@ -833,22 +833,22 @@ const EventBooking: React.FC<EventBookingProps> = ({
                 <div className="bg-white rounded-xl shadow-md p-6 mb-6 transform transition-all duration-300 hover:shadow-lg">
                     <h1 className="text-2xl md:text-3xl font-bold mb-2 text-gray-900">{event.title}</h1>
 
-                    {/* Organizer Info */}
+                    {/* Organiser Info */}
                     <div className="flex items-center mb-6">
                         <div className="h-10 w-10 rounded-full overflow-hidden mr-3 border-2 border-white shadow-md">
                             <Image
-                                src={event.organizer.image}
-                                alt={event.organizer.name}
+                                src={event.organiser.image}
+                                alt={event.organiser.name}
                                 width={40}
                                 height={40}
                                 className="object-cover"
                             />
                         </div>
                         <div>
-                            <p className="font-medium text-gray-900">{event.organizer.name}</p>
-                            <p className="text-sm text-gray-500">Event Organizer</p>
+                            <p className="font-medium text-gray-900">{event.organiser.name}</p>
+                            <p className="text-sm text-gray-500">Event Organiser</p>
                         </div>
-                        {event.organizer.verified && (
+                        {event.organiser.verified && (
                             <div className="ml-2 bg-blue-50 p-1 rounded-full shadow-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />

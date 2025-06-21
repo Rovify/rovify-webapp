@@ -22,7 +22,7 @@ interface Event {
     date: string;
     time: string;
     location: string;
-    organizer: {
+    organiser: {
         name: string;
         avatar: string;
         email: string;
@@ -46,7 +46,7 @@ const mockEvents: Event[] = [
         date: '2025-07-15',
         time: '09:00',
         location: 'San Francisco Convention Center',
-        organizer: {
+        organiser: {
             name: 'TechCorp Events',
             avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=40&h=40&fit=crop&crop=face',
             email: 'events@techcorp.com'
@@ -68,7 +68,7 @@ const mockEvents: Event[] = [
         date: '2025-08-20',
         time: '19:00',
         location: 'Golden Gate Park',
-        organizer: {
+        organiser: {
             name: 'Night Events Co.',
             avatar: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=40&h=40&fit=crop&crop=face',
             email: 'info@nightevents.com'
@@ -90,7 +90,7 @@ const mockEvents: Event[] = [
         date: '2025-06-10',
         time: '14:00',
         location: 'Museum of Modern Art',
-        organizer: {
+        organiser: {
             name: 'Art Collective SF',
             avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=40&h=40&fit=crop&crop=face',
             email: 'curator@artcollective.com'
@@ -116,7 +116,7 @@ export default function EventsPage() {
 
     const filteredEvents = events.filter(event => {
         const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            event.organizer.name.toLowerCase().includes(searchTerm.toLowerCase());
+            event.organiser.name.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
         const matchesCategory = categoryFilter === 'all' || event.category === categoryFilter;
         return matchesSearch && matchesStatus && matchesCategory;
@@ -259,18 +259,18 @@ export default function EventsPage() {
                     </div>
                 </div>
 
-                {/* Organizer & Stats */}
+                {/* Organiser & Stats */}
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                     <div className="flex items-center gap-2">
                         <Image
-                            src={event.organizer.avatar}
-                            alt={event.organizer.name}
+                            src={event.organiser.avatar}
+                            alt={event.organiser.name}
                             width={32}
                             height={32}
                             className="w-8 h-8 rounded-lg object-cover"
                         />
                         <div>
-                            <p className="text-sm font-medium text-gray-900">{event.organizer.name}</p>
+                            <p className="text-sm font-medium text-gray-900">{event.organiser.name}</p>
                             <div className="flex items-center gap-1">
                                 <FiStar className="w-3 h-3 text-yellow-400 fill-current" />
                                 <span className="text-xs text-gray-600">{event.rating}</span>
@@ -403,18 +403,18 @@ export default function EventsPage() {
 
                                     <div className="space-y-4">
                                         <div>
-                                            <h4 className="font-semibold text-gray-900 mb-3">Organizer</h4>
+                                            <h4 className="font-semibold text-gray-900 mb-3">Organiser</h4>
                                             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                                 <Image
-                                                    src={event.organizer.avatar}
-                                                    alt={event.organizer.name}
+                                                    src={event.organiser.avatar}
+                                                    alt={event.organiser.name}
                                                     width={48}
                                                     height={48}
                                                     className="w-12 h-12 rounded-xl object-cover"
                                                 />
                                                 <div>
-                                                    <h5 className="font-medium text-gray-900">{event.organizer.name}</h5>
-                                                    <p className="text-sm text-gray-600">{event.organizer.email}</p>
+                                                    <h5 className="font-medium text-gray-900">{event.organiser.name}</h5>
+                                                    <p className="text-sm text-gray-600">{event.organiser.email}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -429,7 +429,7 @@ export default function EventsPage() {
                                                     View Analytics
                                                 </button>
                                                 <button className="bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-4 rounded-lg font-medium transition-colors">
-                                                    Message Organizer
+                                                    Message Organiser
                                                 </button>
                                                 <button className="bg-green-100 hover:bg-green-200 text-green-700 py-2 px-4 rounded-lg font-medium transition-colors">
                                                     Promote Event
@@ -507,7 +507,7 @@ export default function EventsPage() {
                             <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
-                                placeholder="Search events by title or organizer..."
+                                placeholder="Search events by title or organiser..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="w-full pl-10 pr-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:bg-white transition-all"

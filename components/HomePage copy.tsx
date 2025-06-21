@@ -280,7 +280,7 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-white">
             {/* Side Navigation */}
-            <SideNavigation isOrganizer={true} />
+            <SideNavigation isOrganiser={true} />
 
             {/* Header */}
             <Header isSidebarExpanded={sidebarExpanded} />

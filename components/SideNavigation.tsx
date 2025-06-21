@@ -18,11 +18,11 @@ interface NavigationItem {
 }
 
 interface SideNavigationProps {
-    isOrganizer?: boolean;
+    isOrganiser?: boolean;
     className?: string;
 }
 
-export default function SideNavigation({ isOrganizer = false, className = '' }: SideNavigationProps) {
+export default function SideNavigation({ isOrganiser = false, className = '' }: SideNavigationProps) {
     const pathname = usePathname();
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -77,7 +77,7 @@ export default function SideNavigation({ isOrganizer = false, className = '' }: 
                         ))}
 
                         {/* Create Button */}
-                        {isOrganizer && (
+                        {isOrganiser && (
                             <div className="mt-3 pt-3 border-t border-gray-200/60">
                                 <ModernCreateButton />
                             </div>
@@ -116,7 +116,7 @@ export default function SideNavigation({ isOrganizer = false, className = '' }: 
             <ModernMobileDock
                 navigationItems={navigationItems}
                 isActiveRoute={isActiveRoute}
-                isOrganizer={isOrganizer}
+                isOrganiser={isOrganiser}
             />
         </>
     );
@@ -268,15 +268,15 @@ function ModernCreateButton() {
 function ModernMobileDock({
     navigationItems,
     isActiveRoute,
-    isOrganizer
+    isOrganiser
 }: {
     navigationItems: NavigationItem[];
     isActiveRoute: (href: string) => boolean;
-    isOrganizer: boolean;
+    isOrganiser: boolean;
 }) {
     const [pressedIndex, setPressedIndex] = useState<number | null>(null);
 
-    const displayItems = navigationItems.slice(0, isOrganizer ? 4 : 5);
+    const displayItems = navigationItems.slice(0, isOrganiser ? 4 : 5);
 
     return (
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
@@ -312,7 +312,7 @@ function ModernMobileDock({
                         ))}
 
                         {/* Professional Mobile Create Button */}
-                        {isOrganizer && (
+                        {isOrganiser && (
                             <MobileProfessionalCreateButton
                                 pressedIndex={pressedIndex}
                                 setPressedIndex={setPressedIndex}

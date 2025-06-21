@@ -17,7 +17,7 @@ interface User {
     email: string;
     avatar: string;
     status: 'active' | 'inactive' | 'suspended';
-    role: 'user' | 'organizer' | 'admin';
+    role: 'user' | 'organiser' | 'admin';
     joinDate: string;
     lastActive: string;
     eventsAttended: number;
@@ -43,11 +43,11 @@ const mockUsers: User[] = [
     },
     {
         id: '2',
-        name: 'Sarah Chen',
+        name: 'Joe Rover',
         email: 'sarah@example.com',
         avatar: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=40&h=40&fit=crop&crop=face',
         status: 'active',
-        role: 'organizer',
+        role: 'organiser',
         joinDate: '2023-11-22',
         lastActive: '1 day ago',
         eventsAttended: 28,
@@ -89,7 +89,7 @@ export default function UsersPage() {
     const [users, setUsers] = useState<User[]>(mockUsers);
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
-    const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'organizer' | 'admin'>('all');
+    const [roleFilter, setRoleFilter] = useState<'all' | 'user' | 'organiser' | 'admin'>('all');
     const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
     const [showUserModal, setShowUserModal] = useState(false);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -114,7 +114,7 @@ export default function UsersPage() {
     const getRoleColor = (role: string) => {
         switch (role) {
             case 'admin': return 'bg-purple-100 text-purple-800';
-            case 'organizer': return 'bg-blue-100 text-blue-800';
+            case 'organiser': return 'bg-blue-100 text-blue-800';
             case 'user': return 'bg-gray-100 text-gray-800';
             default: return 'bg-gray-100 text-gray-800';
         }
@@ -292,7 +292,7 @@ export default function UsersPage() {
                     color="#2196F3"
                 />
                 <StatCard
-                    title="Organizers"
+                    title="Organisers"
                     value="89"
                     icon={FiShield}
                     color="#9C27B0"
@@ -331,12 +331,12 @@ export default function UsersPage() {
 
                         <select
                             value={roleFilter}
-                            onChange={(e) => setRoleFilter(e.target.value as 'all' | 'user' | 'organizer' | 'admin')}
+                            onChange={(e) => setRoleFilter(e.target.value as 'all' | 'user' | 'organiser' | 'admin')}
                             className="px-4 py-3 bg-gray-50 border-0 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20"
                         >
                             <option value="all">All Roles</option>
                             <option value="user">Users</option>
-                            <option value="organizer">Organizers</option>
+                            <option value="organiser">Organisers</option>
                             <option value="admin">Admins</option>
                         </select>
                     </div>

@@ -50,7 +50,7 @@ export default function SettingsPage() {
         // Payment Settings
         { id: 'stripe_public_key', name: 'Stripe Public Key', description: 'Your Stripe publishable key', type: 'input', value: 'pk_test_...', section: 'payment' },
         { id: 'commission_rate', name: 'Platform Commission (%)', description: 'Commission percentage on ticket sales', type: 'input', value: '5', section: 'payment' },
-        { id: 'auto_payouts', name: 'Automatic Payouts', description: 'Enable automatic payouts to organizers', type: 'toggle', value: true, section: 'payment' },
+        { id: 'auto_payouts', name: 'Automatic Payouts', description: 'Enable automatic payouts to organisers', type: 'toggle', value: true, section: 'payment' },
         { id: 'refund_policy', name: 'Refund Policy', description: 'Days before event when refunds are allowed', type: 'input', value: '7', section: 'payment' },
 
         // Email Settings

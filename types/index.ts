@@ -25,7 +25,7 @@ export interface Location {
     };
 }
 
-export interface Organizer {
+export interface Organiser {
     id: string;
     name: string;
     image: string;
@@ -40,8 +40,8 @@ export interface Price {
 }
 
 export interface Event {
-    popularity?: any;
-    venue?: any;
+    popularity?: number;
+    venue?: Location;
     imageUrl?: string | StaticImport;
     id: string;
     title: string;
@@ -50,7 +50,7 @@ export interface Event {
     date: Date;
     endDate: Date;
     location: Location;
-    organizer: Organizer;
+    organiser: Organiser;
     category: string;
     subcategory: string;
     price: Price;

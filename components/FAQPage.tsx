@@ -79,7 +79,7 @@ const faqData = {
         },
         {
             question: "What is your refund policy?",
-            answer: "Refund policies are set by event organizers and vary by event. The refund policy for each event is displayed on the event page before purchase. For NFT tickets, refunds may be subject to additional blockchain-related limitations."
+            answer: "Refund policies are set by event organisers and vary by event. The refund policy for each event is displayed on the event page before purchase. For NFT tickets, refunds may be subject to additional blockchain-related limitations."
         }
     ],
     app: [

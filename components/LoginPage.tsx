@@ -30,16 +30,16 @@ const DEMO_CREDENTIALS = {
             company: 'Rovify',
         }
     },
-    organizer: {
-        email: 'organizer@rovify.io',
+    organiser: {
+        email: 'organiser@rovify.io',
         password: 'demo123',
         userData: {
             id: 'org-demo-001',
-            email: 'organizer@rovify.io',
+            email: 'organiser@rovify.io',
             name: 'Sarah Johnson',
             image: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=150&h=150&fit=crop&crop=face',
             authMethod: 'email' as const,
-            role: 'organizer',
+            role: 'organiser',
             company: 'EventCorp',
         }
     },
@@ -249,7 +249,7 @@ export default function LoginPage() {
     };
 
     // Handle demo credential login
-    const handleDemoLogin = (credType: 'admin' | 'organizer' | 'attendee') => {
+    const handleDemoLogin = (credType: 'admin' | 'organiser' | 'attendee') => {
         const cred = DEMO_CREDENTIALS[credType];
         setEmail(cred.email);
         setPassword(cred.password);
@@ -268,12 +268,12 @@ export default function LoginPage() {
 
             // Check for demo credentials
             const isAdminDemo = email === DEMO_CREDENTIALS.admin.email && password === DEMO_CREDENTIALS.admin.password;
-            const isOrganizerDemo = email === DEMO_CREDENTIALS.organizer.email && password === DEMO_CREDENTIALS.organizer.password;
+            const isOrganiserDemo = email === DEMO_CREDENTIALS.organiser.email && password === DEMO_CREDENTIALS.organiser.password;
             const isAttendeeDemo = email === DEMO_CREDENTIALS.attendee.email && password === DEMO_CREDENTIALS.attendee.password;
 
-            if (isAdminDemo || isOrganizerDemo || isAttendeeDemo) {
+            if (isAdminDemo || isOrganiserDemo || isAttendeeDemo) {
                 const userData = isAdminDemo ? DEMO_CREDENTIALS.admin.userData :
-                    isOrganizerDemo ? DEMO_CREDENTIALS.organizer.userData :
+                    isOrganiserDemo ? DEMO_CREDENTIALS.organiser.userData :
                         DEMO_CREDENTIALS.attendee.userData;
 
                 console.log('Demo authentication successful for role:', userData.role);
@@ -283,7 +283,7 @@ export default function LoginPage() {
 
                 // Role-based routing
                 const redirectPath = userData.role === 'admin' ? '/admin-dashboard' :
-                    userData.role === 'organizer' ? '/organiser-dashboard' :
+                    userData.role === 'organiser' ? '/organiser-dashboard' :
                         '/home';
 
                 console.log('Demo login successful, redirecting to:', redirectPath);
@@ -420,7 +420,7 @@ export default function LoginPage() {
                                         <FiCalendar className="w-4 h-4" />
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-medium text-white mb-1">For Organizers</h3>
+                                        <h3 className="text-sm font-medium text-white mb-1">For Organisers</h3>
                                         <p className="text-xs text-white/80 leading-relaxed">
                                             Create and manage events with powerful analytics and attendee insights
                                         </p>
@@ -537,15 +537,15 @@ export default function LoginPage() {
                                         </button>
 
                                         <button
-                                            onClick={() => handleDemoLogin('organizer')}
+                                            onClick={() => handleDemoLogin('organiser')}
                                             className="w-full flex items-center gap-3 p-3 rounded-tr-xl rounded-bl-xl bg-white hover:bg-orange-50 border border-gray-200 hover:border-orange-200 transition-all duration-200 group"
                                         >
                                             <div className="w-6 h-6 bg-gradient-to-br from-orange-400 to-red-500 rounded-tr-lg rounded-bl-lg flex items-center justify-center">
                                                 <FiCalendar className="w-3 h-3 text-white" />
                                             </div>
                                             <div className="text-left">
-                                                <div className="text-sm font-medium text-gray-800">Organizer</div>
-                                                <div className="text-xs text-gray-500">organizer@rovify.io</div>
+                                                <div className="text-sm font-medium text-gray-800">Organiser</div>
+                                                <div className="text-xs text-gray-500">organiser@rovify.io</div>
                                             </div>
                                         </button>
 

@@ -139,8 +139,8 @@ export default function Header({ isSidebarExpanded = false, onLocationUpdate }: 
         },
         {
             type: 'message',
-            content: 'Event organizer sent you important details',
-            actionUrl: '/messages/organizer',
+            content: 'Event organiser sent you important details',
+            actionUrl: '/messages/organiser',
             actionLabel: 'Read Message'
         },
         {

@@ -2,11 +2,12 @@
 
 'use client';
 
-import { useState, useEffect, createContext, useContext, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiUser, FiCalendar, FiStar, FiTrendingUp, FiUsers, FiMapPin } from 'react-icons/fi';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiUser, FiCalendar, FiTrendingUp, FiUsers } from 'react-icons/fi';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import { useBaseAuth } from '@/hooks/useBaseAuth';
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
 import GoogleIcon from '@/public/images/icons/google-logo.svg';
@@ -23,11 +24,10 @@ const DEMO_CREDENTIALS = {
             id: 'adm-demo-001',
             email: 'admin@rovify.io',
             name: 'Marcus Chen',
-            profilePicture: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+            image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
             authMethod: 'email' as const,
             role: 'admin',
             company: 'Rovify',
-            expiresAt: Date.now() + 3600000,
         }
     },
     organizer: {
@@ -37,11 +37,10 @@ const DEMO_CREDENTIALS = {
             id: 'org-demo-001',
             email: 'organizer@rovify.io',
             name: 'Sarah Johnson',
-            profilePicture: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=150&h=150&fit=crop&crop=face',
+            image: 'https://images.unsplash.com/photo-1494790108755-2616b612b47c?w=150&h=150&fit=crop&crop=face',
             authMethod: 'email' as const,
             role: 'organizer',
             company: 'EventCorp',
-            expiresAt: Date.now() + 3600000,
         }
     },
     attendee: {
@@ -51,149 +50,13 @@ const DEMO_CREDENTIALS = {
             id: 'att-demo-001',
             email: 'attendee@rovify.io',
             name: 'Alex Rivera',
-            profilePicture: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+            image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
             authMethod: 'email' as const,
             role: 'attendee',
             company: 'TechStartup Inc',
-            expiresAt: Date.now() + 3600000,
         }
     }
 };
-
-// Define specific types instead of any
-type EncryptedData = string;
-type StoredUserData = Record<string, unknown>;
-
-// Crypto helper for secure storage
-const encryptData = (data: StoredUserData): EncryptedData => {
-    const encoded = btoa(JSON.stringify(data));
-    console.log('Data encrypted for storage');
-    return encoded;
-};
-
-const decryptData = (encrypted: EncryptedData): StoredUserData | null => {
-    try {
-        const decoded = JSON.parse(atob(encrypted)) as StoredUserData;
-        console.log('Data decrypted successfully');
-        return decoded;
-    } catch (error) {
-        console.error('Failed to decrypt data:', error);
-        return null;
-    }
-};
-
-// Auth types
-export type AuthUser = {
-    id: string;
-    email?: string;
-    name?: string;
-    profilePicture?: string;
-    walletAddress?: string;
-    baseName?: string;
-    authMethod: 'email' | 'google' | 'metamask' | 'base';
-    role?: string;
-    company?: string;
-    expiresAt: number;
-};
-
-// Auth context
-type AuthContextType = {
-    user: AuthUser | null;
-    isLoading: boolean;
-    login: (user: AuthUser) => void;
-    logout: () => void;
-};
-
-// Create auth context
-const AuthContext = createContext<AuthContextType>({
-    user: null,
-    isLoading: false,
-    login: () => { },
-    logout: () => { },
-});
-
-// Auth provider component
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<AuthUser | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const login = useCallback((userData: AuthUser) => {
-        setUser(userData);
-        console.log('User authenticated:', {
-            id: userData.id,
-            authMethod: userData.authMethod,
-            email: userData.email || 'N/A',
-            role: userData.role || 'N/A',
-            walletAddress: userData.walletAddress || 'N/A',
-            baseName: userData.baseName || 'N/A'
-        });
-
-        const encrypted = encryptData(userData);
-        localStorage.setItem('rovify_session', encrypted);
-        console.log('Auth data saved to localStorage');
-    }, []);
-
-    const logout = useCallback(() => {
-        console.log('Logging out user');
-        setUser(null);
-        localStorage.removeItem('rovify_session');
-        console.log('Session data cleared from localStorage');
-    }, []);
-
-    useEffect(() => {
-        const initAuth = () => {
-            try {
-                console.log('Initializing auth state...');
-                const encryptedSession = localStorage.getItem('rovify_session');
-                if (encryptedSession) {
-                    console.log('Found existing session, decrypting...');
-                    const userData = decryptData(encryptedSession);
-
-                    if (userData && typeof userData.expiresAt === 'number') {
-                        if (userData.expiresAt > Date.now()) {
-                            console.log('Valid session restored:', {
-                                authMethod: userData.authMethod,
-                                expiresIn: Math.round((userData.expiresAt - Date.now()) / 60000) + ' minutes'
-                            });
-                            setUser(userData as AuthUser);
-                        } else {
-                            console.log('Session expired, clearing localStorage');
-                            localStorage.removeItem('rovify_session');
-                        }
-                    }
-                } else {
-                    console.log('No existing session found');
-                }
-            } catch (error) {
-                console.error('Auth initialization error:', error);
-                localStorage.removeItem('rovify_session');
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        initAuth();
-
-        const checkSessionValidity = () => {
-            if (user && user.expiresAt < Date.now()) {
-                console.log('Session expired during active use, logging out');
-                logout();
-            }
-        };
-
-        const interval = setInterval(checkSessionValidity, 60000);
-        return () => clearInterval(interval);
-    }, [user, logout]);
-
-    return (
-        <AuthContext.Provider value={{ user, isLoading, login, logout }}>
-            {children}
-        </AuthContext.Provider>
-    );
-}
-
-// Custom hook for using auth context
-export const useAuth = () => useContext(AuthContext);
 
 // Generate a secure random string
 const generateRandomString = (length = 32): string => {
@@ -413,36 +276,31 @@ export default function LoginPage() {
                     isOrganizerDemo ? DEMO_CREDENTIALS.organizer.userData :
                         DEMO_CREDENTIALS.attendee.userData;
 
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                console.log('Demo authentication successful');
+                console.log('Demo authentication successful for role:', userData.role);
 
-                login(userData);
-                console.log('Demo login successful, redirecting to home');
-                router.push('/home');
+                // Use AuthContext login with user object for demo accounts
+                await login(userData);
+
+                // Role-based routing
+                const redirectPath = userData.role === 'admin' ? '/admin-dashboard' :
+                    userData.role === 'organizer' ? '/organiser-dashboard' :
+                        '/home';
+
+                console.log('Demo login successful, redirecting to:', redirectPath);
+                router.push(redirectPath);
             } else {
-                // Regular authentication
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                console.log('Regular email/password authentication successful');
+                // Regular authentication - use email/password login
+                console.log('Regular email/password authentication');
 
-                const user: AuthUser = {
-                    id: 'user-' + Math.random().toString(36).substring(2),
-                    email,
-                    authMethod: 'email',
-                    expiresAt: Date.now() + 3600000,
-                };
+                // Use AuthContext login with email and password
+                await login(email, password);
 
-                console.log('Regular user created:', {
-                    id: user.id,
-                    email: user.email
-                });
-
-                login(user);
-                console.log('Email login successful, redirecting to home');
-                router.push('/home');
+                console.log('Regular login successful');
+                // AuthContext will handle the redirect automatically to /discover
             }
         } catch (error) {
             console.error('Email login error:', error);
-            setError('Invalid email or password. Please try again.');
+            setError(error instanceof Error ? error.message : 'Invalid email or password. Please try again.');
         } finally {
             setIsLoading(false);
         }
@@ -984,6 +842,6 @@ export default function LoginPage() {
                 .animate-fade-in { animation: fade-in 0.6s ease-out; }
                 .animate-shake { animation: shake 0.5s ease-in-out; }
             `}</style>
-        </div>
+        </div >
     );
 }

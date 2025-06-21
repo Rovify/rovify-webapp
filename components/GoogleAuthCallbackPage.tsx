@@ -4,17 +4,19 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
-import { useAuth } from '@/components/LoginPage';
 import PasswordConfirmModal from '@/components/PasswordConfirmModal';
+import { useAuth } from '@/context/AuthContext';
 
-interface AuthUser {
+interface User {
     id: string;
-    email?: string;
     name?: string;
-    profilePicture?: string;
+    email?: string;
+    image?: string;
     walletAddress?: string;
-    authMethod: 'email' | 'google' | 'metamask';
-    expiresAt: number;
+    baseName?: string;
+    ethName?: string;
+    authMethod: 'email' | 'password' | 'google' | 'base';
+    [key: string]: unknown;
 }
 
 export default function AuthCallbackPage() {
@@ -23,7 +25,7 @@ export default function AuthCallbackPage() {
     const { login } = useAuth();
     const [error, setError] = useState<string | null>(null);
     const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const [userData, setUserData] = useState<AuthUser | null>(null);
+    const [userData, setUserData] = useState<User | null>(null);
     const exchangeAttemptedRef = useRef(false);
 
     useEffect(() => {
@@ -134,24 +136,15 @@ export default function AuthCallbackPage() {
             }
 
             // If verification successful, complete the login process
-            login(userData);
+            await login(userData);
 
             // Set auth cookies
             document.cookie = `rovify-auth-token=${userData.id}; path=/; secure; samesite=strict; max-age=${60 * 60 * 24 * 7}`; // 7 days
             console.log('Auth token set in cookie');
 
-            // Store user data in localStorage
-            localStorage.setItem('rovify-user', JSON.stringify(userData));
-            console.log('User data stored in localStorage');
-
-            // Mark that the user has completed password verification
-            localStorage.setItem('rovify-password-verified', 'true');
-            localStorage.setItem('rovify-password-verified-at', Date.now().toString());
-
             // Redirect to home
             console.log('Authentication successful, redirecting to home');
             window.history.replaceState({}, document.title, window.location.pathname);
-            router.push('/home');
         } catch (error) {
             // Password verification failed, throw error to be handled by the modal
             throw error;

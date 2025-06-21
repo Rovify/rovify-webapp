@@ -38,27 +38,27 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
-    { id: 'client-dashboard', label: 'Dashboard', icon: <FiHome className="w-5 h-5" />, section: 'main', href: '/client-dashboard' },
-    { id: 'profile', label: 'Profile', icon: <FiUser className="w-5 h-5" />, section: 'main', href: '/client-dashboard/profile' },
-    { id: 'wallet', label: 'Wallet', icon: <FiCreditCard className="w-5 h-5" />, section: 'main', href: '/client-dashboard/wallet' },
-    { id: 'friends', label: 'Friends', icon: <FiUsers className="w-5 h-5" />, badge: 2, section: 'main', href: '/client-dashboard/friends' },
-    { id: 'history', label: 'History', icon: <FiArchive className="w-5 h-5" />, section: 'main', href: '/client-dashboard/history' },
-    { id: 'analytics', label: 'Analytics', icon: <FiBarChart className="w-5 h-5" />, section: 'secondary', href: '/client-dashboard/analytics' },
-    { id: 'collections', label: 'Collections', icon: <FiBookmark className="w-5 h-5" />, section: 'secondary', href: '/client-dashboard/collections' },
-    { id: 'preferences', label: 'Preferences', icon: <FiSliders className="w-5 h-5" />, section: 'secondary', href: '/client-dashboard/preferences' },
-    { id: 'settings', label: 'Settings', icon: <FiSettings className="w-5 h-5" />, section: 'secondary', href: '/client-dashboard/settings' }
+    { id: 'organiser-dashboard', label: 'Dashboard', icon: <FiHome className="w-5 h-5" />, section: 'main', href: '/organiser-dashboard' },
+    { id: 'profile', label: 'Profile', icon: <FiUser className="w-5 h-5" />, section: 'main', href: '/organiser-dashboard/profile' },
+    { id: 'wallet', label: 'Wallet', icon: <FiCreditCard className="w-5 h-5" />, section: 'main', href: '/organiser-dashboard/wallet' },
+    { id: 'friends', label: 'Friends', icon: <FiUsers className="w-5 h-5" />, badge: 2, section: 'main', href: '/organiser-dashboard/friends' },
+    { id: 'history', label: 'History', icon: <FiArchive className="w-5 h-5" />, section: 'main', href: '/organiser-dashboard/history' },
+    { id: 'analytics', label: 'Analytics', icon: <FiBarChart className="w-5 h-5" />, section: 'secondary', href: '/organiser-dashboard/analytics' },
+    { id: 'collections', label: 'Collections', icon: <FiBookmark className="w-5 h-5" />, section: 'secondary', href: '/organiser-dashboard/collections' },
+    { id: 'preferences', label: 'Preferences', icon: <FiSliders className="w-5 h-5" />, section: 'secondary', href: '/organiser-dashboard/preferences' },
+    { id: 'settings', label: 'Settings', icon: <FiSettings className="w-5 h-5" />, section: 'secondary', href: '/organiser-dashboard/settings' }
 ];
 
 const sectionDescriptions = {
-    '/client-dashboard': 'Your personal event control center',
-    '/client-dashboard/profile': 'Manage your public profile and achievements',
-    '/client-dashboard/wallet': 'Manage your crypto wallet and transactions',
-    '/client-dashboard/friends': 'Connect with other event enthusiasts',
-    '/client-dashboard/history': 'View your complete event history',
-    '/client-dashboard/analytics': 'Insights into your event patterns',
-    '/client-dashboard/collections': 'Your saved events and wishlists',
-    '/client-dashboard/preferences': 'Customize your Rovify experience',
-    '/client-dashboard/settings': 'Account and security settings'
+    '/organiser-dashboard': 'Your personal event control center',
+    '/organiser-dashboard/profile': 'Manage your public profile and achievements',
+    '/organiser-dashboard/wallet': 'Manage your crypto wallet and transactions',
+    '/organiser-dashboard/friends': 'Connect with other event enthusiasts',
+    '/organiser-dashboard/history': 'View your complete event history',
+    '/organiser-dashboard/analytics': 'Insights into your event patterns',
+    '/organiser-dashboard/collections': 'Your saved events and wishlists',
+    '/organiser-dashboard/preferences': 'Customize your Rovify experience',
+    '/organiser-dashboard/settings': 'Account and security settings'
 };
 
 export default function DashboardLayout({
@@ -74,14 +74,14 @@ export default function DashboardLayout({
 
     // Get current section name from pathname
     const getCurrentSection = () => {
-        if (pathname === '/client-dashboard') return 'dashboard';
+        if (pathname === '/organiser-dashboard') return 'dashboard';
         const lastSegment = pathname.split('/').pop() || 'dashboard';
-        return lastSegment === 'client-dashboard' ? 'dashboard' : lastSegment;
+        return lastSegment === 'organiser-dashboard' ? 'dashboard' : lastSegment;
     };
 
     const getSectionDisplayName = (section: string) => {
         const displayNames: Record<string, string> = {
-            'client-dashboard': 'Dashboard',
+            'organiser-dashboard': 'Dashboard',
             'dashboard': 'Dashboard',
             'profile': 'Profile',
             'wallet': 'Wallet',

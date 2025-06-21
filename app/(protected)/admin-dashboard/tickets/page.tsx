@@ -49,7 +49,7 @@ const mockTickets: Ticket[] = [
         eventTitle: 'Tech Summit 2025',
         eventDate: '2025-07-15',
         eventImage: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=100&h=100&fit=crop',
-        buyerName: 'Alex Johnson',
+        buyerName: 'Joe Love',
         buyerEmail: 'alex@example.com',
         buyerAvatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
         ticketType: 'VIP',

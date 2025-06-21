@@ -87,7 +87,7 @@ const mockSecurityEvents: SecurityEvent[] = [
         timestamp: '2024-12-15T09:15:00Z',
         user: {
             id: 'user_456',
-            name: 'Alex Johnson',
+            name: 'Joe Love',
             email: 'alex@example.com',
             avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
             role: 'admin'

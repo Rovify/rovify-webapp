@@ -3,6 +3,7 @@
 
 import { useState, ReactNode } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,6 +12,7 @@ import {
     FiBarChart, FiShield, FiGlobe, FiHelpCircle, FiChevronDown,
     FiActivity, FiDatabase, FiMail
 } from 'react-icons/fi';
+import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -187,7 +189,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     {!sidebarCollapsed ? (
                         <Link href="/admin" className="flex items-center gap-3">
                             <div className="h-9 w-9 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
-                                <span className="text-white font-bold text-lg">R</span>
+                                <span className="text-white font-bold text-lg">
+                                    <Image
+                                        src={RoviLogo}
+                                        alt="Rovify Logo"
+                                        width={28}
+                                        height={28}
+                                        className="object-contain"
+                                    />
+                                </span>
                             </div>
                             <div>
                                 <span className="text-xl font-bold text-gray-900">rovify</span>
@@ -223,27 +233,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     </button>
                 </div>
 
-                {/* Quick Stats (when expanded) */}
-                {!sidebarCollapsed && (
-                    <motion.div
-                        className="px-6 py-4 bg-gradient-to-r from-orange-50 to-orange-100 border-b border-orange-200"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <div className="grid grid-cols-2 gap-3 text-center">
-                            <div>
-                                <p className="text-lg font-bold text-orange-600">2.8K</p>
-                                <p className="text-xs text-orange-700">Active Users</p>
-                            </div>
-                            <div>
-                                <p className="text-lg font-bold text-orange-600">187</p>
-                                <p className="text-xs text-orange-700">Live Events</p>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
                 {/* Navigation */}
                 <nav className="flex-1 px-6 py-6 overflow-y-auto">
                     <MenuGroup title="Overview" items={groupedMenuItems.main} />
@@ -261,7 +250,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h4 className="text-sm font-semibold text-gray-900">Admin User</h4>
-                                    <p className="text-xs text-gray-500 truncate">admin@rovify.com</p>
+                                    <p className="text-xs text-gray-500 truncate">admin@rovify.io</p>
                                 </div>
                             </div>
 

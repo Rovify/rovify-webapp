@@ -29,7 +29,7 @@ interface User {
 const mockUsers: User[] = [
     {
         id: '1',
-        name: 'Alex Johnson',
+        name: 'Joe Love',
         email: 'alex@example.com',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
         status: 'active',

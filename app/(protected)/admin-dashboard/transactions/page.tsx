@@ -48,7 +48,7 @@ const mockTransactions: Transaction[] = [
         status: 'completed',
         timestamp: '2024-12-15T10:30:00Z',
         user: {
-            name: 'Alex Johnson',
+            name: 'Joe Love',
             email: 'alex@example.com',
             avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'
         },
@@ -449,8 +449,8 @@ export default function TransactionsPage() {
                                 key={period}
                                 onClick={() => setDateRange(period)}
                                 className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${dateRange === period
-                                        ? 'bg-orange-500 text-white shadow-sm'
-                                        : 'text-gray-600 hover:text-gray-900'
+                                    ? 'bg-orange-500 text-white shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
                                     }`}
                             >
                                 {period}

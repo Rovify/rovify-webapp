@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import {
     FiMessageCircle, FiSearch, FiX, FiMoreHorizontal, FiMapPin,
     FiPhone, FiVideo, FiInfo, FiSend, FiPaperclip, FiSmile,
     FiUsers, FiStar, FiEdit3, FiSettings, FiPlus, FiCheck,
-    FiCalendar, FiClock, FiFilter, FiGrid, FiList, FiTrendingUp,
-    FiUpload, FiImage, FiFile, FiMic, FiCamera
+    FiCalendar, FiClock, FiFilter, FiGrid, FiList, FiTrendingUp
 } from 'react-icons/fi';
 import { BsStars, BsMusicNote, BsTicket, BsFire, BsSteam, BsPeople } from 'react-icons/bs';
 
@@ -27,9 +26,6 @@ interface Room {
     isActive: boolean;
     eventType?: string;
     verified?: boolean;
-    description?: string;
-    location?: string;
-    eventDate?: string;
 }
 
 interface User {
@@ -38,16 +34,6 @@ interface User {
     avatar: string;
     online: boolean;
     location: string;
-}
-
-interface Message {
-    id: number;
-    userId: number;
-    userName: string;
-    userAvatar: string;
-    content: string;
-    timestamp: string;
-    type: 'text' | 'image' | 'file';
 }
 
 // Mock data
@@ -72,10 +58,7 @@ const ROOMS_DATA: Room[] = [
         eventPhase: 'before',
         isActive: true,
         eventType: 'music',
-        verified: true,
-        description: 'Exclusive music event with top DJs and artists from around the world.',
-        location: 'Nairobi Convention Center',
-        eventDate: 'June 25, 2025 - 8:00 PM'
+        verified: true
     },
     {
         id: 2,
@@ -131,25 +114,20 @@ const ROOMS_DATA: Room[] = [
     }
 ];
 
-const EMOJIS = ['😀', '😂', '😍', '🥳', '😎', '🤔', '👍', '❤️', '🔥', '💯', '🎉', '✨', '🙌', '👏', '💪', '🎵', '🎭', '🍕', '☕', '🌟'];
+const ONLINE_USERS = [
+    { id: 1, name: 'Alex Rivera', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face' },
+    { id: 2, name: 'Maya Patel', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&h=400&fit=crop&crop=face' },
+    { id: 3, name: 'Jordan Kim', avatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=400&h=400&fit=crop&crop=face' },
+    { id: 4, name: 'Emma Wilson', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop&crop=face' },
+    { id: 5, name: 'Michael Chen', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face' }
+];
 
-export default function EchoWebInterface() {
+export default function EchoCenter() {
     const [activeTab, setActiveTab] = useState<'rooms' | 'groups' | 'friends'>('rooms');
     const [activeFilter, setActiveFilter] = useState<'all' | 'before' | 'during' | 'after'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-    const [messages, setMessages] = useState<Message[]>([]);
-    const [newMessage, setNewMessage] = useState('');
-    const [showSearchModal, setShowSearchModal] = useState(false);
-    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-    const [showUploadMenu, setShowUploadMenu] = useState(false);
-    const [showCallModal, setShowCallModal] = useState(false);
-    const [showRoomInfo, setShowRoomInfo] = useState(false);
-    const [callType, setCallType] = useState<'audio' | 'video' | null>(null);
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const emojiPickerRef = useRef<HTMLDivElement>(null);
-    const uploadMenuRef = useRef<HTMLDivElement>(null);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
     // Filter rooms based on active tab and filter
     const filteredRooms = ROOMS_DATA.filter(room => {
@@ -159,91 +137,17 @@ export default function EchoWebInterface() {
         return true;
     });
 
-    // Handle message sending
-    const handleSendMessage = useCallback(() => {
-        if (!newMessage.trim() || !selectedRoom) return;
-
-        const message: Message = {
-            id: Date.now(),
-            userId: CURRENT_USER.id,
-            userName: CURRENT_USER.name,
-            userAvatar: CURRENT_USER.avatar,
-            content: newMessage,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            type: 'text'
-        };
-
-        setMessages(prev => [...prev, message]);
-        setNewMessage('');
-    }, [newMessage, selectedRoom]);
-
-    // Handle emoji selection
-    const handleEmojiSelect = (emoji: string) => {
-        setNewMessage(prev => prev + emoji);
-        setShowEmojiPicker(false);
-    };
-
-    // Handle file upload
-    const handleFileUpload = (type: string) => {
-        if (fileInputRef.current) {
-            fileInputRef.current.accept = type === 'image' ? 'image/*' : '*/*';
-            fileInputRef.current.click();
-        }
-        setShowUploadMenu(false);
-    };
-
-    // Handle call initiation
-    const handleCall = (type: 'audio' | 'video') => {
-        setCallType(type);
-        setShowCallModal(true);
-    };
-
-    // Close modals when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
-                setShowEmojiPicker(false);
-            }
-            if (uploadMenuRef.current && !uploadMenuRef.current.contains(event.target as Node)) {
-                setShowUploadMenu(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    // Handle keyboard shortcuts
-    useEffect(() => {
-        const handleKeyPress = (e: KeyboardEvent) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage();
-            }
-            if (e.key === 'Escape') {
-                setShowSearchModal(false);
-                setShowEmojiPicker(false);
-                setShowUploadMenu(false);
-                setShowCallModal(false);
-                setShowRoomInfo(false);
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyPress);
-        return () => document.removeEventListener('keydown', handleKeyPress);
-    }, [handleSendMessage]);
-
     return (
-        <>
-            <div className="h-screen bg-gray-50 text-gray-900 flex overflow-hidden">
-                {/* Left Sidebar - Compact Material Design */}
-                <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm">
-                    {/* Header - Compact */}
-                    <div className="p-4 border-b border-gray-200">
-                        {/* User Profile */}
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
+        <div className="h-screen bg-gray-50 text-gray-900 flex overflow-hidden">
+            {/* Left Sidebar - Compact Material Design */}
+            <div className="w-80 bg-white border-r border-gray-200 flex flex-col shadow-sm">
+                {/* Header - Compact */}
+                <div className="p-4 border-b border-gray-200">
+                    {/* User Profile */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-200">
                                     <Image
                                         src={CURRENT_USER.avatar}
                                         alt={CURRENT_USER.name}
@@ -265,7 +169,6 @@ export default function EchoWebInterface() {
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setShowSearchModal(true)}
                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                         >
                             <FiSearch className="w-4 h-4 text-gray-600" />
@@ -289,25 +192,95 @@ export default function EchoWebInterface() {
                             </motion.button>
                         ))}
                     </div>
+
+                    {/* Search Bar - Compact */}
+                    <div className="relative">
+                        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <input
+                            type="text"
+                            placeholder={`Search ${activeTab}...`}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200"
+                        />
+                    </div>
+                </div>
+
+                {/* Online Users - Compact */}
+                <div className="px-4 py-3 border-b border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-medium text-gray-900 text-sm">Online Now</h3>
+                        <span className="text-xs text-gray-500">{ONLINE_USERS.length}</span>
+                    </div>
+                    <div className="flex -space-x-1.5">
+                        {ONLINE_USERS.slice(0, 8).map((user, index) => (
+                            <motion.div
+                                key={user.id}
+                                className="relative"
+                                initial={{ x: 20, opacity: 0 }}
+                                animate={{ x: 0, opacity: 1 }}
+                                transition={{ delay: index * 0.1 }}
+                                whileHover={{ scale: 1.1, zIndex: 10 }}
+                            >
+                                <div className="w-7 h-7 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                                    <Image
+                                        src={user.avatar}
+                                        alt={user.name}
+                                        width={28}
+                                        height={28}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-green-500 border border-white rounded-full" />
+                            </motion.div>
+                        ))}
+                        {ONLINE_USERS.length > 8 && (
+                            <div className="w-7 h-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-xs font-medium text-gray-600">
+                                +{ONLINE_USERS.length - 8}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Filters - Compact */}
                 <div className="px-4 py-3 border-b border-gray-200">
-                    <div className="flex gap-1">
-                        {(['all', 'before', 'during', 'after'] as const).map((filter) => (
+                    <div className="flex items-center justify-between">
+                        <div className="flex gap-1">
+                            {(['all', 'before', 'during', 'after'] as const).map((filter) => (
+                                <motion.button
+                                    key={filter}
+                                    onClick={() => setActiveFilter(filter)}
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 capitalize ${activeFilter === filter
+                                        ? 'bg-orange-500 text-white'
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                        }`}
+                                >
+                                    {filter}
+                                </motion.button>
+                            ))}
+                        </div>
+                        <div className="flex items-center gap-0.5">
                             <motion.button
-                                key={filter}
-                                onClick={() => setActiveFilter(filter)}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-200 capitalize ${activeFilter === filter
-                                    ? 'bg-orange-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                onClick={() => setViewMode('list')}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className={`p-1 rounded transition-colors ${viewMode === 'list' ? 'bg-orange-100 text-orange-600' : 'text-gray-400 hover:text-gray-600'
                                     }`}
                             >
-                                {filter}
+                                <FiList className="w-4 h-4" />
                             </motion.button>
-                        ))}
+                            <motion.button
+                                onClick={() => setViewMode('grid')}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className={`p-1 rounded transition-colors ${viewMode === 'grid' ? 'bg-orange-100 text-orange-600' : 'text-gray-400 hover:text-gray-600'
+                                    }`}
+                            >
+                                <FiGrid className="w-4 h-4" />
+                            </motion.button>
+                        </div>
                     </div>
                 </div>
 
@@ -476,7 +449,6 @@ export default function EchoWebInterface() {
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleCall('audio')}
                                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     <FiPhone className="w-4 h-4 text-gray-600" />
@@ -484,7 +456,6 @@ export default function EchoWebInterface() {
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => handleCall('video')}
                                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     <FiVideo className="w-4 h-4 text-gray-600" />
@@ -492,7 +463,6 @@ export default function EchoWebInterface() {
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => setShowRoomInfo(true)}
                                     className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                 >
                                     <FiInfo className="w-4 h-4 text-gray-600" />
@@ -502,132 +472,42 @@ export default function EchoWebInterface() {
 
                         {/* Chat Messages Area */}
                         <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
-                            {messages.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <div className="w-16 h-16 mx-auto mb-4 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
-                                        <FiMessageCircle className="w-8 h-8 text-white" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to {selectedRoom.name}</h3>
-                                    <p className="text-gray-600">Start chatting with {selectedRoom.online} online members</p>
+                            <div className="text-center py-12">
+                                <div className="w-16 h-16 mx-auto mb-4 bg-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <FiMessageCircle className="w-8 h-8 text-white" />
                                 </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {messages.map((message) => (
-                                        <div key={message.id} className="flex gap-3">
-                                            <div className="w-8 h-8 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
-                                                <Image
-                                                    src={message.userAvatar}
-                                                    alt={message.userName}
-                                                    width={32}
-                                                    height={32}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="font-medium text-gray-900 text-sm">{message.userName}</span>
-                                                    <span className="text-xs text-gray-500">{message.timestamp}</span>
-                                                </div>
-                                                <div className="bg-white rounded-2xl px-4 py-2 shadow-sm border border-gray-200">
-                                                    <p className="text-sm text-gray-900">{message.content}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">Welcome to {selectedRoom.name}</h3>
+                                <p className="text-gray-600">Start chatting with {selectedRoom.online} online members</p>
+                            </div>
                         </div>
 
                         {/* Message Input - Compact */}
                         <div className="px-6 py-4 border-t border-gray-200 bg-white">
                             <div className="flex items-center gap-3">
-                                <div className="relative" ref={uploadMenuRef}>
-                                    <motion.button
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={() => setShowUploadMenu(!showUploadMenu)}
-                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                    >
-                                        <FiPlus className="w-4 h-4 text-gray-600" />
-                                    </motion.button>
-
-                                    <AnimatePresence>
-                                        {showUploadMenu && (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                exit={{ opacity: 0, y: 10 }}
-                                                className="absolute bottom-full left-0 mb-2 bg-white rounded-2xl shadow-lg border border-gray-200 p-2 min-w-[150px]"
-                                            >
-                                                <button
-                                                    onClick={() => handleFileUpload('image')}
-                                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
-                                                >
-                                                    <FiImage className="w-4 h-4" />
-                                                    Photo
-                                                </button>
-                                                <button
-                                                    onClick={() => handleFileUpload('file')}
-                                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
-                                                >
-                                                    <FiFile className="w-4 h-4" />
-                                                    File
-                                                </button>
-                                                <button
-                                                    onClick={() => handleFileUpload('camera')}
-                                                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
-                                                >
-                                                    <FiCamera className="w-4 h-4" />
-                                                    Camera
-                                                </button>
-                                            </motion.div>
-                                        )}
-                                    </AnimatePresence>
-                                </div>
+                                <motion.button
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <FiPlus className="w-4 h-4 text-gray-600" />
+                                </motion.button>
                                 <div className="flex-1 relative">
                                     <input
                                         type="text"
                                         placeholder="Type a message..."
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
                                         className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent pr-14"
                                     />
                                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                                        <div className="relative" ref={emojiPickerRef}>
-                                            <motion.button
-                                                whileHover={{ scale: 1.05 }}
-                                                whileTap={{ scale: 0.95 }}
-                                                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                                className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-                                            >
-                                                <FiSmile className="w-4 h-4 text-gray-600" />
-                                            </motion.button>
-
-                                            <AnimatePresence>
-                                                {showEmojiPicker && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: 10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        exit={{ opacity: 0, y: 10 }}
-                                                        className="absolute bottom-full right-0 mb-2 bg-white rounded-2xl shadow-lg border border-gray-200 p-3 grid grid-cols-5 gap-2"
-                                                    >
-                                                        {EMOJIS.map((emoji, index) => (
-                                                            <button
-                                                                key={index}
-                                                                onClick={() => handleEmojiSelect(emoji)}
-                                                                className="w-8 h-8 rounded-lg hover:bg-gray-100 transition-colors flex items-center justify-center text-lg"
-                                                            >
-                                                                {emoji}
-                                                            </button>
-                                                        ))}
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
                                         <motion.button
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
-                                            onClick={handleSendMessage}
+                                            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                                        >
+                                            <FiSmile className="w-4 h-4 text-gray-600" />
+                                        </motion.button>
+                                        <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
                                             className="p-1.5 bg-orange-500 text-white rounded-full"
                                         >
                                             <FiSend className="w-3 h-3" />
@@ -658,216 +538,6 @@ export default function EchoWebInterface() {
                 )}
             </div>
 
-            {/* Search Modal */}
-            <AnimatePresence>
-                {showSearchModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                        onClick={() => setShowSearchModal(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-3xl p-6 w-full max-w-md mx-4"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex items-center gap-3 mb-4">
-                                <FiSearch className="w-5 h-5 text-gray-400" />
-                                <input
-                                    type="text"
-                                    placeholder="Search rooms, groups, friends..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="flex-1 text-lg outline-none"
-                                    autoFocus
-                                />
-                                <button
-                                    onClick={() => setShowSearchModal(false)}
-                                    className="p-1 hover:bg-gray-100 rounded-lg"
-                                >
-                                    <FiX className="w-5 h-5 text-gray-400" />
-                                </button>
-                            </div>
-                            <div className="space-y-2 max-h-60 overflow-y-auto">
-                                {filteredRooms.map((room) => (
-                                    <button
-                                        key={room.id}
-                                        onClick={() => {
-                                            setSelectedRoom(room);
-                                            setShowSearchModal(false);
-                                        }}
-                                        className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 rounded-2xl transition-colors"
-                                    >
-                                        <Image
-                                            src={room.avatar}
-                                            alt={room.name}
-                                            width={40}
-                                            height={40}
-                                            className="w-10 h-10 rounded-lg object-cover"
-                                        />
-                                        <div className="text-left">
-                                            <h3 className="font-medium text-gray-900">{room.name}</h3>
-                                            <p className="text-sm text-gray-600">{room.memberCount} members</p>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Call Modal */}
-            <AnimatePresence>
-                {showCallModal && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-3xl p-8 w-full max-w-sm mx-4 text-center"
-                        >
-                            <div className="w-20 h-20 rounded-full bg-orange-500 mx-auto mb-4 flex items-center justify-center">
-                                {callType === 'video' ? (
-                                    <FiVideo className="w-10 h-10 text-white" />
-                                ) : (
-                                    <FiPhone className="w-10 h-10 text-white" />
-                                )}
-                            </div>
-                            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                                {callType === 'video' ? 'Video Call' : 'Voice Call'}
-                            </h3>
-                            <p className="text-gray-600 mb-6">
-                                Starting {callType} call with {selectedRoom?.name}...
-                            </p>
-                            <div className="flex gap-4">
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => setShowCallModal(false)}
-                                    className="flex-1 py-3 bg-red-500 text-white rounded-2xl font-medium"
-                                >
-                                    End Call
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="flex-1 py-3 bg-green-500 text-white rounded-2xl font-medium"
-                                >
-                                    Join Call
-                                </motion.button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Room Info Modal */}
-            <AnimatePresence>
-                {showRoomInfo && selectedRoom && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-                        onClick={() => setShowRoomInfo(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-3xl p-6 w-full max-w-md mx-4"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-xl font-semibold text-gray-900">Room Info</h3>
-                                <button
-                                    onClick={() => setShowRoomInfo(false)}
-                                    className="p-1 hover:bg-gray-100 rounded-lg"
-                                >
-                                    <FiX className="w-5 h-5 text-gray-400" />
-                                </button>
-                            </div>
-
-                            <div className="text-center mb-6">
-                                <Image
-                                    src={selectedRoom.avatar}
-                                    alt={selectedRoom.name}
-                                    width={80}
-                                    height={80}
-                                    className="w-20 h-20 rounded-lg mx-auto mb-3 object-cover"
-                                />
-                                <h4 className="text-lg font-semibold text-gray-900 mb-1">
-                                    {selectedRoom.name}
-                                    {selectedRoom.verified && (
-                                        <FiStar className="w-4 h-4 text-blue-500 inline ml-1" />
-                                    )}
-                                </h4>
-                                <p className="text-sm text-gray-600">{selectedRoom.description}</p>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <FiUsers className="w-5 h-5 text-gray-400" />
-                                    <div>
-                                        <p className="font-medium text-gray-900">{selectedRoom.memberCount} Members</p>
-                                        <p className="text-sm text-gray-600">{selectedRoom.online} online now</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <FiMapPin className="w-5 h-5 text-gray-400" />
-                                    <div>
-                                        <p className="font-medium text-gray-900">Location</p>
-                                        <p className="text-sm text-gray-600">{selectedRoom.location}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <FiCalendar className="w-5 h-5 text-gray-400" />
-                                    <div>
-                                        <p className="font-medium text-gray-900">Event Date</p>
-                                        <p className="text-sm text-gray-600">{selectedRoom.eventDate}</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center gap-3">
-                                    <FiClock className="w-5 h-5 text-gray-400" />
-                                    <div>
-                                        <p className="font-medium text-gray-900">Status</p>
-                                        <div className={`inline-flex px-2 py-1 rounded text-xs font-medium ${selectedRoom.eventPhase === 'during' ? 'bg-red-100 text-red-700' :
-                                            selectedRoom.eventPhase === 'before' ? 'bg-blue-100 text-blue-700' :
-                                                'bg-gray-100 text-gray-700'
-                                            }`}>
-                                            {selectedRoom.eventPhase}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Hidden file input */}
-            <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={(e) => {
-                    console.log('File selected:', e.target.files?.[0]);
-                }}
-            />
-
             {/* Custom Scrollbar */}
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar {
@@ -885,6 +555,6 @@ export default function EchoWebInterface() {
                     background: rgba(0,0,0,0.3);
                 }
             `}</style>
-        </>
+        </div>
     );
 }

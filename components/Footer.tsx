@@ -135,8 +135,8 @@ export function Footer() {
                             </li>
                             <li className="flex items-start gap-2">
                                 <FiMail className="h-5 w-5 text-[#FF5722] mt-0.5" />
-                                <a href="mailto:hello@rovify.com" className="text-gray-600 hover:text-[#FF5722] transition-colors">
-                                    hello@rovify.com
+                                <a href="mailto:hello@rovify.io" className="text-gray-600 hover:text-[#FF5722] transition-colors">
+                                    hello@rovify.io
                                 </a>
                             </li>
                         </ul>

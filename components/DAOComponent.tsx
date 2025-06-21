@@ -379,25 +379,31 @@ export default function DAOComponent() {
                                 </div>
                             </div>
                             <div className="relative group">
-                                <button className="bg-white border border-gray-200 rounded-xl py-2 px-4 flex items-center shadow-sm hover:bg-gray-50 transition-colors">
+                                <div className="bg-white border border-gray-200 rounded-xl py-2 px-4 flex items-center shadow-sm hover:bg-gray-50 transition-colors">
                                     <span className="text-gray-700 font-medium truncate max-w-[120px]">0x7Fc6...DDaE9</span>
-                                    <button
+                                    <span
                                         onClick={handleCopyAddress}
-                                        className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+                                        className="ml-2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyPress={e => { if (e.key === 'Enter') handleCopyAddress(); }}
                                     >
                                         {copiedToClipboard ? (
                                             <FiCheck className="w-4 h-4 text-green-500" />
                                         ) : (
                                             <FiCopy className="w-4 h-4" />
                                         )}
-                                    </button>
-                                    <button
+                                    </span>
+                                    <span
                                         onClick={handleDisconnectWallet}
-                                        className="ml-2 text-gray-400 hover:text-red-500 transition-colors"
+                                        className="ml-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                                        role="button"
+                                        tabIndex={0}
+                                        onKeyPress={e => { if (e.key === 'Enter') handleDisconnectWallet(); }}
                                     >
                                         <FiX className="w-4 h-4" />
-                                    </button>
-                                </button>
+                                    </span>
+                                </div>
                                 {copiedToClipboard && (
                                     <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
                                         Copied!
@@ -975,7 +981,7 @@ export default function DAOComponent() {
                                                 <div className="text-sm text-gray-900 font-medium">{asset.value}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                                <button className="text-[#FF5722] hover:underline mr-3 flex items-center inline-flex">
+                                                <button className="text-[#FF5722] hover:underline mr-3 items-center inline-flex">
                                                     <FiEye className="w-4 h-4 mr-1" />
                                                     <span>View</span>
                                                 </button>

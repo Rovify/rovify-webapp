@@ -4,13 +4,13 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  reactStrictMode: true,
+  reactStrictMode: false,
   images: {
-    domains: [
-      'via.placeholder.com',
-      'images.unsplash.com',
-      'api.qrserver.com'
-    ],
+    // domains: [
+    //   'via.placeholder.com',
+    //   'images.unsplash.com',
+    //   'api.qrserver.com'
+    // ],
     remotePatterns: [
       {
         protocol: 'https',

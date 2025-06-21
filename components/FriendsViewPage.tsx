@@ -1,631 +1,476 @@
-
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import {
-    FiSearch, FiFilter, FiMessageSquare, FiUserPlus,
-    FiCalendar, FiClock, FiMoreHorizontal, FiX,
-    FiChevronDown, FiCheck, FiCamera
+    FiSearch, FiMessageSquare, FiUserPlus, FiMoreVertical,
+    FiCalendar, FiX, FiPhone, FiVideo, FiUserCheck,
+    FiMapPin, FiZap, FiFilter
 } from 'react-icons/fi';
 import { IoTicket } from 'react-icons/io5';
-import { BsCameraVideoFill, BsThreeDots } from 'react-icons/bs';
+import { BsCameraVideoFill } from 'react-icons/bs';
 
-// Mock friend data with activity
+// Types
 interface Activity {
     type: 'event' | 'streaming' | 'ticket' | 'moment';
     content: string;
     timeAgo: string;
     emoji?: string;
-    eventId?: string;
-    ticketId?: string;
-    streamId?: string;
-    momentId?: string;
 }
 
 interface Friend {
     id: string;
     name: string;
+    username: string;
     image: string;
     online: boolean;
     lastSeen?: string;
     verified: boolean;
     location?: string;
     mutualFriends: number;
-    mutualEvents: number;
-    isNew?: boolean;
     activity?: Activity;
+    isClose?: boolean;
 }
 
-// Sample data
+// Sample data with usernames for modern feel
 const FRIENDS_DATA: Friend[] = [
     {
         id: 'f1',
         name: 'Alex Morgan',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
+        username: '@alexmorgan',
+        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&h=120&fit=crop&crop=face',
         online: true,
         verified: true,
-        location: 'New York, NY',
+        location: 'New York',
         mutualFriends: 15,
-        mutualEvents: 3,
+        isClose: true,
         activity: {
             type: 'event',
-            content: 'Going to Summer Festival 2025',
+            content: 'At Summer Festival 2025',
             timeAgo: '15m',
-            emoji: '🎵',
-            eventId: 'evt123'
+            emoji: '🎵'
         }
     },
     {
         id: 'f2',
         name: 'Jamie Chen',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
+        username: '@jamiechen',
+        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop&crop=face',
         online: true,
         verified: false,
-        location: 'San Francisco, CA',
+        location: 'San Francisco',
         mutualFriends: 8,
-        mutualEvents: 5,
         activity: {
             type: 'streaming',
             content: 'Live from Crypto Meetup',
-            timeAgo: '2m',
-            streamId: 'str456'
+            timeAgo: '2m'
         }
     },
     {
         id: 'f3',
         name: 'Samira Khan',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
+        username: '@samira_k',
+        image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&h=120&fit=crop&crop=face',
         online: false,
         lastSeen: '3h ago',
         verified: true,
-        location: 'Austin, TX',
+        location: 'Austin',
         mutualFriends: 3,
-        mutualEvents: 2,
+        isClose: true,
         activity: {
             type: 'ticket',
-            content: 'Purchased NFT ticket for Tech Summit',
-            timeAgo: '1h',
-            ticketId: 'tkt789'
+            content: 'Got tickets for Tech Summit',
+            timeAgo: '1h'
         }
     },
     {
         id: 'f4',
         name: 'Mike Johnson',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
+        username: '@mikej',
+        image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&h=120&fit=crop&crop=face',
         online: false,
         lastSeen: '1d ago',
         verified: false,
-        location: 'Miami, FL',
+        location: 'Miami',
         mutualFriends: 6,
-        mutualEvents: 1,
     },
     {
         id: 'f5',
         name: 'Leila Patel',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
+        username: '@leilapatel',
+        image: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=120&h=120&fit=crop&crop=face',
         online: true,
         verified: true,
-        location: 'Chicago, IL',
+        location: 'Chicago',
         mutualFriends: 12,
-        mutualEvents: 7,
         activity: {
             type: 'moment',
-            content: 'Shared a moment from Wellness Retreat',
+            content: 'Shared wellness retreat moments',
             timeAgo: '45m',
-            emoji: '✨',
-            momentId: 'mom101'
+            emoji: '✨'
         }
     },
     {
         id: 'f6',
         name: 'Carlos Rodriguez',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
+        username: '@carlosr',
+        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop&crop=face',
         online: true,
         verified: false,
-        location: 'Los Angeles, CA',
+        location: 'Los Angeles',
         mutualFriends: 4,
-        mutualEvents: 2,
         activity: {
             type: 'event',
             content: 'RSVP\'d to VR Gaming Expo',
             timeAgo: '30m',
-            emoji: '🎮',
-            eventId: 'evt456'
-        }
-    },
-    {
-        id: 'f7',
-        name: 'Zoe Williams',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
-        online: false,
-        lastSeen: '5h ago',
-        verified: true,
-        location: 'Seattle, WA',
-        mutualFriends: 9,
-        mutualEvents: 4,
-        isNew: true,
-    },
-    {
-        id: 'f8',
-        name: 'David Kim',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
-        online: true,
-        verified: false,
-        location: 'Portland, OR',
-        mutualFriends: 7,
-        mutualEvents: 3,
-        activity: {
-            type: 'ticket',
-            content: 'Transferred a ticket to you',
-            timeAgo: '2h',
-            ticketId: 'tkt101',
-        }
-    },
-    {
-        id: 'f9',
-        name: 'Emma Thompson',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
-        online: false,
-        lastSeen: '2d ago',
-        verified: true,
-        location: 'Denver, CO',
-        mutualFriends: 5,
-        mutualEvents: 1,
-    },
-    {
-        id: 'f10',
-        name: 'Ryan Garcia',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
-        online: true,
-        verified: true,
-        location: 'Boston, MA',
-        mutualFriends: 11,
-        mutualEvents: 6,
-        activity: {
-            type: 'streaming',
-            content: 'Starting a stream "NFT art creation live"',
-            timeAgo: '5m',
-            streamId: 'str789'
+            emoji: '🎮'
         }
     },
 ];
 
-// Mock suggested friends
 const SUGGESTED_FRIENDS: Friend[] = [
     {
         id: 's1',
         name: 'Taylor Swift',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
+        username: '@taylorswift',
+        image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop&crop=face',
         online: true,
         verified: true,
-        location: 'Nashville, TN',
+        location: 'Nashville',
         mutualFriends: 23,
-        mutualEvents: 5,
     },
     {
         id: 's2',
         name: 'Jordan Lee',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
+        username: '@jordanlee',
+        image: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=120&h=120&fit=crop&crop=face',
         online: false,
         lastSeen: '6h ago',
         verified: false,
-        location: 'Atlanta, GA',
+        location: 'Atlanta',
         mutualFriends: 8,
-        mutualEvents: 2,
     },
-    {
-        id: 's3',
-        name: 'Olivia Martinez',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8cHJvZmlsZXxlbnwwfHwwfHw%3D&ixlib=rb-1.2.1&w=100&q=80',
-        online: true,
-        verified: true,
-        location: 'Phoenix, AZ',
-        mutualFriends: 15,
-        mutualEvents: 3,
-        isNew: true,
-    },
-];
-
-// Filter options
-const FILTER_OPTIONS = [
-    { id: 'all', label: 'All' },
-    { id: 'online', label: 'Online Now' },
-    { id: 'attending', label: 'Attending Events' },
-    { id: 'streaming', label: 'Live Streaming' },
-    { id: 'recent', label: 'Recently Active' },
 ];
 
 const getActivityIcon = (type: Activity['type']) => {
     switch (type) {
         case 'event':
-            return <FiCalendar className="w-4 h-4 text-blue-500" />;
+            return <FiCalendar className="w-3 h-3" />;
         case 'streaming':
-            return <BsCameraVideoFill className="w-4 h-4 text-red-500" />;
+            return <BsCameraVideoFill className="w-3 h-3" />;
         case 'ticket':
-            return <IoTicket className="w-4 h-4 text-amber-500" />;
-        case 'moment':
-            return <FiCamera className="w-4 h-4 text-purple-500" />;
+            return <IoTicket className="w-3 h-3" />;
         default:
-            return <FiClock className="w-4 h-4 text-gray-500" />;
+            return <FiZap className="w-3 h-3" />;
     }
 };
 
-export default function FriendsView() {
+const getActivityColor = (type: Activity['type']) => {
+    switch (type) {
+        case 'event':
+            return 'text-[#3329CF]';
+        case 'streaming':
+            return 'text-red-500';
+        case 'ticket':
+            return 'text-amber-500';
+        default:
+            return 'text-[#C281FF]';
+    }
+};
+
+export default function EpicFriendsView() {
     const [searchQuery, setSearchQuery] = useState('');
-    const [activeFilter, setActiveFilter] = useState('all');
-    const [expandedFriend, setExpandedFriend] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<'all' | 'online' | 'close'>('all');
     const [filteredFriends, setFilteredFriends] = useState<Friend[]>(FRIENDS_DATA);
     const [showSuggested, setShowSuggested] = useState(true);
-    const [showFilterMenu, setShowFilterMenu] = useState(false);
-    const [animateNewActivity, setAnimateNewActivity] = useState<boolean[]>(
-        Array(FRIENDS_DATA.length).fill(false)
-    );
+    const [contextMenu, setContextMenu] = useState<{ friendId: string; x: number; y: number } | null>(null);
 
-    const filterMenuRef = useRef<HTMLDivElement>(null);
-
-    // Simulate random friend activity
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const randomIndex = Math.floor(Math.random() * FRIENDS_DATA.length);
-            const newAnimate = [...animateNewActivity];
-            newAnimate[randomIndex] = true;
-            setAnimateNewActivity(newAnimate);
-
-            setTimeout(() => {
-                const resetAnimate = [...newAnimate];
-                resetAnimate[randomIndex] = false;
-                setAnimateNewActivity(resetAnimate);
-            }, 3000);
-        }, 10000); // Every 10 seconds
-
-        return () => clearInterval(interval);
-    }, [animateNewActivity]);
-
-    // Filter friends based on selected filter and search query
+    // Filter friends
     useEffect(() => {
         let results = [...FRIENDS_DATA];
 
-        // Apply filter
-        switch (activeFilter) {
+        switch (activeTab) {
             case 'online':
                 results = results.filter(friend => friend.online);
                 break;
-            case 'attending':
-                results = results.filter(friend => friend.activity?.type === 'event');
-                break;
-            case 'streaming':
-                results = results.filter(friend => friend.activity?.type === 'streaming');
-                break;
-            case 'recent':
-                results = results.filter(friend =>
-                    friend.online || (friend.lastSeen && friend.lastSeen.includes('h'))
-                );
+            case 'close':
+                results = results.filter(friend => friend.isClose);
                 break;
         }
 
-        // Apply search
         if (searchQuery) {
             results = results.filter(friend =>
                 friend.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (friend.location && friend.location.toLowerCase().includes(searchQuery.toLowerCase()))
+                friend.username.toLowerCase().includes(searchQuery.toLowerCase())
             );
         }
 
         setFilteredFriends(results);
-    }, [activeFilter, searchQuery]);
+    }, [activeTab, searchQuery]);
 
-    // Close filter menu when clicking outside
+    // Close context menu when clicking outside
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (filterMenuRef.current && !filterMenuRef.current.contains(event.target as Node)) {
-                setShowFilterMenu(false);
-            }
-        };
+        const handleClick = () => setContextMenu(null);
+        if (contextMenu) {
+            document.addEventListener('click', handleClick);
+            return () => document.removeEventListener('click', handleClick);
+        }
+    }, [contextMenu]);
 
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
+    const handleContextMenu = (e: React.MouseEvent, friendId: string) => {
+        e.preventDefault();
+        setContextMenu({
+            friendId,
+            x: e.clientX,
+            y: e.clientY
+        });
+    };
 
     return (
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
-            <div className="flex flex-col">
-                {/* Header with search and filter */}
-                <div className="mb-6">
+        <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-100">
+                <div className="px-4 py-4">
                     <div className="flex items-center justify-between mb-4">
-                        <h1 className="text-2xl font-bold text-gray-900">Friends</h1>
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">Friends</h1>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                                {filteredFriends.filter(f => f.online).length} online • {filteredFriends.length} total
+                            </p>
+                        </div>
                         <div className="flex items-center gap-2">
-                            <Link href="/friends/requests">
-                                <span className="text-sm font-medium text-[#FF5722] hover:underline">Friend Requests</span>
-                            </Link>
-                            <div className="h-4 w-px bg-gray-300"></div>
-                            <Link href="/friends/find">
-                                <span className="text-sm font-medium text-[#FF5722] hover:underline">Find Friends</span>
-                            </Link>
+                            <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                            >
+                                <FiFilter className="w-5 h-5 text-gray-600" />
+                            </motion.button>
+                            <motion.button
+                                whileTap={{ scale: 0.95 }}
+                                className="px-4 py-2 bg-[#FF5900] text-white font-medium rounded-full hover:bg-[#E64A19] transition-colors"
+                            >
+                                Add Friends
+                            </motion.button>
                         </div>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3">
-                        {/* Search input */}
-                        <div className="relative flex-grow">
-                            <input
-                                type="text"
-                                placeholder="Search friends..."
-                                className="w-full py-3 pl-10 pr-4 bg-gray-50 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#FF5722] focus:border-transparent transition-all text-gray-700"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                                <FiSearch className="w-5 h-5" />
-                            </div>
-                            {searchQuery && (
-                                <button
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                    onClick={() => setSearchQuery('')}
-                                >
-                                    <FiX className="w-5 h-5" />
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Filter dropdown */}
-                        <div className="relative" ref={filterMenuRef}>
+                    {/* Search */}
+                    <div className="relative mb-4">
+                        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search friends..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-0 rounded-full text-sm focus:bg-white focus:ring-2 focus:ring-[#FF5900]/20 transition-all"
+                        />
+                        {searchQuery && (
                             <button
-                                className="w-full sm:w-auto py-3 px-4 flex items-center justify-between gap-2 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors text-gray-700"
-                                onClick={() => setShowFilterMenu(!showFilterMenu)}
+                                onClick={() => setSearchQuery('')}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
                             >
-                                <div className="flex items-center gap-2">
-                                    <FiFilter className="w-5 h-5 text-gray-500" />
-                                    <span className="font-medium">
-                                        {FILTER_OPTIONS.find(opt => opt.id === activeFilter)?.label || 'Filter'}
-                                    </span>
-                                </div>
-                                <FiChevronDown className={`w-5 h-5 transition-transform ${showFilterMenu ? 'rotate-180' : ''}`} />
+                                <FiX className="w-3 h-3 text-gray-400" />
                             </button>
+                        )}
+                    </div>
 
-                            <AnimatePresence>
-                                {showFilterMenu && (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                        transition={{ duration: 0.2 }}
-                                        className="absolute z-20 top-full mt-2 right-0 sm:left-0 bg-white rounded-xl shadow-lg border border-gray-200 w-56 overflow-hidden"
-                                    >
-                                        <div className="py-1">
-                                            {FILTER_OPTIONS.map((option) => (
-                                                <button
-                                                    key={option.id}
-                                                    className={`w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 ${activeFilter === option.id ? 'bg-gray-50 text-[#FF5722] font-medium' : 'text-gray-700'
-                                                        }`}
-                                                    onClick={() => {
-                                                        setActiveFilter(option.id);
-                                                        setShowFilterMenu(false);
-                                                    }}
-                                                >
-                                                    {option.label}
-                                                    {activeFilter === option.id && (
-                                                        <FiCheck className="w-4 h-4" />
-                                                    )}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </div>
+                    {/* Tabs */}
+                    <div className="flex bg-gray-100 rounded-full p-1">
+                        {[
+                            { id: 'all' as const, label: 'All', count: FRIENDS_DATA.length },
+                            { id: 'online' as const, label: 'Online', count: FRIENDS_DATA.filter(f => f.online).length },
+                            { id: 'close' as const, label: 'Close Friends', count: FRIENDS_DATA.filter(f => f.isClose).length }
+                        ].map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex-1 px-4 py-2 text-sm font-medium rounded-full transition-all ${activeTab === tab.id
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
+                                    }`}
+                            >
+                                {tab.label}
+                                <span className="ml-1.5 text-xs opacity-60">({tab.count})</span>
+                            </button>
+                        ))}
                     </div>
                 </div>
+            </div>
 
-                {/* Suggested Friends Section */}
-                {showSuggested && (
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between mb-3">
-                            <h2 className="text-lg font-semibold text-gray-800">Suggested Friends</h2>
-                            <button onClick={() => setShowSuggested(false)} className="text-gray-500 hover:text-gray-700">
-                                <FiX className="w-5 h-5" />
+            <div className="px-4 pb-6">
+                {/* Suggested Friends */}
+                {showSuggested && activeTab === 'all' && (
+                    <motion.section
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="py-6"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-gray-900">People you may know</h2>
+                            <button
+                                onClick={() => setShowSuggested(false)}
+                                className="text-sm text-gray-500 hover:text-gray-700"
+                            >
+                                Hide
                             </button>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="flex gap-4 overflow-x-auto pb-2 -mx-1">
                             {SUGGESTED_FRIENDS.map((friend) => (
                                 <SuggestedFriendCard key={friend.id} friend={friend} />
                             ))}
                         </div>
-                    </div>
+                    </motion.section>
                 )}
 
-                {/* Friends list */}
-                <div>
-                    <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-lg font-semibold text-gray-800">
-                            {filteredFriends.length} {activeFilter !== 'all' ? FILTER_OPTIONS.find(opt => opt.id === activeFilter)?.label : ''} Friends
-                        </h2>
-                        <button className="text-sm font-medium text-gray-500 hover:text-gray-700 flex items-center gap-1">
-                            <BsThreeDots className="w-5 h-5" />
-                        </button>
-                    </div>
-
+                {/* Friends List */}
+                <div className="space-y-1">
                     {filteredFriends.length === 0 ? (
-                        <div className="text-center py-16 bg-gray-50 rounded-2xl">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
+                        <div className="text-center py-16">
+                            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                                 <FiUserPlus className="w-8 h-8 text-gray-400" />
                             </div>
-                            <h3 className="text-lg font-medium text-gray-700 mb-2">No friends found</h3>
-                            <p className="text-gray-500 max-w-md mx-auto">
-                                {searchQuery
-                                    ? `No friends match "${searchQuery}". Try a different search.`
-                                    : `No friends with the selected filter. Try a different filter.`
-                                }
+                            <h3 className="text-lg font-medium text-gray-900 mb-2">No friends found</h3>
+                            <p className="text-gray-500 text-sm">
+                                {searchQuery ? `No results for "${searchQuery}"` : 'No friends in this category'}
                             </p>
-                            <button
-                                className="mt-4 px-5 py-2 bg-[#FF5722] text-white rounded-lg font-medium hover:bg-[#E64A19] transition-colors"
-                                onClick={() => {
-                                    setSearchQuery('');
-                                    setActiveFilter('all');
-                                }}
-                            >
-                                Reset Filters
-                            </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                            {filteredFriends.map((friend, index) => (
-                                <FriendCard
-                                    key={friend.id}
+                        filteredFriends.map((friend, index) => (
+                            <motion.div
+                                key={friend.id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: index * 0.03 }}
+                            >
+                                <FriendRow
                                     friend={friend}
-                                    isExpanded={expandedFriend === friend.id}
-                                    toggleExpand={() => setExpandedFriend(expandedFriend === friend.id ? null : friend.id)}
-                                    animate={animateNewActivity[index]}
+                                    onContextMenu={(e) => handleContextMenu(e, friend.id)}
                                 />
-                            ))}
-                        </div>
+                            </motion.div>
+                        ))
                     )}
                 </div>
             </div>
+
+            {/* Context Menu */}
+            <AnimatePresence>
+                {contextMenu && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="fixed z-50 bg-white rounded-xl shadow-2xl border border-gray-200 py-2 min-w-48"
+                        style={{
+                            left: contextMenu.x,
+                            top: contextMenu.y,
+                            transform: 'translate(-50%, -10px)'
+                        }}
+                    >
+                        <ContextMenuItem icon={FiMessageSquare} label="Message" />
+                        <ContextMenuItem icon={FiPhone} label="Call" />
+                        <ContextMenuItem icon={FiVideo} label="Video Call" />
+                        <ContextMenuItem icon={FiCalendar} label="Invite to Event" />
+                        <div className="h-px bg-gray-100 my-1" />
+                        <ContextMenuItem icon={FiUserCheck} label="Close Friend" />
+                        <ContextMenuItem icon={FiMoreVertical} label="More Options" />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
 
-// Friend Card Component
-interface FriendCardProps {
+// Production-grade Friend Row Component
+function FriendRow({ friend, onContextMenu }: {
     friend: Friend;
-    isExpanded: boolean;
-    toggleExpand: () => void;
-    animate: boolean;
-}
-
-function FriendCard({ friend, isExpanded, toggleExpand, animate }: FriendCardProps) {
-
+    onContextMenu: (e: React.MouseEvent) => void;
+}) {
     return (
         <motion.div
-            className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-200 transition-all ${isExpanded ? 'ring-2 ring-[#FF5722]' : 'hover:shadow-md'
-                }`}
-            animate={animate ? { scale: [1, 1.02, 1] } : {}}
-            transition={{ duration: 0.5 }}
+            className="group flex items-center px-3 py-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer"
+            whileTap={{ scale: 0.98 }}
+            onContextMenu={onContextMenu}
         >
-            <div className="p-4">
-                <div className="flex items-start gap-3">
-                    {/* Profile Image & Status */}
-                    <div className="relative">
-                        <div className="w-14 h-14 rounded-full overflow-hidden">
-                            <Image
-                                src={friend.image}
-                                alt={friend.name}
-                                width={56}
-                                height={56}
-                                className="object-cover"
-                            />
+            {/* Avatar with status */}
+            <div className="relative mr-3">
+                <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100">
+                    <Image
+                        src={friend.image}
+                        alt={friend.name}
+                        width={36}
+                        height={36}
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                {friend.online && (
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#18E299] border-2 border-white rounded-full" />
+                )}
+                {friend.isClose && (
+                    <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#FF5900] rounded-full flex items-center justify-center">
+                        <div className="w-1.5 h-1.5 bg-white rounded-full" />
+                    </div>
+                )}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-semibold text-gray-900 truncate">{friend.name}</span>
+                    {friend.verified && (
+                        <div className="w-4 h-4 bg-[#3329CF] rounded-full flex items-center justify-center flex-shrink-0">
+                            <div className="w-2 h-2 bg-white rounded-full" />
                         </div>
-                        {friend.online ? (
-                            <div className="absolute -right-0.5 -bottom-0.5 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
-                        ) : friend.lastSeen ? (
-                            <div className="absolute -right-1 -bottom-1 w-5 h-5 bg-gray-100 border border-gray-200 rounded-full flex items-center justify-center">
-                                <FiClock className="w-3 h-3 text-gray-500" />
+                    )}
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                    <span className="truncate">{friend.username}</span>
+                    {friend.location && (
+                        <>
+                            <span>•</span>
+                            <div className="flex items-center gap-1">
+                                <FiMapPin className="w-3 h-3" />
+                                <span>{friend.location}</span>
                             </div>
-                        ) : null}
-                    </div>
-
-                    {/* Friend Info */}
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                            <h3 className="font-semibold text-gray-900 truncate">{friend.name}</h3>
-                            {friend.verified && (
-                                <span className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <FiCheck className="w-3 h-3 text-white" />
-                                </span>
-                            )}
-                            {friend.isNew && (
-                                <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
-                                    NEW
-                                </span>
-                            )}
-                        </div>
-                        {friend.location && (
-                            <p className="text-sm text-gray-500 truncate">{friend.location}</p>
-                        )}
-
-                        {/* Mutual stats */}
-                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                            <span>{friend.mutualFriends} mutual friends</span>
-                            <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                            <span>{friend.mutualEvents} mutual events</span>
-                        </div>
-                    </div>
-
-                    {/* Action buttons */}
-                    <div className="flex gap-1">
-                        <Link
-                            href={`/messages/${friend.id}`}
-                            className="p-2 text-gray-500 hover:text-[#FF5722] hover:bg-[#FF5722]/5 rounded-full transition-colors"
-                            aria-label="Message"
-                        >
-                            <FiMessageSquare className="w-5 h-5" />
-                        </Link>
-                        <button
-                            onClick={toggleExpand}
-                            className={`p-2 rounded-full transition-colors ${isExpanded
-                                ? 'text-[#FF5722] bg-[#FF5722]/10'
-                                : 'text-gray-500 hover:text-[#FF5722] hover:bg-[#FF5722]/5'
-                                }`}
-                            aria-label="More options"
-                        >
-                            <FiMoreHorizontal className="w-5 h-5" />
-                        </button>
-                    </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Activity */}
                 {friend.activity && (
-                    <motion.div
-                        className="mt-3 pt-3 border-t border-gray-100"
-                        animate={animate ? { backgroundColor: ['rgba(255,87,34,0.05)', 'rgba(255,87,34,0)', 'rgba(255,87,34,0)'] } : {}}
-                        transition={{ duration: 2 }}
-                    >
-                        <div className="flex items-center gap-2 text-sm">
-                            <div className="w-5 h-5 flex-shrink-0">
-                                {getActivityIcon(friend.activity.type)}
-                            </div>
-                            <span className="flex-1 text-gray-700">{friend.activity.content}</span>
-                            <span className="text-xs text-gray-500 flex-shrink-0">{friend.activity.timeAgo}</span>
+                    <div className="flex items-center gap-1.5 mt-1">
+                        <div className={`${getActivityColor(friend.activity.type)}`}>
+                            {getActivityIcon(friend.activity.type)}
                         </div>
-                    </motion.div>
+                        <span className="text-xs text-gray-600 truncate">
+                            {friend.activity.content}
+                        </span>
+                        {friend.activity.emoji && (
+                            <span className="text-xs">{friend.activity.emoji}</span>
+                        )}
+                        <span className="text-xs text-gray-400 ml-auto">{friend.activity.timeAgo}</span>
+                    </div>
                 )}
             </div>
 
-            {/* Expanded actions */}
-            <AnimatePresence>
-                {isExpanded && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="bg-gray-50 border-t border-gray-100 overflow-hidden"
-                    >
-                        <div className="grid grid-cols-2 gap-1 p-2">
-                            <ExpandedAction
-                                label="View Profile"
-                                href={`/profile/${friend.id}`}
-                            />
-                            <ExpandedAction
-                                label="Invite to Event"
-                                href={`/events/invite?friend=${friend.id}`}
-                            />
-                            <ExpandedAction
-                                label="Share Tickets"
-                                href={`/tickets/share?friend=${friend.id}`}
-                            />
-                            <ExpandedAction
-                                label="Hide Activity"
-                                onClick={() => console.log('Hide activity for', friend.id)}
-                            />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Quick Actions */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity ml-3">
+                <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 text-gray-400 hover:text-[#FF5900] hover:bg-[#FF5900]/5 rounded-full transition-colors"
+                >
+                    <FiMessageSquare className="w-4 h-4" />
+                </motion.button>
+                <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                    <FiMoreVertical className="w-4 h-4" />
+                </motion.button>
+            </div>
         </motion.div>
     );
 }
@@ -634,84 +479,55 @@ function FriendCard({ friend, isExpanded, toggleExpand, animate }: FriendCardPro
 function SuggestedFriendCard({ friend }: { friend: Friend }) {
     return (
         <motion.div
-            className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200 hover:shadow-md transition-all"
+            className="flex-shrink-0 w-40 bg-white border border-gray-200 rounded-xl p-3 hover:shadow-md transition-shadow"
             whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
         >
-            <div className="p-4">
-                <div className="flex items-center gap-3">
-                    {/* Profile Image & Status */}
-                    <div className="relative">
-                        <div className="w-12 h-12 rounded-full overflow-hidden">
-                            <Image
-                                src={friend.image}
-                                alt={friend.name}
-                                width={48}
-                                height={48}
-                                className="object-cover"
-                            />
-                        </div>
-                        {friend.online && (
-                            <div className="absolute -right-0.5 -bottom-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+            <div className="text-center">
+                <div className="relative mx-auto mb-3 w-16 h-16">
+                    <div className="w-full h-full rounded-full overflow-hidden bg-gray-100">
+                        <Image
+                            src={friend.image}
+                            alt={friend.name}
+                            width={36}
+                            height={36}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                    {friend.online && (
+                        <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 bg-[#18E299] border-2 border-white rounded-full" />
+                    )}
+                </div>
+
+                <div className="mb-3">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                        <h3 className="font-semibold text-gray-900 text-sm truncate">{friend.name}</h3>
+                        {friend.verified && (
+                            <div className="w-3 h-3 bg-[#3329CF] rounded-full flex items-center justify-center flex-shrink-0">
+                                <div className="w-1 h-1 bg-white rounded-full" />
+                            </div>
                         )}
                     </div>
-
-                    {/* Friend Info */}
-                    <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                            <h3 className="font-semibold text-gray-900 truncate">{friend.name}</h3>
-                            {friend.verified && (
-                                <span className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                    <FiCheck className="w-3 h-3 text-white" />
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Mutual stats */}
-                        <div className="text-xs text-gray-500 flex items-center gap-1">
-                            <span>{friend.mutualFriends} mutual friends</span>
-                            {friend.isNew && (
-                                <>
-                                    <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                    <span className="text-blue-600 font-medium">New on Rovify</span>
-                                </>
-                            )}
-                        </div>
-                    </div>
+                    <p className="text-xs text-gray-500">{friend.mutualFriends} mutual friends</p>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                    <button className="py-1.5 px-2 bg-[#FF5722] text-white text-sm font-medium rounded-lg hover:bg-[#E64A19] transition-colors">
-                        Add Friend
-                    </button>
-                    <button className="py-1.5 px-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                        Remove
-                    </button>
-                </div>
+                <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full py-1.5 bg-[#FF5900] text-white text-xs font-medium rounded-lg hover:bg-[#E64A19] transition-colors"
+                >
+                    Add Friend
+                </motion.button>
             </div>
         </motion.div>
     );
 }
 
-// Expanded action button or link
-function ExpandedAction({
-    label,
-    onClick,
-    href
-}: {
-    label: string;
-    onClick?: () => void;
-    href?: string;
-}) {
-    const content = (
-        <div className="py-2 px-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors text-center">
+// Context Menu Item
+function ContextMenuItem({ icon: Icon, label }: { icon: React.ComponentType<{ className?: string }>; label: string }) {
+    return (
+        <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            <Icon className="w-4 h-4 text-gray-500" />
             {label}
-        </div>
+        </button>
     );
-
-    if (href) {
-        return <Link href={href}>{content}</Link>;
-    }
-
-    return <button onClick={onClick}>{content}</button>;
 }

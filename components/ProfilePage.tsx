@@ -4,1257 +4,759 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getCurrentUser } from '@/mocks/data/users';
-import { getEventById } from '@/mocks/data/events';
-import { getUserTickets } from '@/mocks/data/tickets';
-import { User, Event, Ticket } from '@/types';
-import EventCard from './EventCard';
-import EventCardSkeleton from './skeletons/EventCardSkeleton';
-import ProfileSkeleton from './skeletons/ProfileSkeleton';
-import Header from '@/components/Header';
-import BottomNavigation from '@/components/SideNavigation';
-import { FiEdit2, FiLogOut, FiCheck, FiX, FiCalendar, FiMessageSquare, FiClock, FiAlertCircle, FiRefreshCcw, FiExternalLink, FiCopy, FiArrowRight, FiSettings, FiBell, FiHeart, FiUser, FiLink } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    FiUser, FiCreditCard, FiSettings, FiSliders, FiUsers, FiArchive,
+    FiBarChart, FiAward, FiBookmark, FiShield, FiEdit2, FiLogOut,
+    FiCheck, FiX, FiCalendar, FiMessageSquare, FiClock, FiAlertCircle,
+    FiRefreshCcw, FiExternalLink, FiCopy, FiArrowRight, FiBell,
+    FiHeart, FiLink, FiUpload, FiCamera, FiZap, FiTrendingUp,
+    FiStar, FiEye, FiUserPlus, FiUserCheck, FiUserX, FiDownload,
+    FiGrid, FiList, FiFilter, FiSearch, FiMoreHorizontal, FiHome,
+    FiChevronRight, FiChevronLeft, FiMenu
+} from 'react-icons/fi';
 import { FaBell, FaEthereum, FaCamera } from "react-icons/fa";
-import { IoTicket } from "react-icons/io5";
+import { IoTicket, IoSparkles } from "react-icons/io5";
 
-// Define Ethereum types without modifying global Window interface
-interface EthereumProviderEvent {
-    accountsChanged: string[];
-    chainChanged: string;
-    connect: { chainId: string };
-    disconnect: object;
-    message: { type: string; data: unknown };
-}
-
-interface EthereumProvider {
-    isMetaMask?: boolean;
-    request(request: { method: string; params?: unknown[] }): Promise<unknown>;
-    on<K extends keyof EthereumProviderEvent>(event: K, listener: (event: EthereumProviderEvent[K]) => void): void;
-    removeListener<K extends keyof EthereumProviderEvent>(event: K, listener: (event: EthereumProviderEvent[K]) => void): void;
-}
-
-interface Notification {
-    id: string;
-    type: 'event' | 'message' | 'system' | 'reminder';
-    title: string;
-    content: string;
-    image?: string;
-    time: string;
-    read: boolean;
-    link: string;
-    action?: string;
-}
-
-type TabType = 'events' | 'tickets' | 'notifications' | 'settings';
-type EventsSubTabType = 'saved' | 'attended';
-
-export default function ProfilePage() {
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [savedEvents, setSavedEvents] = useState<Event[]>([]);
-    const [tickets, setTickets] = useState<Ticket[]>([]);
-
-    const [activeTab, setActiveTab] = useState<TabType>('events');
-    const [activeSubTab, setActiveSubTab] = useState<EventsSubTabType>('saved');
-    const [isLoading, setIsLoading] = useState(true);
-
-    const [isWalletConnecting, setIsWalletConnecting] = useState(false);
-    const [isWalletConnected, setIsWalletConnected] = useState(false);
-    const [walletAddress, setWalletAddress] = useState<string | null>(null);
-    const [walletBalance, setWalletBalance] = useState<string | null>(null);
-    const [chainId, setChainId] = useState<string | null>(null);
-    const [walletError, setWalletError] = useState<string | null>(null);
-    const [walletCopied, setWalletCopied] = useState(false);
-
-    const [notifications, setNotifications] = useState<Notification[]>([]);
-
-    const tabs: TabType[] = ['events', 'tickets', 'notifications', 'settings'];
-
-    // New state variables to add
-    const [uploadingProfile, setUploadingProfile] = useState(false);
-    const [uploadingCover, setUploadingCover] = useState(false);
-
-    // Create mockNotifications with useMemo and explicit type annotation to match Notification[]
-    const mockNotifications = useMemo<Notification[]>(() => [
-        {
-            id: '1',
-            type: 'event', // Now explicitly using the literal type
-            title: 'Tech Summit 2025 is tomorrow!',
-            content: 'Don\'t forget your tickets. The event starts at 10:00 AM.',
-            image: '/images/events/tech-summit.jpg',
-            time: '2 hours ago',
-            read: false,
-            link: '/events/tech-summit-2025',
-            action: 'View Ticket'
+// Clean Design System - Rovify inspired
+const theme = {
+    colors: {
+        primary: '#FF5722',
+        primaryDark: '#E64A19',
+        primaryLight: '#FF8A65',
+        background: '#FAFAFA',
+        surface: '#FFFFFF',
+        text: {
+            primary: '#1A1A1A',
+            secondary: '#666666',
+            muted: '#999999'
         },
-        {
-            id: '2',
-            type: 'message', // Now explicitly using the literal type
-            title: 'New message from Sarah',
-            content: 'Hey! Are you going to the Culinary Masterclass next week? I just got my tickets!',
-            time: '1 day ago',
-            read: true,
-            link: '/messages/sarah',
-            action: 'Reply'
-        },
-        {
-            id: '3',
-            type: 'system', // Now explicitly using the literal type
-            title: 'NFT Tickets Confirmed',
-            content: 'Your NFT tickets for Neon Nights have been minted and transferred to your wallet.',
-            time: '2 days ago',
-            read: false,
-            link: '/tickets/neon-nights',
-            action: 'View in Wallet'
-        },
-        {
-            id: '4',
-            type: 'reminder', // Now explicitly using the literal type
-            title: 'Mindfulness Retreat starts soon',
-            content: 'Your event begins in 48 hours. Don\'t forget to bring your yoga mat!',
-            time: '3 days ago',
-            read: true,
-            link: '/events/mindfulness-retreat',
-            action: 'View Details'
-        },
-        {
-            id: '5',
-            type: 'event', // Now explicitly using the literal type
-            title: 'Price Drop Alert!',
-            content: 'Tickets for Urban Art Exhibition have been discounted by 20%.',
-            time: '4 days ago',
-            read: false,
-            link: '/events/urban-art-exhibition',
-            action: 'Buy Now'
-        },
-        {
-            id: '6',
-            type: 'system', // Now explicitly using the literal type
-            title: 'Wallet Connected',
-            content: 'Your Ethereum wallet has been successfully connected to your Rovify account.',
-            time: '1 week ago',
-            read: true,
-            link: '/settings',
-            action: 'Manage Wallet'
-        }
-    ], []);
-
-    // Handler for profile image upload
-    const handleProfileImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        try {
-            setUploadingProfile(true);
-
-            // Here you would typically:
-            // 1. Create a FormData object
-            // 2. Upload it to your backend using fetch or axios
-            // 3. Get back the URL of the uploaded image
-            // For demo purposes, we'll simulate this with a timeout
-
-            // Simulate uploading
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Create an object URL for preview (in production, you'd use the URL from your server)
-            const previewUrl = URL.createObjectURL(file);
-
-            // Update user data - this is just a simulation
-            // In production, you would update this after the server confirms the upload
-            setCurrentUser(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    image: previewUrl
-                };
-            });
-
-            // Success message
-            // You might use a toast notification in production
-            console.log("Profile image uploaded successfully!");
-
-        } catch (error) {
-            console.error("Error uploading profile image:", error);
-            // Show error message to user
-        } finally {
-            setUploadingProfile(false);
-        }
-    };
-
-    // Handler for cover image upload
-    const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        try {
-            setUploadingCover(true);
-
-            // Here you would typically:
-            // 1. Create a FormData object
-            // 2. Upload it to your backend using fetch or axios
-            // 3. Get back the URL of the uploaded image
-            // For demo purposes, we'll simulate this with a timeout
-
-            // Simulate uploading
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Create an object URL for preview (in production, you'd use the URL from your server)
-            const previewUrl = URL.createObjectURL(file);
-
-            // Update user data - this is just a simulation
-            // In production, you would update this after the server confirms the upload
-            setCurrentUser(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    coverImage: previewUrl
-                };
-            });
-
-            // Success message
-            // You might use a toast notification in production
-            console.log("Cover image uploaded successfully!");
-
-        } catch (error) {
-            console.error("Error uploading cover image:", error);
-            // Show error message to user
-        } finally {
-            setUploadingCover(false);
-        }
-    };
-
-    // Wrapped in useCallback to avoid recreations
-    const checkWalletConnection = useCallback(async () => {
-        if (typeof window !== 'undefined' && window.ethereum) {
-            try {
-                const ethereum = window.ethereum as EthereumProvider;
-                const accounts = await ethereum.request({
-                    method: 'eth_accounts'
-                }) as string[];
-
-                if (accounts && accounts.length > 0) {
-                    setWalletAddress(accounts[0]);
-                    setIsWalletConnected(true);
-
-                    const chainId = await ethereum.request({
-                        method: 'eth_chainId'
-                    }) as string;
-                    setChainId(chainId);
-
-                    await updateWalletBalance(accounts[0]);
-                }
-            } catch (error) {
-                console.error("Error checking wallet connection:", error);
-            }
-        }
-    }, []);
-
-    const handleAccountsChanged = useCallback((accounts: string[]) => {
-        if (accounts.length === 0) {
-            setIsWalletConnected(false);
-            setWalletAddress(null);
-            setWalletBalance(null);
-            setChainId(null);
-        } else {
-            setWalletAddress(accounts[0]);
-            updateWalletBalance(accounts[0]);
-        }
-    }, []);
-
-    const handleChainChanged = useCallback((chainId: string) => {
-        setChainId(chainId);
-        if (walletAddress) {
-            updateWalletBalance(walletAddress);
-        }
-    }, [walletAddress]);
-
-    const initEthereumProvider = useCallback(() => {
-        if (typeof window !== 'undefined' && window.ethereum) {
-            const ethereum = window.ethereum as EthereumProvider;
-            ethereum.on('accountsChanged', handleAccountsChanged);
-            ethereum.on('chainChanged', handleChainChanged);
-            checkWalletConnection();
-        }
-    }, [handleAccountsChanged, handleChainChanged, checkWalletConnection]);
-
-    const handleConnectWallet = async () => {
-        setIsWalletConnecting(true);
-        setWalletError(null);
-
-        if (typeof window !== 'undefined' && window.ethereum) {
-            try {
-                const ethereum = window.ethereum as EthereumProvider;
-                const accounts = await ethereum.request({
-                    method: 'eth_requestAccounts'
-                }) as string[];
-
-                if (accounts && accounts.length > 0) {
-                    setIsWalletConnected(true);
-                    setWalletAddress(accounts[0]);
-
-                    const chainId = await ethereum.request({
-                        method: 'eth_chainId'
-                    }) as string;
-                    setChainId(chainId);
-
-                    await updateWalletBalance(accounts[0]);
-                }
-            } catch (error) {
-                console.error("Error connecting wallet:", error);
-                const errorMessage = error instanceof Error
-                    ? error.message
-                    : "Could not connect to wallet. Please try again.";
-                setWalletError(errorMessage);
-            } finally {
-                setIsWalletConnecting(false);
-            }
-        } else {
-            setWalletError("Metamask not detected! Please install Metamask extension.");
-            setIsWalletConnecting(false);
-        }
-    };
-
-    const updateWalletBalance = async (address: string) => {
-        if (typeof window !== 'undefined' && window.ethereum) {
-            try {
-                const ethereum = window.ethereum as EthereumProvider;
-                const balance = await ethereum.request({
-                    method: 'eth_getBalance',
-                    params: [address, 'latest']
-                }) as string;
-
-                if (balance) {
-                    const ethBalance = (parseInt(balance, 16) / 1e18).toFixed(4);
-                    setWalletBalance(ethBalance);
-                }
-            } catch (error) {
-                console.error("Error updating balance:", error);
-            }
-        }
-    };
-
-    const disconnectWallet = useCallback(() => {
-        setIsWalletConnected(false);
-        setWalletAddress(null);
-        setWalletBalance(null);
-        setChainId(null);
-    }, []);
-
-    const copyWalletAddress = () => {
-        if (walletAddress) {
-            navigator.clipboard.writeText(walletAddress);
-            setWalletCopied(true);
-            setTimeout(() => setWalletCopied(false), 2000);
-        }
-    };
-
-    const getChainName = (chainId: string | null) => {
-        if (!chainId) return 'Unknown';
-
-        const chainNames: Record<string, string> = {
-            '0x1': 'Ethereum Mainnet',
-            '0x89': 'Polygon',
-            '0x13881': 'Polygon Mumbai',
-            '0xaa36a7': 'Sepolia Testnet'
-        };
-
-        return chainNames[chainId] || 'Unknown Chain';
-    };
-
-    const markAsRead = (notificationId: string) => {
-        setNotifications(prevNotifications =>
-            prevNotifications.map(notification =>
-                notification.id === notificationId
-                    ? { ...notification, read: true }
-                    : notification
-            )
-        );
-    };
-
-    const markAllAsRead = () => {
-        setNotifications(prevNotifications =>
-            prevNotifications.map(notification => ({ ...notification, read: true }))
-        );
-    };
-
-    useEffect(() => {
-        initEthereumProvider();
-
-        const timer = setTimeout(() => {
-            const user = getCurrentUser();
-            setCurrentUser(user);
-
-            const events = user.savedEvents
-                .map(id => getEventById(id))
-                .filter(Boolean) as Event[];
-            setSavedEvents(events);
-
-            const userTickets = getUserTickets(user.id);
-            setTickets(userTickets);
-
-            setNotifications(mockNotifications);
-
-            setIsLoading(false);
-        }, 1500);
-
-        return () => {
-            if (typeof window !== 'undefined' && window.ethereum) {
-                const ethereum = window.ethereum as EthereumProvider;
-                ethereum.removeListener('accountsChanged', handleAccountsChanged);
-                ethereum.removeListener('chainChanged', handleChainChanged);
-            }
-            clearTimeout(timer);
-        };
-    }, [handleAccountsChanged, handleChainChanged, initEthereumProvider, mockNotifications]);
-
-    const unreadNotificationsCount = notifications.filter(n => !n.read).length;
-
-    const renderTabIcon = (tab: TabType) => {
-        const isActive = activeTab === tab;
-        const baseClass = `w-5 h-5 ${isActive ? 'text-[#FF5722]' : 'text-gray-600'}`;
-
-        switch (tab) {
-            case 'events':
-                return <FiHeart className={baseClass} />;
-            case 'tickets':
-                return <IoTicket className={baseClass} />;
-            case 'notifications':
-                return <FiBell className={baseClass} />;
-            case 'settings':
-                return <FiSettings className={baseClass} />;
-            default:
-                return null;
-        }
-    };
-
-    interface StatCardProps {
-        icon: React.ReactNode;
-        value: number | string;
-        label: string;
+        border: '#E5E5E5',
+        success: '#10B981',
+        warning: '#F59E0B',
+        error: '#EF4444',
+        info: '#3B82F6',
+        ethereum: '#627EEA'
+    },
+    shadows: {
+        sm: '0 1px 3px rgba(0, 0, 0, 0.08)',
+        md: '0 4px 12px rgba(0, 0, 0, 0.08)',
+        lg: '0 10px 25px rgba(0, 0, 0, 0.1)'
+    },
+    radius: {
+        sm: '6px',
+        md: '12px',
+        lg: '16px',
+        xl: '20px'
     }
+};
 
-    const StatCard: React.FC<StatCardProps> = ({ icon, value, label }) => (
-        <div className="bg-gray-50 hover:bg-gray-100 transition-all duration-300 rounded-xl p-3 flex items-center gap-3 min-w-32 cursor-pointer group hover:shadow-md hover:-translate-y-1 transform">
-            <div className="h-12 w-12 rounded-full bg-[#FF5722]/10 flex items-center justify-center group-hover:bg-[#FF5722]/20 transition-colors">
-                {icon}
+// Mock Data
+const mockUser = {
+    id: 'user1',
+    name: 'Alex Johnson',
+    username: 'alexj',
+    email: 'alex@rovify.com',
+    bio: 'Event enthusiast and community builder. Always seeking memorable experiences to share with friends.',
+    image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    coverImage: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=300&fit=crop',
+    verified: true,
+    level: 'Gold',
+    points: 2840,
+    followers: 1234,
+    following: 456,
+    eventsAttended: 28,
+    totalSpent: 4250,
+    interests: ['Music', 'Tech', 'Art', 'Food', 'Travel'],
+    joinedDate: '2023-01-15'
+};
+
+const mockFriends = [
+    { id: '1', name: 'Sarah Chen', username: 'sarahc', image: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=50&h=50&fit=crop&crop=face', status: 'online', mutualEvents: 5 },
+    { id: '2', name: 'Marcus Reid', username: 'marcus', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=50&h=50&fit=crop&crop=face', status: 'offline', mutualEvents: 3 },
+    { id: '3', name: 'Emma Wilson', username: 'emmaw', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face', status: 'online', mutualEvents: 8 }
+];
+
+const mockFriendRequests = [
+    { id: '1', name: 'David Park', username: 'davidp', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=50&h=50&fit=crop&crop=face', mutualFriends: 3 },
+    { id: '2', name: 'Lisa Thompson', username: 'lisat', image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=50&h=50&fit=crop&crop=face', mutualFriends: 1 }
+];
+
+const mockEventHistory = [
+    {
+        id: '1',
+        title: 'Tech Summit 2024',
+        date: '2024-11-15',
+        image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&h=300&fit=crop',
+        status: 'attended',
+        rating: 5,
+        spent: 299
+    },
+    {
+        id: '2',
+        title: 'Jazz Night Downtown',
+        date: '2024-10-28',
+        image: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
+        status: 'attended',
+        rating: 4,
+        spent: 85
+    }
+];
+
+const mockAchievements = [
+    { id: '1', title: 'Early Bird', description: 'Booked 10 events in advance', icon: '🐦', unlocked: true },
+    { id: '2', title: 'Social Butterfly', description: 'Attended events with 50+ friends', icon: '🦋', unlocked: true },
+    { id: '3', title: 'Culture Vulture', description: 'Attended 5 different event categories', icon: '🎭', unlocked: false }
+];
+
+interface SidebarItem {
+    id: string;
+    label: string;
+    icon: React.ReactNode;
+    badge?: number;
+    section: 'main' | 'secondary';
+}
+
+type ActiveSection = 'dashboard' | 'profile' | 'wallet' | 'friends' | 'history' | 'analytics' | 'collections' | 'preferences' | 'settings';
+
+export default function UserDashboard() {
+    const [activeSection, setActiveSection] = useState<ActiveSection>('dashboard');
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [currentUser, setCurrentUser] = useState(mockUser);
+    const [friends, setFriends] = useState(mockFriends);
+    const [friendRequests, setFriendRequests] = useState(mockFriendRequests);
+    const [eventHistory, setEventHistory] = useState(mockEventHistory);
+
+    // Wallet states
+    const [isWalletConnected, setIsWalletConnected] = useState(true);
+    const [walletAddress] = useState('0x742d35Cc6565C42cAA5b8e8a8b02b9eF3D5d2D8B');
+    const [walletBalance] = useState('2.4567');
+
+    const sidebarItems: SidebarItem[] = [
+        { id: 'dashboard', label: 'Dashboard', icon: <FiHome className="w-5 h-5" />, section: 'main' },
+        { id: 'profile', label: 'Profile', icon: <FiUser className="w-5 h-5" />, section: 'main' },
+        { id: 'wallet', label: 'Wallet', icon: <FiCreditCard className="w-5 h-5" />, section: 'main' },
+        { id: 'friends', label: 'Friends', icon: <FiUsers className="w-5 h-5" />, badge: friendRequests.length, section: 'main' },
+        { id: 'history', label: 'History', icon: <FiArchive className="w-5 h-5" />, section: 'main' },
+        { id: 'analytics', label: 'Analytics', icon: <FiBarChart className="w-5 h-5" />, section: 'secondary' },
+        { id: 'collections', label: 'Collections', icon: <FiBookmark className="w-5 h-5" />, section: 'secondary' },
+        { id: 'preferences', label: 'Preferences', icon: <FiSliders className="w-5 h-5" />, section: 'secondary' },
+        { id: 'settings', label: 'Settings', icon: <FiSettings className="w-5 h-5" />, section: 'secondary' }
+    ];
+
+    const StatCard = ({ title, value, subtitle, icon, trend }: {
+        title: string;
+        value: string | number;
+        subtitle?: string;
+        icon: React.ReactNode;
+        trend?: 'up' | 'down' | 'neutral';
+    }) => (
+        <motion.div
+            className="bg-white rounded-xl p-6 border border-gray-100 hover:shadow-md transition-all duration-200"
+            whileHover={{ y: -2 }}
+        >
+            <div className="flex items-center justify-between mb-4">
+                <div className="h-12 w-12 bg-orange-50 rounded-lg flex items-center justify-center">
+                    {icon}
+                </div>
+                {trend && (
+                    <div className={`flex items-center gap-1 text-sm font-medium ${trend === 'up' ? 'text-green-600' : trend === 'down' ? 'text-red-600' : 'text-gray-600'
+                        }`}>
+                        {trend === 'up' && <FiTrendingUp className="w-4 h-4" />}
+                        {trend === 'down' && <FiTrendingUp className="w-4 h-4 rotate-180" />}
+                    </div>
+                )}
             </div>
             <div>
-                <p className="text-xl font-bold text-gray-800 group-hover:text-[#FF5722] transition-colors">{value}</p>
-                <p className="text-xs text-gray-500">{label}</p>
+                <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
+                <p className="text-sm text-gray-600">{title}</p>
+                {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
+            </div>
+        </motion.div>
+    );
+
+    const renderDashboard = () => (
+        <div className="space-y-8">
+            {/* Welcome Header */}
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl p-8 text-white">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-3xl font-bold mb-2">Welcome back, {currentUser.name.split(' ')[0]}!</h1>
+                        <p className="text-orange-100">You have 3 upcoming events this week</p>
+                    </div>
+                    <div className="text-right">
+                        <div className="flex items-center gap-2 mb-2">
+                            <IoSparkles className="w-5 h-5" />
+                            <span className="font-semibold">{currentUser.level} Member</span>
+                        </div>
+                        <p className="text-orange-100">{currentUser.points} points</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <StatCard
+                    title="Events Attended"
+                    value={currentUser.eventsAttended}
+                    subtitle="This year"
+                    icon={<FiCalendar className="w-6 h-6 text-orange-500" />}
+                    trend="up"
+                />
+                <StatCard
+                    title="Friends"
+                    value={currentUser.followers}
+                    subtitle={`${friends.filter(f => f.status === 'online').length} online`}
+                    icon={<FiUsers className="w-6 h-6 text-blue-500" />}
+                    trend="up"
+                />
+                <StatCard
+                    title="Total Spent"
+                    value={`$${currentUser.totalSpent}`}
+                    subtitle="All time"
+                    icon={<FiCreditCard className="w-6 h-6 text-green-500" />}
+                    trend="neutral"
+                />
+                <StatCard
+                    title="Wallet Balance"
+                    value={`${walletBalance} ETH`}
+                    subtitle="≈ $4,250"
+                    icon={<FaEthereum className="w-6 h-6 text-indigo-500" />}
+                    trend="up"
+                />
+            </div>
+
+            {/* Recent Activity & Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Recent Events */}
+                <div className="lg:col-span-2 bg-white rounded-xl p-6 border border-gray-100">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-semibold text-gray-900">Recent Events</h2>
+                        <button className="text-orange-500 hover:text-orange-600 text-sm font-medium">View all</button>
+                    </div>
+                    <div className="space-y-4">
+                        {eventHistory.slice(0, 3).map((event) => (
+                            <div key={event.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                                <Image src={event.image} alt={event.title} width={48} height={48} className="rounded-lg object-cover" />
+                                <div className="flex-1">
+                                    <h3 className="font-medium text-gray-900">{event.title}</h3>
+                                    <p className="text-sm text-gray-600">{new Date(event.date).toLocaleDateString()}</p>
+                                </div>
+                                <div className="text-right">
+                                    <div className="flex items-center gap-1 mb-1">
+                                        {[...Array(5)].map((_, i) => (
+                                            <FiStar key={i} className={`w-3 h-3 ${i < event.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} />
+                                        ))}
+                                    </div>
+                                    <p className="text-sm font-medium text-gray-900">${event.spent}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="bg-white rounded-xl p-6 border border-gray-100">
+                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h2>
+                    <div className="space-y-3">
+                        <button className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg p-3 font-medium transition-colors">
+                            Find Events
+                        </button>
+                        <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg p-3 font-medium transition-colors">
+                            Invite Friends
+                        </button>
+                        <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg p-3 font-medium transition-colors">
+                            View Tickets
+                        </button>
+                    </div>
+
+                    {/* Friend Requests */}
+                    {friendRequests.length > 0 && (
+                        <div className="mt-8">
+                            <h3 className="font-medium text-gray-900 mb-4">Friend Requests</h3>
+                            <div className="space-y-3">
+                                {friendRequests.slice(0, 2).map((request) => (
+                                    <div key={request.id} className="flex items-center gap-3">
+                                        <Image src={request.image} alt={request.name} width={32} height={32} className="rounded-full object-cover" />
+                                        <div className="flex-1">
+                                            <p className="text-sm font-medium text-gray-900">{request.name}</p>
+                                            <p className="text-xs text-gray-600">{request.mutualFriends} mutual friends</p>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button className="w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center justify-center transition-colors">
+                                                <FiCheck className="w-4 h-4" />
+                                            </button>
+                                            <button className="w-8 h-8 bg-gray-200 hover:bg-gray-300 text-gray-600 rounded-lg flex items-center justify-center transition-colors">
+                                                <FiX className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
 
-    return (
-        <div className="min-h-screen bg-gray-50 text-gray-900">
-            <Header />
-
-            <main className="container mx-auto px-4 py-6 pt-24 pb-28 max-w-6xl">
-
-                {isLoading ? (
-                    <ProfileSkeleton />
-                ) : (
-                    <div className="relative mb-8">
-                        {/* Integrated card with consistent border radius */}
-                        <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-xl">
-                            {/* Cover Image Section */}
-                            <div className="relative h-40 sm:h-48 bg-gray-200 rounded-t-3xl overflow-hidden">
-                                {/* Cover Image */}
-                                {currentUser?.coverImage ? (
-                                    <Image
-                                        src={currentUser.coverImage as string}
-                                        alt="Cover"
-                                        fill
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF5722]/90 to-[#FF9800]/80">
-                                        {/* Background pattern */}
-                                        <div className="absolute inset-0 opacity-10">
-                                            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-                                                <defs>
-                                                    <pattern id="smallGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                                                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="white" strokeWidth="1" />
-                                                    </pattern>
-                                                </defs>
-                                                <rect width="100%" height="100%" fill="url(#smallGrid)" />
-                                            </svg>
-                                        </div>
-
-                                        {/* Decorative elements */}
-                                        <div className="absolute right-8 bottom-12 text-white opacity-20 transform rotate-12">
-                                            <svg width="56" height="56" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z" />
-                                            </svg>
-                                        </div>
-                                        <div className="absolute left-12 top-10 text-white opacity-20 transform -rotate-15">
-                                            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-                                            </svg>
-                                        </div>
+    const renderProfile = () => (
+        <div className="space-y-8">
+            {/* Profile Header */}
+            <div className="bg-white rounded-xl overflow-hidden border border-gray-100">
+                <div className="relative h-48 bg-gradient-to-r from-orange-500 to-orange-600">
+                    <div className="absolute inset-0 bg-black/10"></div>
+                    <button className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-700 rounded-lg p-2 transition-colors">
+                        <FiCamera className="w-4 h-4" />
+                    </button>
+                </div>
+                <div className="relative px-8 pb-8">
+                    <div className="relative w-24 h-24 -mt-12 mb-6">
+                        <Image src={currentUser.image} alt={currentUser.name} fill className="rounded-xl object-cover border-4 border-white" />
+                        <button className="absolute -bottom-2 -right-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg p-2 transition-colors">
+                            <FiCamera className="w-3 h-3" />
+                        </button>
+                    </div>
+                    <div className="flex items-start justify-between">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <h1 className="text-2xl font-bold text-gray-900">{currentUser.name}</h1>
+                                {currentUser.verified && (
+                                    <div className="bg-orange-500 text-white rounded-full p-1">
+                                        <FiCheck className="w-3 h-3" />
                                     </div>
                                 )}
+                            </div>
+                            <p className="text-gray-600 mb-1">@{currentUser.username}</p>
+                            <p className="text-gray-700 mb-4">{currentUser.bio}</p>
+                            <div className="flex flex-wrap gap-2">
+                                {currentUser.interests.map((interest) => (
+                                    <span key={interest} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                                        {interest}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                        <button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-6 py-2 font-medium transition-colors">
+                            <FiEdit2 className="w-4 h-4 mr-2 inline" />
+                            Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                                {/* Cover Image Upload Button */}
-                                <button
-                                    className="absolute top-4 right-4 bg-white/80 hover:bg-white shadow-md rounded-full p-2 backdrop-blur-sm group transition-all"
-                                    onClick={() => {
-                                        const uploadElement = document.getElementById('cover-image-upload');
-                                        if (uploadElement) {
-                                            uploadElement.click();
-                                        }
-                                    }}
-                                >
-                                    <FaCamera className="w-4 h-4 text-gray-700 group-hover:text-[#FF5722]" />
-                                    <span className="sr-only">Upload cover image</span>
-                                    <input
-                                        type="file"
-                                        id="cover-image-upload"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={handleCoverImageUpload}
-                                    />
+            {/* Profile Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <StatCard
+                    title="Followers"
+                    value={currentUser.followers}
+                    icon={<FiUsers className="w-6 h-6 text-blue-500" />}
+                />
+                <StatCard
+                    title="Following"
+                    value={currentUser.following}
+                    icon={<FiUserPlus className="w-6 h-6 text-green-500" />}
+                />
+                <StatCard
+                    title="Events Attended"
+                    value={currentUser.eventsAttended}
+                    icon={<FiCalendar className="w-6 h-6 text-orange-500" />}
+                />
+            </div>
+
+            {/* Achievements */}
+            <div className="bg-white rounded-xl p-6 border border-gray-100">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">Achievements</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {mockAchievements.map((achievement) => (
+                        <div key={achievement.id} className={`p-4 rounded-lg border-2 transition-all ${achievement.unlocked
+                            ? 'border-orange-200 bg-orange-50'
+                            : 'border-gray-200 bg-gray-50 opacity-60'
+                            }`}>
+                            <div className="text-3xl mb-2">{achievement.icon}</div>
+                            <h3 className="font-medium text-gray-900 mb-1">{achievement.title}</h3>
+                            <p className="text-sm text-gray-600">{achievement.description}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
+    const renderFriends = () => (
+        <div className="space-y-8">
+            {/* Friend Requests */}
+            {friendRequests.length > 0 && (
+                <div className="bg-white rounded-xl p-6 border border-gray-100">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-semibold text-gray-900">Friend Requests</h2>
+                        <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-sm font-medium">
+                            {friendRequests.length} pending
+                        </span>
+                    </div>
+                    <div className="space-y-4">
+                        {friendRequests.map((request) => (
+                            <div key={request.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                                <Image src={request.image} alt={request.name} width={48} height={48} className="rounded-full object-cover" />
+                                <div className="flex-1">
+                                    <h3 className="font-medium text-gray-900">{request.name}</h3>
+                                    <p className="text-sm text-gray-600">@{request.username} • {request.mutualFriends} mutual friends</p>
+                                </div>
+                                <div className="flex gap-3">
+                                    <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                        Accept
+                                    </button>
+                                    <button className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors">
+                                        Decline
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Friends List */}
+            <div className="bg-white rounded-xl p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900">Friends</h2>
+                    <div className="flex items-center gap-4">
+                        <div className="relative">
+                            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <input
+                                type="text"
+                                placeholder="Search friends..."
+                                className="pl-10 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+                            />
+                        </div>
+                        <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                            <FiUserPlus className="w-4 h-4 mr-2 inline" />
+                            Add Friend
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {friends.map((friend) => (
+                        <div key={friend.id} className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="relative">
+                                    <Image src={friend.image} alt={friend.name} width={40} height={40} className="rounded-full object-cover" />
+                                    <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${friend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
+                                        }`}></div>
+                                </div>
+                                <div>
+                                    <h3 className="font-medium text-gray-900">{friend.name}</h3>
+                                    <p className="text-sm text-gray-600">@{friend.username}</p>
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-600 mb-3">{friend.mutualEvents} events together</p>
+                            <div className="flex gap-2">
+                                <button className="flex-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    Message
+                                </button>
+                                <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                    <FiCalendar className="w-4 h-4" />
                                 </button>
                             </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
 
-                            {/* Profile Image with External Status Indicator */}
-                            <div className="relative mx-auto sm:mx-0 sm:ml-8 w-28 h-28 -mt-14 z-10">
-                                <div className="relative h-full w-full rounded-full overflow-hidden border-4 border-white shadow-lg bg-white group">
-                                    <Image
-                                        src={currentUser?.image || '/images/placeholder-user.jpg'}
-                                        alt={currentUser?.name || 'User'}
-                                        fill
-                                        className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
+    const renderWallet = () => (
+        <div className="space-y-8">
+            {/* Wallet Overview */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-8 text-white">
+                    <div className="flex items-center justify-between mb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold mb-2">Wallet Balance</h2>
+                            <p className="text-indigo-100">Your crypto & fiat funds</p>
+                        </div>
+                        <FaEthereum className="w-12 h-12 text-indigo-200" />
+                    </div>
+                    <div className="space-y-4">
+                        <div>
+                            <p className="text-3xl font-bold">{walletBalance} ETH</p>
+                            <p className="text-indigo-100">≈ $4,250.30 USD</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-indigo-100">Connected to Ethereum Mainnet</span>
+                        </div>
+                    </div>
+                </div>
 
-                                    {/* Profile Image Upload Button */}
-                                    <div
-                                        className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                                        onClick={() => {
-                                            const uploadElement = document.getElementById('profile-image-upload');
-                                            if (uploadElement) {
-                                                uploadElement.click();
-                                            }
-                                        }}
-                                    >
-                                        <FaCamera className="w-6 h-6 text-white" />
-                                        <span className="sr-only">Upload profile picture</span>
-                                        <input
-                                            type="file"
-                                            id="profile-image-upload"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handleProfileImageUpload}
-                                        />
-                                    </div>
-                                </div>
+                <div className="bg-white rounded-xl p-6 border border-gray-100">
+                    <h3 className="font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                    <div className="space-y-3">
+                        <button className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg p-3 font-medium transition-colors">
+                            Add Funds
+                        </button>
+                        <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg p-3 font-medium transition-colors">
+                            Send Crypto
+                        </button>
+                        <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg p-3 font-medium transition-colors">
+                            View History
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-                                {/* External Status Indicators */}
-                                {currentUser?.verified && (
-                                    <div className="absolute bottom-1 right-1 bg-[#FF5722] rounded-full h-7 w-7 flex items-center justify-center border-2 border-white shadow-sm">
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                    </div>
-                                )}
-
-                                {/* Online Status Indicator (separate from verification) */}
-                                <div className="absolute top-1 right-1 bg-green-500 rounded-full h-4 w-4 border-2 border-white shadow-sm"></div>
+            {/* Recent Transactions */}
+            <div className="bg-white rounded-xl p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900">Recent Transactions</h2>
+                    <button className="text-orange-500 hover:text-orange-600 text-sm font-medium">View all</button>
+                </div>
+                <div className="space-y-4">
+                    {[
+                        { type: 'ticket', event: 'Tech Summit 2024', amount: '0.15 ETH', date: '2024-11-15', status: 'completed' },
+                        { type: 'deposit', event: 'Added funds', amount: '+1.0 ETH', date: '2024-11-10', status: 'completed' },
+                        { type: 'ticket', event: 'Jazz Night', amount: '0.04 ETH', date: '2024-10-28', status: 'completed' }
+                    ].map((tx, index) => (
+                        <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${tx.type === 'ticket' ? 'bg-orange-100' : 'bg-green-100'
+                                }`}>
+                                {tx.type === 'ticket' ?
+                                    <IoTicket className="w-5 h-5 text-orange-500" /> :
+                                    <FiCreditCard className="w-5 h-5 text-green-500" />
+                                }
                             </div>
+                            <div className="flex-1">
+                                <h3 className="font-medium text-gray-900">{tx.event}</h3>
+                                <p className="text-sm text-gray-600">{new Date(tx.date).toLocaleDateString()}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className={`font-medium ${tx.amount.startsWith('+') ? 'text-green-600' : 'text-gray-900'}`}>
+                                    {tx.amount}
+                                </p>
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {tx.status}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
 
-                            {/* User Info - Integrated with cover image - properly respecting parent's border radius */}
-                            <div className="p-6 sm:pl-40 sm:-mt-10 rounded-b-3xl">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                                    <div>
-                                        <h1 className="text-2xl font-bold text-gray-800">{currentUser?.name}</h1>
-                                        <p className="text-gray-500 flex items-center gap-1.5 mt-1">
-                                            <span>@{currentUser?.username}</span>
-                                            {walletAddress && (
-                                                <>
-                                                    <span className="text-gray-300">•</span>
-                                                    <div className="inline-flex bg-gray-100 text-gray-700 rounded-full px-2 py-0.5 text-xs font-medium items-center gap-1 cursor-pointer hover:bg-gray-200 transition-all" onClick={copyWalletAddress}>
-                                                        <FaEthereum className="text-[#627EEA] text-xs" />
-                                                        <span className="truncate max-w-[80px]">
-                                                            {walletAddress && `${walletAddress.substring(0, 4)}...${walletAddress.substring(walletAddress.length - 4)}`}
-                                                        </span>
-                                                        {walletCopied ? (
-                                                            <FiCheck className="w-3 h-3 text-green-500" />
-                                                        ) : (
-                                                            <FiCopy className="w-3 h-3" />
-                                                        )}
-                                                    </div>
-                                                </>
-                                            )}
-                                        </p>
-                                    </div>
+    const renderContent = () => {
+        switch (activeSection) {
+            case 'dashboard':
+                return renderDashboard();
+            case 'profile':
+                return renderProfile();
+            case 'friends':
+                return renderFriends();
+            case 'wallet':
+                return renderWallet();
+            case 'history':
+                return (
+                    <div className="bg-white rounded-xl p-8 border border-gray-100 text-center">
+                        <FiArchive className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Event History</h2>
+                        <p className="text-gray-600">Your complete event attendance history will appear here.</p>
+                    </div>
+                );
+            case 'analytics':
+                return (
+                    <div className="bg-white rounded-xl p-8 border border-gray-100 text-center">
+                        <FiBarChart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Analytics</h2>
+                        <p className="text-gray-600">Insights about your event preferences and spending patterns.</p>
+                    </div>
+                );
+            case 'collections':
+                return (
+                    <div className="bg-white rounded-xl p-8 border border-gray-100 text-center">
+                        <FiBookmark className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Collections</h2>
+                        <p className="text-gray-600">Saved events, wishlists, and custom collections.</p>
+                    </div>
+                );
+            case 'preferences':
+                return (
+                    <div className="bg-white rounded-xl p-8 border border-gray-100 text-center">
+                        <FiSliders className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Preferences</h2>
+                        <p className="text-gray-600">Customize your notifications, interests, and privacy settings.</p>
+                    </div>
+                );
+            case 'settings':
+                return (
+                    <div className="bg-white rounded-xl p-8 border border-gray-100 text-center">
+                        <FiSettings className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-gray-900 mb-2">Settings</h2>
+                        <p className="text-gray-600">Account settings, security, and data management options.</p>
+                    </div>
+                );
+            default:
+                return renderDashboard();
+        }
+    };
 
-                                    <div className="flex gap-2 mt-4 sm:mt-0">
-                                        <button className="bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5 hover:shadow transform hover:-translate-y-0.5">
-                                            <FiEdit2 className="w-4 h-4" />
-                                            <span>Edit Profile</span>
-                                        </button>
+    return (
+        <div className="min-h-screen bg-gray-50 flex">
+            {/* Sidebar */}
+            <motion.div
+                className={`bg-white border-r border-gray-200 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'
+                    }`}
+                initial={false}
+                animate={{ width: sidebarCollapsed ? 64 : 256 }}
+            >
+                {/* Logo & Collapse Button */}
+                <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center justify-between">
+                        {!sidebarCollapsed && (
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
+                                    <span className="text-white font-bold text-sm">R</span>
+                                </div>
+                                <span className="font-bold text-gray-900">Rovify</span>
+                            </div>
+                        )}
+                        <button
+                            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                        >
+                            {sidebarCollapsed ? <FiChevronRight className="w-4 h-4" /> : <FiChevronLeft className="w-4 h-4" />}
+                        </button>
+                    </div>
+                </div>
 
-                                        {!isWalletConnected ? (
-                                            <button
-                                                onClick={handleConnectWallet}
-                                                disabled={isWalletConnecting}
-                                                className={`bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5 hover:shadow transform hover:-translate-y-0.5 ${isWalletConnecting ? 'opacity-75 cursor-not-allowed' : ''}`}
-                                            >
-                                                {isWalletConnecting ? (
-                                                    <>
-                                                        <div className="w-4 h-4 border-2 border-gray-400 border-t-[#FF5722] rounded-full animate-spin"></div>
-                                                        <span>Connecting...</span>
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <FaEthereum className="text-[#627EEA]" />
-                                                        <span>Connect Wallet</span>
-                                                    </>
+                {/* Navigation */}
+                <nav className="flex-1 p-4">
+                    <div className="space-y-8">
+                        {/* Main Section */}
+                        <div>
+                            {!sidebarCollapsed && (
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Main</p>
+                            )}
+                            <div className="space-y-1">
+                                {sidebarItems.filter(item => item.section === 'main').map((item) => (
+                                    <motion.button
+                                        key={item.id}
+                                        onClick={() => setActiveSection(item.id as ActiveSection)}
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all relative ${activeSection === item.id
+                                            ? 'bg-orange-50 text-orange-600 font-medium'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        whileHover={{ x: 2 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {item.icon}
+                                        {!sidebarCollapsed && (
+                                            <>
+                                                <span className="flex-1">{item.label}</span>
+                                                {item.badge && (
+                                                    <span className="bg-orange-500 text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center">
+                                                        {item.badge}
+                                                    </span>
                                                 )}
-                                            </button>
-                                        ) : (
-                                            <button
-                                                onClick={disconnectWallet}
-                                                className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5 hover:shadow transform hover:-translate-y-0.5"
-                                            >
-                                                <FiLogOut className="w-4 h-4" />
-                                                <span>Disconnect</span>
-                                            </button>
+                                            </>
                                         )}
-                                    </div>
-                                </div>
+                                    </motion.button>
+                                ))}
+                            </div>
+                        </div>
 
-                                <div className="mt-4">
-                                    <p className="text-gray-700 mb-4">{currentUser?.bio}</p>
-
-                                    <div className="flex flex-wrap gap-2 mb-5">
-                                        {currentUser?.interests.map((interest, index) => (
-                                            <span
-                                                key={index}
-                                                className="bg-gray-100 text-gray-700 text-xs px-3 py-1.5 rounded-full transition-all hover:bg-[#FF5722]/10 hover:text-[#FF5722] cursor-pointer inline-flex items-center"
-                                            >
-                                                #{interest}
-                                            </span>
-                                        ))}
-                                    </div>
-
-                                    {/* User Stats Cards */}
-                                    <div className="flex flex-wrap justify-start gap-3 mt-6">
-                                        <StatCard
-                                            icon={<FiUser className="h-6 w-6 text-[#FF5722]" />}
-                                            value={currentUser?.followers || 0}
-                                            label="Followers"
-                                        />
-
-                                        <StatCard
-                                            icon={<FiUser className="h-6 w-6 text-[#FF5722]" />}
-                                            value={currentUser?.following || 0}
-                                            label="Following"
-                                        />
-
-                                        <StatCard
-                                            icon={<FiCalendar className="h-6 w-6 text-[#FF5722]" />}
-                                            value={currentUser?.attendedEvents?.length || 0}
-                                            label="Events"
-                                        />
-
-                                        {walletBalance && (
-                                            <StatCard
-                                                icon={<FaEthereum className="h-6 w-6 text-[#627EEA]" />}
-                                                value={`${walletBalance} ETH`}
-                                                label={getChainName(chainId)}
-                                            />
-                                        )}
-                                    </div>
-                                </div>
+                        {/* Secondary Section */}
+                        <div>
+                            {!sidebarCollapsed && (
+                                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">More</p>
+                            )}
+                            <div className="space-y-1">
+                                {sidebarItems.filter(item => item.section === 'secondary').map((item) => (
+                                    <motion.button
+                                        key={item.id}
+                                        onClick={() => setActiveSection(item.id as ActiveSection)}
+                                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${activeSection === item.id
+                                            ? 'bg-orange-50 text-orange-600 font-medium'
+                                            : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        whileHover={{ x: 2 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        {item.icon}
+                                        {!sidebarCollapsed && <span className="flex-1">{item.label}</span>}
+                                    </motion.button>
+                                ))}
                             </div>
                         </div>
                     </div>
-                )}
+                </nav>
 
-                <div className="bg-white rounded-full p-1.5 shadow-sm border border-gray-100 flex mb-6 overflow-x-auto hide-scrollbar">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-4 py-2.5 rounded-full flex-1 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 relative ${activeTab === tab
-                                ? 'bg-[#FF5722] text-white shadow-md'
-                                : 'text-gray-600 hover:bg-gray-100'
-                                }`}
+                {/* User Profile Footer */}
+                <div className="p-4 border-t border-gray-200">
+                    <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+                        <Image
+                            src={currentUser.image}
+                            alt={currentUser.name}
+                            width={32}
+                            height={32}
+                            className="rounded-lg object-cover"
+                        />
+                        {!sidebarCollapsed && (
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 truncate">{currentUser.name}</p>
+                                <p className="text-xs text-gray-600 truncate">{currentUser.level} Member</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* Main Content */}
+            <div className="flex-1 flex flex-col">
+                {/* Header */}
+                <header className="bg-white border-b border-gray-200 px-8 py-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900 capitalize">{activeSection}</h1>
+                            <p className="text-gray-600">
+                                {activeSection === 'dashboard' && 'Your personal event control center'}
+                                {activeSection === 'profile' && 'Manage your public profile and achievements'}
+                                {activeSection === 'wallet' && 'Manage your crypto wallet and transactions'}
+                                {activeSection === 'friends' && 'Connect with other event enthusiasts'}
+                                {activeSection === 'history' && 'View your complete event history'}
+                                {activeSection === 'analytics' && 'Insights into your event patterns'}
+                                {activeSection === 'collections' && 'Your saved events and wishlists'}
+                                {activeSection === 'preferences' && 'Customize your Rovify experience'}
+                                {activeSection === 'settings' && 'Account and security settings'}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                                <FiBell className="w-5 h-5" />
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full"></span>
+                            </button>
+                            <button className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                                Find Events
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Page Content */}
+                <main className="flex-1 p-8 overflow-y-auto">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={activeSection}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3 }}
                         >
-                            {renderTabIcon(tab)}
-                            <span className="capitalize">{tab}</span>
-                            {tab === 'notifications' && unreadNotificationsCount > 0 && (
-                                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-                                    {unreadNotificationsCount}
-                                </span>
-                            )}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="transition-opacity duration-300">
-                    {activeTab === 'events' && (
-                        <div className="space-y-6 animate-fadeIn">
-                            <div className="flex border-b border-gray-200 mb-6">
-                                <button
-                                    onClick={() => setActiveSubTab('saved')}
-                                    className={`px-6 py-3 font-medium transition-colors ${activeSubTab === 'saved' ? 'text-[#FF5722] border-b-2 border-[#FF5722]' : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    Saved Events
-                                </button>
-                                <button
-                                    onClick={() => setActiveSubTab('attended')}
-                                    className={`px-6 py-3 font-medium transition-colors ${activeSubTab === 'attended' ? 'text-[#FF5722] border-b-2 border-[#FF5722]' : 'text-gray-600 hover:text-gray-900'
-                                        }`}
-                                >
-                                    Attended Events
-                                </button>
-                            </div>
-
-                            {activeSubTab === 'saved' && (
-                                <>
-                                    {isLoading ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {[...Array(3)].map((_, i) => (
-                                                <EventCardSkeleton key={i} />
-                                            ))}
-                                        </div>
-                                    ) : savedEvents.length > 0 ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {savedEvents.map((event) => (
-                                                <EventCard key={event.id} event={event} />
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="bg-white rounded-xl p-8 text-center border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                            <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                                                <FiHeart className="h-8 w-8 text-[#FF5722]" />
-                                            </div>
-                                            <h3 className="text-xl font-semibold mb-2 text-gray-800">No saved events</h3>
-                                            <p className="text-gray-600 mb-6">Find and save events that interest you.</p>
-                                            <Link
-                                                href="/"
-                                                className="bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-full px-6 py-2 font-medium inline-block shadow-sm transition-colors hover:shadow-md transform hover:translate-y-[-1px]"
-                                            >
-                                                Discover Events
-                                            </Link>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {activeSubTab === 'attended' && (
-                                <>
-                                    {isLoading ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {[...Array(3)].map((_, i) => (
-                                                <EventCardSkeleton key={i} />
-                                            ))}
-                                        </div>
-                                    ) : currentUser?.attendedEvents.length ? (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {currentUser.attendedEvents.map((eventId) => {
-                                                const event = getEventById(eventId);
-                                                if (!event) return null;
-                                                return <EventCard key={event.id} event={event} />;
-                                            })}
-                                        </div>
-                                    ) : (
-                                        <div className="bg-white rounded-xl p-8 text-center border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                            <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                                                <FiCalendar className="h-8 w-8 text-[#FF5722]" />
-                                            </div>
-                                            <h3 className="text-xl font-semibold mb-2 text-gray-800">No attended events</h3>
-                                            <p className="text-gray-600 mb-6">Purchase tickets to events to see them here.</p>
-                                            <Link
-                                                href="/"
-                                                className="bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-full px-6 py-2 font-medium inline-block shadow-sm transition-colors hover:shadow-md transform hover:translate-y-[-1px]"
-                                            >
-                                                Find Events
-                                            </Link>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    )}
-
-                    {activeTab === 'tickets' && (
-                        <div className="space-y-6 animate-fadeIn">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-semibold text-gray-800">Your Tickets</h2>
-                                <div className="flex gap-2">
-                                    <button className="text-sm text-gray-700 px-4 py-1.5 rounded-full bg-white border border-gray-200 flex items-center gap-1.5 hover:shadow-sm transition-all hover:bg-gray-50">
-                                        <FiRefreshCcw className="w-4 h-4" />
-                                        <span>Refresh</span>
-                                    </button>
-                                    <button className="text-sm text-white px-4 py-1.5 rounded-full bg-[#FF5722] flex items-center gap-1.5 hover:bg-[#E64A19] transition-colors shadow-sm hover:shadow hover:-translate-y-0.5 transform">
-                                        <FiExternalLink className="w-4 h-4" />
-                                        <span>View in Wallet</span>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {isLoading ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {[...Array(4)].map((_, i) => (
-                                        <div key={i} className="h-36 rounded-xl bg-gray-200 animate-shimmer"></div>
-                                    ))}
-                                </div>
-                            ) : tickets.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {tickets.map((ticket) => {
-                                        const event = getEventById(ticket.eventId);
-                                        if (!event) return null;
-
-                                        return (
-                                            <Link key={ticket.id} href={`/tickets?selected=${ticket.id}`}>
-                                                <div className="relative h-36 flex rounded-xl overflow-hidden border border-gray-200 hover:border-[#FF5722] group transition-all bg-white shadow-sm hover:shadow-md transform hover:-translate-y-1">
-                                                    <div className="w-1/3 relative">
-                                                        <Image
-                                                            src={event.image}
-                                                            alt={event.title}
-                                                            fill
-                                                            className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                        />
-                                                        {ticket.isNft && (
-                                                            <div className="absolute top-2 left-2 bg-gradient-to-r from-[#FF5722] to-[#FF9800] text-white rounded-full px-2 py-0.5 text-xs font-bold shadow-md">
-                                                                NFT
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="w-2/3 bg-white p-3 flex flex-col justify-between">
-                                                        <div>
-                                                            <h3 className="font-semibold line-clamp-1 text-gray-800 group-hover:text-[#FF5722] transition-colors">{event.title}</h3>
-                                                            <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                                                                <FiCalendar className="h-3 w-3 text-[#FF5722]" />
-                                                                {new Date(event.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                                            </p>
-                                                            <div className="flex items-center gap-1 text-xs text-gray-600">
-                                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#FF5722]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                </svg>
-                                                                <span className="line-clamp-1">{event.location.name}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="flex justify-between items-end">
-                                                            <div className="bg-gray-100 rounded-full px-3 py-1 text-xs">
-                                                                <span className="font-medium">{ticket.type}</span>
-                                                            </div>
-                                                            <div className="text-[#FF5722] font-bold flex items-center gap-1">
-                                                                {ticket.isNft ? (
-                                                                    <>
-                                                                        <FaEthereum className="text-[#627EEA]" />
-                                                                        <span>#{ticket.tokenId?.substring(0, 4) || ticket.id}</span>
-                                                                    </>
-                                                                ) : (
-                                                                    <span>#{ticket.id}</span>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="absolute h-full w-0 left-1/3 flex flex-col justify-between py-2">
-                                                        <div className="h-3 w-3 rounded-full bg-white shadow-sm"></div>
-                                                        {[...Array(8)].map((_, i) => (
-                                                            <div key={i} className="h-1 w-1 rounded-full bg-white shadow-sm"></div>
-                                                        ))}
-                                                        <div className="h-3 w-3 rounded-full bg-white shadow-sm"></div>
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-xl p-8 text-center border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                    <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-[#FF5722]/10 flex items-center justify-center">
-                                        <IoTicket className="h-8 w-8 text-[#FF5722]" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold mb-2 text-gray-800">No tickets yet</h3>
-                                    <p className="text-gray-600 mb-6">Purchase tickets to events to see them here.</p>
-                                    <Link
-                                        href="/"
-                                        className="bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-full px-6 py-2 font-medium inline-block shadow-sm transition-colors hover:shadow-md transform hover:translate-y-[-1px]"
-                                    >
-                                        Discover Events
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {activeTab === 'notifications' && (
-                        <div className="space-y-6 animate-fadeIn">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-semibold text-gray-800">Notifications</h2>
-                                {notifications.some(n => !n.read) && (
-                                    <button
-                                        onClick={markAllAsRead}
-                                        className="text-sm text-[#FF5722] hover:text-[#E64A19] transition-colors font-medium"
-                                    >
-                                        Mark all as read
-                                    </button>
-                                )}
-                            </div>
-
-                            {isLoading ? (
-                                <div className="space-y-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <div key={i} className="h-24 bg-gray-200 rounded-xl animate-shimmer" style={{ animationDelay: `${i * 0.1}s` }}></div>
-                                    ))}
-                                </div>
-                            ) : notifications.length > 0 ? (
-                                <div className="space-y-3">
-                                    {notifications.map((notification) => (
-                                        <div
-                                            key={notification.id}
-                                            className={`bg-white rounded-xl border transform transition-all duration-300 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-0.5 cursor-pointer ${!notification.read ? 'border-[#FF5722]/20 bg-orange-50/30' : 'border-gray-200'}`}
-                                            onClick={() => markAsRead(notification.id)}
-                                        >
-                                            <div className="p-4">
-                                                <div className="flex gap-3">
-                                                    <div className={`h-12 w-12 rounded-full flex-shrink-0 flex items-center justify-center ${!notification.read ? 'bg-[#FF5722]/10' : 'bg-gray-100'}`}>
-                                                        {notification.type === 'event' && <FiCalendar className="h-5 w-5 text-[#FF5722]" />}
-                                                        {notification.type === 'message' && <FiMessageSquare className="h-5 w-5 text-[#FF5722]" />}
-                                                        {notification.type === 'system' && <FiAlertCircle className="h-5 w-5 text-[#FF5722]" />}
-                                                        {notification.type === 'reminder' && <FiClock className="h-5 w-5 text-[#FF5722]" />}
-                                                    </div>
-
-                                                    <div className="flex-1">
-                                                        <div className="flex justify-between items-start">
-                                                            <h3 className={`font-semibold ${!notification.read ? 'text-gray-900' : 'text-gray-800'}`}>
-                                                                {notification.title}
-                                                            </h3>
-                                                            <span className="text-xs text-gray-500 whitespace-nowrap ml-2 bg-gray-100 px-2 py-0.5 rounded-full">{notification.time}</span>
-                                                        </div>
-
-                                                        <p className="text-sm text-gray-600 mt-1 line-clamp-2">{notification.content}</p>
-
-                                                        <div className="flex justify-between items-center mt-2">
-                                                            <span className="text-xs font-medium px-2 py-0.5 rounded-full capitalize bg-opacity-10 inline-block"
-                                                                style={{
-                                                                    backgroundColor:
-                                                                        notification.type === 'event' ? 'rgba(255, 87, 34, 0.1)' :
-                                                                            notification.type === 'message' ? 'rgba(25, 118, 210, 0.1)' :
-                                                                                notification.type === 'system' ? 'rgba(156, 39, 176, 0.1)' :
-                                                                                    'rgba(76, 175, 80, 0.1)',
-                                                                    color:
-                                                                        notification.type === 'event' ? '#FF5722' :
-                                                                            notification.type === 'message' ? '#1976D2' :
-                                                                                notification.type === 'system' ? '#9C27B0' :
-                                                                                    '#4CAF50'
-                                                                }}>
-                                                                {notification.type}
-                                                            </span>
-
-                                                            <Link
-                                                                href={notification.link}
-                                                                className="text-sm font-medium text-[#FF5722] hover:text-[#E64A19] transition-colors inline-flex items-center gap-1"
-                                                            >
-                                                                {notification.action}
-                                                                <FiArrowRight className="w-3.5 h-3.5" />
-                                                            </Link>
-                                                        </div>
-                                                    </div>
-
-                                                    {!notification.read && (
-                                                        <div className="h-3 w-3 rounded-full bg-[#FF5722] flex-shrink-0 mt-2"></div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-
-                                    <div className="text-center py-4">
-                                        <button className="text-gray-500 text-sm hover:text-[#FF5722] transition-colors font-medium inline-flex items-center gap-1.5 bg-white px-4 py-2 rounded-full shadow-sm hover:shadow">
-                                            <span>Load more notifications</span>
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="bg-white rounded-xl p-8 text-center border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                    <div className="h-16 w-16 mx-auto mb-4 rounded-full bg-[#FF5722]/10 flex items-center justify-center">
-                                        <FaBell className="h-8 w-8 text-[#FF5722]" />
-                                    </div>
-                                    <h3 className="text-xl font-semibold mb-2 text-gray-800">No notifications</h3>
-                                    <p className="text-gray-600 mb-6">You&apos;re all caught up!</p>
-                                    <Link
-                                        href="/"
-                                        className="bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-full px-6 py-2 font-medium inline-block shadow-sm transition-colors hover:shadow-md transform hover:translate-y-[-1px]"
-                                    >
-                                        Explore Events
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {activeTab === 'settings' && (
-                        <div className="space-y-6 animate-fadeIn">
-                            {isLoading ? (
-                                <>
-                                    {[...Array(3)].map((_, i) => (
-                                        <div key={i} className="bg-gray-200 rounded-xl h-64 animate-shimmer" style={{ animationDelay: `${i * 0.2}s` }}></div>
-                                    ))}
-                                </>
-                            ) : (
-                                <>
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h2 className="text-xl font-semibold text-gray-800">Account Settings</h2>
-                                            <div className="h-8 w-8 rounded-full bg-[#FF5722]/10 flex items-center justify-center">
-                                                <FiUser className="h-4 w-4 text-[#FF5722]" />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div>
-                                                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Full Name
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    id="name"
-                                                    defaultValue={currentUser?.name}
-                                                    className="w-full bg-white border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:border-transparent"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Username
-                                                </label>
-                                                <div className="relative">
-                                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                        <span className="text-gray-500 sm:text-sm">@</span>
-                                                    </div>
-                                                    <input
-                                                        type="text"
-                                                        id="username"
-                                                        defaultValue={currentUser?.username}
-                                                        className="w-full bg-white border border-gray-300 rounded-lg p-3 pl-8 focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:border-transparent"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Email
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    id="email"
-                                                    defaultValue={currentUser?.email}
-                                                    className="w-full bg-white border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:border-transparent"
-                                                />
-                                            </div>
-
-                                            <div>
-                                                <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                                                    Bio
-                                                </label>
-                                                <textarea
-                                                    id="bio"
-                                                    rows={3}
-                                                    defaultValue={currentUser?.bio}
-                                                    className="w-full bg-white border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:border-transparent"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h2 className="text-xl font-semibold text-gray-800">Notifications</h2>
-                                            <div className="h-8 w-8 rounded-full bg-[#FF5722]/10 flex items-center justify-center">
-                                                <FiBell className="h-4 w-4 text-[#FF5722]" />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            {['Event Reminders', 'When Friends Attend', 'New Events Near You', 'Price Drops'].map((notification, index) => (
-                                                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                                                    <span className="text-gray-700">{notification}</span>
-                                                    <label className="inline-flex relative items-center cursor-pointer">
-                                                        <input
-                                                            type="checkbox"
-                                                            className="sr-only peer"
-                                                            defaultChecked={index < 2}
-                                                        />
-                                                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#FF5722] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FF5722]"></div>
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <h2 className="text-xl font-semibold text-gray-800">Wallet</h2>
-                                            <div className="h-8 w-8 rounded-full bg-[#FF5722]/10 flex items-center justify-center">
-                                                <FaEthereum className="h-4 w-4 text-[#627EEA]" />
-                                            </div>
-                                        </div>
-
-                                        {walletError && (
-                                            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-red-700 flex items-center gap-2">
-                                                <FiAlertCircle className="w-5 h-5 text-red-500" />
-                                                <span>{walletError}</span>
-                                            </div>
-                                        )}
-
-                                        {!isWalletConnected ? (
-                                            <div className="flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6">
-                                                <div className="h-16 w-16 mb-4 rounded-full bg-[#627EEA]/10 flex items-center justify-center">
-                                                    <FaEthereum className="h-8 w-8 text-[#627EEA]" />
-                                                </div>
-                                                <h3 className="text-lg font-semibold mb-2 text-gray-800">Connect Wallet</h3>
-                                                <p className="text-gray-600 text-center mb-4 max-w-md">Connect your Web3 wallet to access NFT tickets and blockchain features.</p>
-                                                <button
-                                                    onClick={handleConnectWallet}
-                                                    disabled={isWalletConnecting}
-                                                    className={`bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-full px-6 py-2 font-medium shadow-sm transition-all duration-300 hover:shadow-md transform hover:translate-y-[-1px] flex items-center gap-2 ${isWalletConnecting ? 'opacity-75 cursor-not-allowed' : ''}`}
-                                                >
-                                                    {isWalletConnecting ? (
-                                                        <div className="flex items-center gap-2">
-                                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                            <span>Connecting...</span>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <FaEthereum />
-                                                            <span>Connect Metamask</span>
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-4">
-                                                <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4">
-                                                    <div className="flex justify-between items-center py-2">
-                                                        <span className="text-gray-600">Connected Wallet</span>
-                                                        <div className="bg-white text-gray-700 rounded-full px-3 py-1.5 text-sm flex items-center gap-1 shadow-sm">
-                                                            <span className="h-2 w-2 rounded-full bg-green-400"></span>
-                                                            <span className="font-medium truncate max-w-xs">
-                                                                {`${walletAddress?.substring(0, 6)}...${walletAddress?.substring(walletAddress?.length - 4)}`}
-                                                            </span>
-                                                            <button onClick={copyWalletAddress} className="ml-1 hover:text-gray-900">
-                                                                {walletCopied ? (
-                                                                    <FiCheck className="w-4 h-4 text-green-500" />
-                                                                ) : (
-                                                                    <FiCopy className="w-4 h-4" />
-                                                                )}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex justify-between items-center py-2">
-                                                        <span className="text-gray-600">Network</span>
-                                                        <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-full shadow-sm">
-                                                            <span className="h-2 w-2 rounded-full bg-green-400"></span>
-                                                            <span className="text-gray-700">{getChainName(chainId)}</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex justify-between items-center py-2">
-                                                        <span className="text-gray-600">Balance</span>
-                                                        <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-full shadow-sm">
-                                                            <FaEthereum className="text-[#627EEA] text-sm" />
-                                                            <span className="text-gray-700 font-medium">{walletBalance} ETH</span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex justify-between items-center py-2">
-                                                        <span className="text-gray-600">NFT Tickets</span>
-                                                        <div className="flex items-center gap-1 bg-white px-3 py-1.5 rounded-full shadow-sm">
-                                                            <span className="text-gray-700 font-medium">{tickets.filter(t => t.isNft).length} Tickets</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    onClick={disconnectWallet}
-                                                    className="w-full bg-white hover:bg-gray-50 border border-gray-300 transition-all duration-300 rounded-full py-2.5 text-sm text-gray-700 flex items-center justify-center gap-2 hover:shadow-sm"
-                                                >
-                                                    <FiLogOut className="w-4 h-4" />
-                                                    Disconnect Wallet
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="flex justify-end mt-6">
-                                        <button className="bg-[#FF5722] hover:bg-[#E64A19] text-white rounded-full px-8 py-3 font-medium shadow-sm transition-all duration-300 hover:shadow-md transform hover:-translate-y-1 flex items-center gap-2">
-                                            <FiCheck className="w-5 h-5" />
-                                            Save Changes
-                                        </button>
-                                    </div>
-                                </>
-                            )}
-                        </div>
-                    )}
-                </div>
-            </main>
-
-            <BottomNavigation />
-
-            <style jsx global>{`
-                @keyframes shimmer {
-                    0% { background-position: -200% 0; }
-                    100% { background-position: 200% 0; }
-                }
-                
-                .animate-shimmer {
-                    background: linear-gradient(
-                        90deg,
-                        #f0f0f0 25%,
-                        #e0e0e0 50%,
-                        #f0f0f0 75%
-                    );
-                    background-size: 200% 100%;
-                    animation: shimmer 1.5s infinite;
-                }
-                
-                .line-clamp-1 {
-                    display: -webkit-box;
-                    -webkit-line-clamp: 1;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                }
-                
-                .line-clamp-2 {
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                }
-
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(5px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-
-                .animate-fadeIn {
-                    animation: fadeIn 0.3s ease-out forwards;
-                }
-
-                .hide-scrollbar {
-                    -ms-overflow-style: none;  /* IE and Edge */
-                    scrollbar-width: none;  /* Firefox */
-                }
-                
-                .hide-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-            `}</style>
+                            {renderContent()}
+                        </motion.div>
+                    </AnimatePresence>
+                </main>
+            </div>
         </div>
     );
 }

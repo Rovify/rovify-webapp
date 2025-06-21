@@ -1,12 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// utils/auth.ts
 'use client';
 
-// Use the same User interface as in AuthContext
+// same User interface as in AuthContext
 interface User {
     id: string;
-    name?: string;          // Made optional
-    email?: string;         // Made optional
+    name?: string; // Made optional
+    email?: string; // Made optional
     image?: string;
     walletAddress?: string;
     baseName?: string;
@@ -16,6 +15,22 @@ interface User {
 }
 
 const USER_DATA_KEY = 'rovify-user';
+
+/**
+ * Get OAuth redirect URI for the specified provider
+ * This ensures consistent URL generation across your app
+ */
+export const getOAuthRedirectUri = (provider: 'google') => {
+    // For production, use your actual domain
+    // For development, use localhost
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+        (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+
+    const redirectUri = `${baseUrl}/api/auth/callback/${provider}`;
+
+    console.log('🔗 Generated OAuth redirect URI:', redirectUri);
+    return redirectUri;
+};
 
 export const authService = {
     /**
@@ -36,14 +51,12 @@ export const authService = {
 
         try {
             const parsedUser = JSON.parse(userData) as User;
-
             // Validate essential user properties
             if (!parsedUser.id || !parsedUser.authMethod) {
                 console.error('🔐 AUTH ERROR: Invalid user data structure');
                 this.logout();
                 return null;
             }
-
             return parsedUser;
         } catch (error) {
             console.error('🔐 AUTH ERROR: Failed to parse user data');
@@ -61,7 +74,6 @@ export const authService = {
             console.error('🔐 AUTH ERROR: Missing required user data fields');
             throw new Error('Invalid user data');
         }
-
         console.log('🔐 AUTH: Storing user data', userData.email || userData.walletAddress || userData.id);
         localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
     },

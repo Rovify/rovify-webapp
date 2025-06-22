@@ -56,6 +56,11 @@ export default function OrganiserDashboardLayout({
         setMobileMenuOpen(false);
     };
 
+    // Calculate footer height for proper content spacing
+    const getFooterHeight = () => {
+        return isMobile ? 64 : 80; // h-16 = 64px, h-20 = 80px
+    };
+
     return (
         <>
             <div className="h-screen bg-gradient-to-br from-gray-50 via-white to-purple-50/30 flex overflow-hidden">
@@ -69,15 +74,21 @@ export default function OrganiserDashboardLayout({
                 />
 
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col h-full overflow-hidden">
+                <div
+                    className="flex-1 flex flex-col overflow-hidden"
+                    style={{
+                        height: `calc(100vh - ${getFooterHeight()}px)`,
+                        maxHeight: `calc(100vh - ${getFooterHeight()}px)`
+                    }}
+                >
                     {/* Header */}
                     <Header
                         isMobile={isMobile}
                         onMobileMenuToggleAction={handleMobileMenuToggle}
                     />
 
-                    {/* Content Area */}
-                    <main className="flex-1 overflow-y-auto" style={{ paddingBottom: '100px' }}>
+                    {/* Content Area - Scrollable within calculated space */}
+                    <main className="flex-1 overflow-y-auto">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={pathname}
@@ -90,18 +101,23 @@ export default function OrganiserDashboardLayout({
                                     opacity: { duration: 0.3 },
                                     y: { duration: 0.4 }
                                 }}
-                                className="p-4 sm:p-6 lg:p-8 h-full"
+                                className="p-4 sm:p-6 lg:p-8"
                             >
-                                <div className="max-w-7xl mx-auto h-full">
+                                <div className="max-w-7xl mx-auto">
                                     {children}
                                 </div>
+                                {/* Bottom spacer for comfortable scrolling */}
+                                <div className="h-8"></div>
                             </motion.div>
                         </AnimatePresence>
                     </main>
-
-                    {/* Sticky Footer */}
-                    <Footer />
                 </div>
+
+                {/* Fixed Footer */}
+                <Footer
+                    sidebarCollapsed={sidebarCollapsed}
+                    isMobile={isMobile}
+                />
             </div>
 
             {/* Background decorative elements */}

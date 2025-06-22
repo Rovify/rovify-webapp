@@ -19,7 +19,7 @@ import { BsShield, BsBank, BsCreditCard2Front } from "react-icons/bs";
 const mockSettings = {
     profile: {
         name: 'Joe Rover',
-        email: 'sarah.chen@rovify.com',
+        email: 'sarah.chen@rovify.io',
         phone: '+1 (555) 123-4567',
         avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face',
         company: 'Rovify Events',

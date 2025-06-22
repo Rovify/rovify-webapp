@@ -391,7 +391,8 @@ export default function LoginPage() {
                     >
                         <div className="h-10 w-10 bg-white/20 backdrop-blur-lg rounded-tr-xl rounded-bl-xl flex items-center justify-center shadow-2xl overflow-hidden">
                             <Image
-                                src={RoviLogo}
+                                // src={RoviLogo}
+                                src="/images/contents/rovi-logo.png"
                                 alt="Rovify Logo"
                                 width={28}
                                 height={28}
@@ -483,7 +484,8 @@ export default function LoginPage() {
                     >
                         <div className="h-10 w-10 bg-gradient-to-br from-[#FF5722] to-[#FF8A65] rounded-tr-xl rounded-bl-xl flex items-center justify-center shadow-lg overflow-hidden">
                             <Image
-                                src={RoviLogo}
+                                // src={RoviLogo}
+                                src="/images/contents/rovi-logo.png"
                                 alt="Rovify Logo"
                                 width={28}
                                 height={28}

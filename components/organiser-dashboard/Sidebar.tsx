@@ -219,11 +219,20 @@ export default function Sidebar({
                                         <div className="w-12 h-12 bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/25 relative overflow-hidden">
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
                                             <Image
-                                                src={RoviLogo}
+                                                src="/images/contents/rovi-logo.png"
                                                 alt="Rovify Logo"
                                                 width={24}
                                                 height={24}
-                                                className="object-contain filter brightness-0 invert relative z-10"
+                                                className="object-contain relative z-10"
+                                                onError={(e) => {
+                                                    // Fallback
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.style.display = 'none';
+                                                    const parent = target.parentElement;
+                                                    if (parent) {
+                                                        parent.innerHTML = '<span class="text-white font-bold text-lg relative z-10">R</span>';
+                                                    }
+                                                }}
                                             />
                                         </div>
                                         <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full flex items-center justify-center">
@@ -231,7 +240,7 @@ export default function Sidebar({
                                         </div>
                                     </div>
                                     <div>
-                                        <h2 className="font-bold text-gray-900 text-xl tracking-tight">Rovify Pro</h2>
+                                        <h2 className="font-bold text-gray-900 text-xl tracking-tight">Rovify</h2>
                                         <p className="text-sm text-orange-600 font-medium">Event organiser</p>
                                     </div>
                                 </motion.div>
@@ -246,13 +255,21 @@ export default function Sidebar({
                                 >
                                     <div className="w-12 h-12 bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/25 relative overflow-hidden">
                                         <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                                        {/* FIXED: Show logo instead of "R" text */}
                                         <Image
-                                            src={RoviLogo}
+                                            src="/images/contents/rovi-logo.png"
                                             alt="Rovify Logo"
                                             width={20}
                                             height={20}
-                                            className="object-contain filter brightness-0 invert relative z-10"
+                                            className="object-contain relative z-10"
+                                            onError={(e) => {
+                                                // Fallback 
+                                                const target = e.target as HTMLImageElement;
+                                                target.style.display = 'none';
+                                                const parent = target.parentElement;
+                                                if (parent) {
+                                                    parent.innerHTML = '<span class="text-white font-bold text-sm relative z-10">R</span>';
+                                                }
+                                            }}
                                         />
                                     </div>
                                 </motion.div>

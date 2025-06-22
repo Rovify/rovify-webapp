@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // app/legal/page.tsx
 'use client';
 
@@ -167,7 +168,8 @@ export default function LegalPage() {
                             <div className="flex items-center">
                                 <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#FF5722] to-[#FF9800] flex items-center justify-center">
                                     <Image
-                                        src={RoviLogo}
+                                        // src={RoviLogo}
+                                        src="/images/contents/rovi-logo.png"
                                         alt="Rovify Logo"
                                         width={32}
                                         height={32}

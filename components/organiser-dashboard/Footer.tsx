@@ -1,13 +1,22 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
-
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { FiHeart, FiGithub, FiTwitter, FiMail, FiExternalLink } from 'react-icons/fi';
-import RoviLogo from '@/public/images/contents/rovi-logo.png';
+import { FiHeart, FiGithub, FiTwitter, FiMail } from 'react-icons/fi';
 
-export default function Footer() {
+interface FooterProps {
+    sidebarCollapsed?: boolean;
+    isMobile?: boolean;
+}
+
+export default function Footer({ sidebarCollapsed = false, isMobile = false }: FooterProps) {
     const currentYear = new Date().getFullYear();
+
+    const getPositionClasses = () => {
+        if (isMobile) {
+            return 'left-0 right-0';
+        }
+        return sidebarCollapsed ? 'left-16 right-0' : 'left-64 right-0';
+    };
 
     const socialLinks = [
         { icon: <FiTwitter className="w-4 h-4" />, href: '#', label: 'Twitter' },
@@ -16,96 +25,88 @@ export default function Footer() {
     ];
 
     return (
-        <footer className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-gray-200/50 shadow-2xl shadow-purple-500/5 z-20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                {/* Compact Footer Content */}
-                <div className="py-3 sm:py-4">
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-                        {/* Left: Brand + Copyright */}
-                        <div className="flex items-center gap-4">
-                            <motion.div
-                                className="flex items-center gap-2"
-                                whileHover={{ scale: 1.02 }}
-                                transition={{ duration: 0.2 }}
-                            >
-                                <div className="w-8 h-8 bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 rounded-lg flex items-center justify-center shadow-md shadow-orange-500/25 relative overflow-hidden">
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
-                                    <Image
-                                        src={RoviLogo}
-                                        alt="Rovify Logo"
-                                        width={16}
-                                        height={16}
-                                        className="object-contain filter brightness-0 invert relative z-10"
-                                    />
-                                </div>
-                                <div className="hidden sm:block">
-                                    <h3 className="font-bold text-gray-900 text-sm">Rovify Pro</h3>
-                                </div>
-                            </motion.div>
+        <footer className={`
+      fixed bottom-0 ${getPositionClasses()}
+      h-14 bg-white/90 backdrop-blur-sm
+      border-t border-gray-200/60
+      shadow-sm
+      z-20 transition-all duration-300 ease-in-out
+      flex items-center
+    `}>
+            <div className="w-full max-w-7xl mx-auto px-4 lg:px-8">
+                <div className="flex justify-between items-center">
 
-                            <div className="text-xs text-gray-600 flex items-center gap-3">
-                                <span>© {currentYear} Rovify Pro</span>
-                                <div className="hidden md:flex items-center gap-1">
-                                    <span>Made with</span>
-                                    <motion.div
-                                        animate={{ scale: [1, 1.2, 1] }}
-                                        transition={{ duration: 1.5, repeat: Infinity }}
-                                    >
-                                        <FiHeart className="w-3 h-3 text-red-500" />
-                                    </motion.div>
-                                    <span>in Rwanda</span>
-                                </div>
+                    <motion.div
+                        className="flex items-center gap-3"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <div className="relative w-7 h-7 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg shadow-orange-500/25">
+                            <Image
+                                src="/images/contents/rovi-logo.png"
+                                alt="Rovify Logo"
+                                width={16}
+                                height={16}
+                                className="object-contain"
+                                onError={(e) => {
+                                    // Fallback if image fails to load
+                                    const target = e.target as HTMLImageElement;
+                                    target.style.display = 'none';
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                        parent.innerHTML = '<span class="text-white font-bold text-xs">R</span>';
+                                    }
+                                }}
+                            />
+                        </div>
+                        <div className="hidden sm:block">
+                            <span className="text-sm font-semibold text-gray-900">Rovify</span>
+                            <div className="text-xs text-gray-500">Event Organiser</div>
+                        </div>
+                    </motion.div>
+
+                    <div className="hidden md:flex items-center gap-1 text-xs text-gray-500">
+                        <span>© {currentYear} Rovify. Made with</span>
+                        <FiHeart className="w-3 h-3 text-red-500 fill-current" />
+                        <span>for amazing events</span>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                        {/* Status indicators */}
+                        <div className="flex items-center gap-3 text-xs">
+                            <div className="flex items-center gap-1.5 text-gray-600">
+                                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm"></div>
+                                <span className="font-medium text-xs">v2.1.4</span>
+                            </div>
+
+                            {/* <div className="flex items-center gap-1.5 text-gray-600">
+                                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm"></div>
+                                <span className="font-medium text-xs">v2.1.4</span>
+                                <span className="hidden md:inline text-xs opacity-60">• Build 1247</span>
+                            </div> */}
+
+                            <div className="flex items-center gap-1.5 text-gray-600">
+                                <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                                <span className="hidden lg:inline font-medium">Operational</span>
+                                <span className="lg:hidden font-medium">Online</span>
                             </div>
                         </div>
 
-                        {/* Center: Quick Links */}
-                        <div className="hidden lg:flex items-center gap-6 text-xs text-gray-600">
-                            {['Help Center', 'Privacy', 'Terms', 'Status'].map((link, index) => (
+                        <div className="hidden sm:flex items-center gap-2">
+                            {socialLinks.map((link, index) => (
                                 <motion.a
-                                    key={link}
-                                    href="#"
-                                    className="hover:text-orange-600 transition-colors duration-200 flex items-center gap-1 group"
-                                    whileHover={{ y: -1 }}
+                                    key={index}
+                                    href={link.href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1.5 text-gray-500 hover:text-orange-500 transition-colors duration-200"
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    aria-label={link.label}
                                 >
-                                    {link}
-                                    <FiExternalLink className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                    {link.icon}
                                 </motion.a>
                             ))}
-                        </div>
-
-                        {/* Right: Status + Social */}
-                        <div className="flex items-center gap-4">
-                            {/* Status Indicators */}
-                            <div className="flex items-center gap-3 text-xs">
-                                <div className="flex items-center gap-1.5 text-gray-600">
-                                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                                    <span className="hidden sm:inline">v2.1.4</span>
-                                    <span className="sm:hidden">v2.1</span>
-                                </div>
-                                <div className="flex items-center gap-1.5 text-gray-600">
-                                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                                    <span className="hidden md:inline">Operational</span>
-                                    <span className="md:hidden">Online</span>
-                                </div>
-                            </div>
-
-                            {/* Social Links */}
-                            <div className="flex items-center gap-2">
-                                {socialLinks.slice(0, 3).map((social, index) => (
-                                    <motion.a
-                                        key={social.label}
-                                        href={social.href}
-                                        className="p-1.5 bg-gray-100 hover:bg-orange-50 border border-gray-200 hover:border-orange-200 rounded-lg transition-all duration-200 group"
-                                        whileHover={{ scale: 1.05, y: -1 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        title={social.label}
-                                    >
-                                        <div className="text-gray-600 group-hover:text-orange-600 text-xs">
-                                            {social.icon}
-                                        </div>
-                                    </motion.a>
-                                ))}
-                            </div>
                         </div>
                     </div>
                 </div>

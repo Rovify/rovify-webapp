@@ -71,7 +71,7 @@ const mockTransactions: Transaction[] = [
         timestamp: '2024-12-14T15:45:00Z',
         user: {
             name: 'Joe Rover',
-            email: 'sarah@example.com',
+            email: 'rover@rovify.io',
             avatar: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=40&h=40&fit=crop&crop=face'
         },
         event: {

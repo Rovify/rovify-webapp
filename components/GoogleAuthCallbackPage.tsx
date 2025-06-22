@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -184,7 +185,8 @@ export default function AuthCallbackPage() {
                         <div className="absolute inset-0 bg-gradient-to-br from-[#FF5722] to-[#FF7A50]"></div>
                         <div className="relative z-10">
                             <Image
-                                src={RoviLogo}
+                                // src={RoviLogo}
+                                src="/images/contents/rovi-logo.png"
                                 alt="Rovify Logo"
                                 width={40}
                                 height={40}

@@ -288,7 +288,7 @@ const FEATURED_CREATORS: Creator[] = [
     {
         id: "3",
         name: "Sarah Johnson",
-        email: "sarah@example.com",
+        email: "rover@rovify.io",
         avatarUrl: "https://images.unsplash.com/photo-1614283233556-f35b0c801ef1?w=100&h=100&fit=crop&crop=face",
         verified: true,
         followers: 27800,

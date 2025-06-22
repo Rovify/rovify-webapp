@@ -27,7 +27,7 @@ const mockOrganizerProfile = {
     bio: 'Passionate event organizer with 8+ years of experience creating memorable experiences that bring people together. Specialized in tech conferences, music festivals, and corporate events.',
     location: 'San Francisco, CA',
     website: 'https://sarahevents.com',
-    email: 'sarah@rovify.com',
+    email: 'sarah@rovify.io',
     phone: '+1 (555) 123-4567',
     joinDate: '2020-03-15',
     verified: true,

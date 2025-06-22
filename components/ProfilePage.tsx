@@ -2332,7 +2332,8 @@ export default function UserDashboard() {
                                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
                                     <span className="text-white font-bold text-lg">
                                         <Image
-                                            src={RoviLogo}
+                                            // src={RoviLogo}
+                                            src="/images/contents/rovi-logo.png"
                                             alt="Rovify Logo"
                                             width={28}
                                             height={28}

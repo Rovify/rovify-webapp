@@ -56,7 +56,8 @@ export default function ForgotPasswordPage() {
                     <div className="flex items-center gap-2">
                         <div className="h-10 w-10 bg-[#FF5722] rounded-xl flex items-center justify-center shadow-sm overflow-hidden">
                             <Image
-                                src={RoviLogo}
+                                // src={RoviLogo}
+                                src="/images/contents/rovi-logo.png"
                                 alt="Rovify Logo"
                                 width={32}
                                 height={32}

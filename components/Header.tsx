@@ -693,7 +693,8 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                     whileTap={{ scale: 0.95 }}
                                 >
                                     <Image
-                                        src={RoviLogo}
+                                        // src={RoviLogo}
+                                        src="/images/contents/rovi-logo.png"
                                         alt="Rovify Logo"
                                         width={28}
                                         height={28}

@@ -30,7 +30,8 @@ export function Footer() {
                         <Link href="/" className="flex items-center gap-2 group mb-4">
                             <div className="h-10 w-10 bg-gradient-to-r from-[#FF5722] to-[#FF7A50] rounded-xl flex items-center justify-center shadow-md transition-transform group-hover:scale-105">
                                 <Image
-                                    src={RoviLogo}
+                                    // src={RoviLogo}
+                                    src="/images/contents/rovi-logo.png"
                                     alt="Rovify Logo"
                                     width={32}
                                     height={32}

@@ -110,7 +110,7 @@ const mockSecurityEvents: SecurityEvent[] = [
         user: {
             id: 'user_789',
             name: 'Joe Rover',
-            email: 'sarah@example.com',
+            email: 'rover@rovify.io',
             avatar: 'https://images.unsplash.com/photo-1494790108755-2616b88e1f9d?w=40&h=40&fit=crop&crop=face',
             role: 'organiser'
         },

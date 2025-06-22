@@ -328,7 +328,7 @@ export default function LoginPage() {
                 throw new Error('Authentication configuration error');
             }
 
-            const redirectUri = `${window.location.origin}/api/auth/callback/google`;
+            const redirectUri = getOAuthRedirectUri('google');
             console.log('Using redirect URI:', redirectUri);
 
             const googleOAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +

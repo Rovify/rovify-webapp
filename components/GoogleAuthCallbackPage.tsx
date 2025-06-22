@@ -7,6 +7,7 @@ import Image from 'next/image';
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
 import PasswordConfirmModal from '@/components/PasswordConfirmModal';
 import { useAuth } from '@/context/AuthContext';
+import { getOAuthRedirectUri } from '@/utils/env';
 
 interface User {
     id: string;
@@ -72,7 +73,7 @@ export default function AuthCallbackPage() {
                     body: JSON.stringify({
                         code,
                         codeVerifier: verifier,
-                        redirectUri: window.location.origin + '/api/auth/callback/google'
+                        redirectUri: getOAuthRedirectUri('google')
                     })
                 });
 

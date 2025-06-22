@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiUser, FiCalendar, FiTrendingUp, FiUsers, FiZap, FiStar, FiHeart } from 'react-icons/fi';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight, FiUser, FiCalendar, FiTrendingUp, FiUsers, FiZap, FiStar, FiHeart, FiCheck } from 'react-icons/fi';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useBaseAuth } from '@/hooks/useBaseAuth';
@@ -16,7 +16,6 @@ import BaseIcon from '@/public/images/icons/base-logo.png';
 import MetaMaskIcon from '@/public/images/icons/metamask-logo.svg';
 import { getOAuthRedirectUri } from '@/utils/env';
 
-// Demo credentials for testing (hidden)
 const DEMO_CREDENTIALS = {
     admin: {
         email: 'admin@rovify.io',
@@ -59,7 +58,6 @@ const DEMO_CREDENTIALS = {
     }
 };
 
-// Event/party images from Unsplash
 const EVENT_IMAGES = [
     {
         src: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&h=600&fit=crop',
@@ -83,24 +81,143 @@ const EVENT_IMAGES = [
     }
 ];
 
-// Marketing features
-const FEATURES = [
+const DYNAMIC_MESSAGES = [
     {
-        icon: FiZap,
-        title: 'Lightning Fast',
-        description: 'Set up events in minutes, not hours'
+        title: "WHERE MOMENTS",
+        subtitle: "BEGIN",
+        description: "Create unforgettable experiences that connect creators with their communities worldwide."
     },
     {
-        icon: FiStar,
-        title: 'Premium Experience',
-        description: 'Delight attendees with seamless interactions'
+        title: "STREAM IT!",
+        subtitle: "FLEX IT! OWN IT!",
+        description: "Revolutionary NFT ticketing and creator marketplace built for the Web3 generation."
     },
     {
-        icon: FiHeart,
-        title: 'Loved by Thousands',
-        description: 'Join 50k+ event creators worldwide'
+        title: "CREATORS FIRST,",
+        subtitle: "ALWAYS",
+        description: "Direct monetization, global reach, and community building tools in one platform."
+    },
+    {
+        title: "BUILD YOUR",
+        subtitle: "EMPIRE",
+        description: "Social-first event platform with loyalty systems and creator incentive programs."
     }
 ];
+
+// 3D Glassmorphism Emoji Components
+const GlassEmoji = ({ type, size = "w-8 h-8" }: { type: string; size?: string }) => {
+    const emojiStyles = {
+        artist: {
+            bg: "bg-gradient-to-br from-purple-400 via-pink-400 to-red-400",
+            icon: "🎨",
+            glow: "shadow-purple-500/30"
+        },
+        money: {
+            bg: "bg-gradient-to-br from-yellow-400 via-amber-400 to-orange-400",
+            icon: "💰",
+            glow: "shadow-yellow-500/30"
+        },
+        chart: {
+            bg: "bg-gradient-to-br from-green-400 via-emerald-400 to-teal-400",
+            icon: "📈",
+            glow: "shadow-green-500/30"
+        },
+        ticket: {
+            bg: "bg-gradient-to-br from-blue-400 via-indigo-400 to-purple-400",
+            icon: "🎫",
+            glow: "shadow-blue-500/30"
+        },
+        shop: {
+            bg: "bg-gradient-to-br from-pink-400 via-rose-400 to-red-400",
+            icon: "🛍️",
+            glow: "shadow-pink-500/30"
+        },
+        phone: {
+            bg: "bg-gradient-to-br from-cyan-400 via-blue-400 to-indigo-400",
+            icon: "📱",
+            glow: "shadow-cyan-500/30"
+        }
+    };
+
+    const style = emojiStyles[type as keyof typeof emojiStyles];
+
+    return (
+        <div className={`${size} relative group cursor-pointer`}>
+            {/* Outer Glow */}
+            <div className={`absolute inset-0 ${style.bg} rounded-2xl blur-lg opacity-40 group-hover:opacity-60 transition-opacity duration-300 ${style.glow} shadow-2xl animate-glass-breathe`}></div>
+
+            {/* Main Glass Container */}
+            <div className={`relative ${size} ${style.bg} rounded-2xl backdrop-blur-xl border border-white/30 shadow-2xl overflow-hidden group-hover:scale-110 transition-all duration-300 animate-glass-glow`}>
+                {/* Top Glass Shine */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-white/10 to-transparent rounded-2xl"></div>
+
+                {/* Inner Glow */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-white/30 rounded-2xl"></div>
+
+                {/* Emoji Content */}
+                <div className="relative z-10 w-full h-full flex items-center justify-center text-lg font-bold text-white drop-shadow-lg">
+                    <span className="filter drop-shadow-md">{style.icon}</span>
+                </div>
+
+                {/* Bottom Shine */}
+                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-white/20 to-transparent rounded-b-2xl"></div>
+
+                {/* Side Reflection */}
+                <div className="absolute top-2 left-2 w-1 h-4 bg-white/50 rounded-full blur-sm"></div>
+            </div>
+        </div>
+    );
+};
+
+const CREATOR_STATS = [
+    { label: "Event Creators", value: "50K+", icon: "artist" },
+    { label: "Market Size", value: "$700B+", icon: "money" },
+    { label: "Growth Rate", value: "22.7%", icon: "chart" }
+];
+
+const WEB3_FEATURES = [
+    {
+        icon: "ticket",
+        title: 'NFT Ticketing Ready',
+        description: 'Secure, tradeable event access'
+    },
+    {
+        icon: "shop",
+        title: 'Creator Marketplace',
+        description: 'Direct monetization & merch sales'
+    },
+    {
+        icon: "phone",
+        title: 'Social-First Design',
+        description: 'Built for Gen Z & creators'
+    }
+];
+
+// Floating Particle Component
+const FloatingParticle = ({ delay = 0 }) => {
+    return (
+        <motion.div
+            className="absolute w-2 h-2 bg-white/20 rounded-full"
+            initial={{
+                x: Math.random() * 400,
+                y: Math.random() * 600,
+                scale: Math.random() * 0.5 + 0.5
+            }}
+            animate={{
+                x: Math.random() * 400,
+                y: Math.random() * 600,
+                scale: [0.5, 1, 0.5],
+                opacity: [0.2, 0.8, 0.2]
+            }}
+            transition={{
+                duration: Math.random() * 10 + 15,
+                repeat: Infinity,
+                delay: delay,
+                ease: "linear"
+            }}
+        />
+    );
+};
 
 // Generate a secure random string
 const generateRandomString = (length = 32): string => {
@@ -139,9 +256,11 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
     const [walletAvailable, setWalletAvailable] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
 
     // Image carousel state
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
 
     // Easter egg state
     const [logoClickCount, setLogoClickCount] = useState(0);
@@ -153,14 +272,64 @@ export default function LoginPage() {
     const [oauthState, setOauthState] = useState('');
     const [pkceVerifier, setPkceVerifier] = useState('');
 
-    // Image rotation effect
+    // Image and message rotation effect
     useEffect(() => {
-        const interval = setInterval(() => {
+        const imageInterval = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % EVENT_IMAGES.length);
         }, 4000);
 
-        return () => clearInterval(interval);
+        const messageInterval = setInterval(() => {
+            setCurrentMessageIndex((prev) => (prev + 1) % DYNAMIC_MESSAGES.length);
+        }, 5000);
+
+        return () => {
+            clearInterval(imageInterval);
+            clearInterval(messageInterval);
+        };
     }, []);
+
+    // Auto-focus email field
+    useEffect(() => {
+        const emailInput = document.getElementById('email');
+        if (emailInput) {
+            emailInput.focus();
+        }
+    }, []);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            // Enter to submit
+            if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey) {
+                const form = document.querySelector('form');
+                if (form && document.activeElement?.tagName !== 'BUTTON') {
+                    e.preventDefault();
+                    form.requestSubmit();
+                }
+            }
+
+            // Escape to clear
+            if (e.key === 'Escape') {
+                setError('');
+                setShowSecretPanel(false);
+            }
+
+            // Secret sequence detection
+            const key = e.key.toLowerCase();
+            const newSequence = [...secretSequence, key];
+            if (newSequence.length > 10) newSequence.shift();
+            setSecretSequence(newSequence);
+
+            if (newSequence.join('').includes('demo')) {
+                setShowSecretPanel(true);
+                setSecretSequence([]);
+                setTimeout(() => setShowSecretPanel(false), 10000);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, [secretSequence]);
 
     // OAuth callback handler
     const handleOAuthCallback = useCallback(async (code: string, stateParam: string) => {
@@ -214,11 +383,13 @@ export default function LoginPage() {
                 name: userData.name
             });
 
-            login(userData);
-            console.log('Google authentication successful, redirecting to home');
-
-            window.history.replaceState({}, document.title, window.location.pathname);
-            router.push('/home');
+            setShowSuccess(true);
+            setTimeout(() => {
+                login(userData);
+                console.log('Google authentication successful, redirecting to home');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                router.push('/home');
+            }, 1500);
         } catch (error) {
             console.error('OAuth callback error:', error);
             setError(error instanceof Error ? error.message : 'Authentication failed. Please try again.');
@@ -264,29 +435,7 @@ export default function LoginPage() {
         };
 
         initAuth();
-
-        // Easter egg: Listen for konami code sequence
-        const handleKeyPress = (e: KeyboardEvent) => {
-            const key = e.key.toLowerCase();
-            const newSequence = [...secretSequence, key];
-
-            // Keep only last 10 keys
-            if (newSequence.length > 10) newSequence.shift();
-
-            setSecretSequence(newSequence);
-
-            // Check for "demo" sequence
-            if (newSequence.join('').includes('demo')) {
-                setShowSecretPanel(true);
-                setSecretSequence([]);
-                // Auto-hide after 10 seconds
-                setTimeout(() => setShowSecretPanel(false), 10000);
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyPress);
-        return () => window.removeEventListener('keydown', handleKeyPress);
-    }, [searchParams, handleOAuthCallback, secretSequence]);
+    }, [searchParams, handleOAuthCallback]);
 
     // Handle logo click easter egg
     const handleLogoClick = () => {
@@ -296,11 +445,9 @@ export default function LoginPage() {
         if (newCount === 7) {
             setShowSecretPanel(true);
             setLogoClickCount(0);
-            // Auto-hide after 10 seconds
             setTimeout(() => setShowSecretPanel(false), 10000);
         }
 
-        // Reset count after 3 seconds of no clicking
         setTimeout(() => setLogoClickCount(0), 3000);
     };
 
@@ -334,25 +481,22 @@ export default function LoginPage() {
 
                 console.log('Demo authentication successful for role:', userData.role);
 
-                // Use AuthContext login with user object for demo accounts
-                await login(userData);
-
-                // Role-based routing
-                const redirectPath = userData.role === 'admin' ? '/admin-dashboard' :
-                    userData.role === 'organiser' ? '/organiser-dashboard' :
-                        '/home';
-
-                console.log('Demo login successful, redirecting to:', redirectPath);
-                router.push(redirectPath);
+                setShowSuccess(true);
+                setTimeout(async () => {
+                    await login(userData);
+                    const redirectPath = userData.role === 'admin' ? '/admin-dashboard' :
+                        userData.role === 'organiser' ? '/organiser-dashboard' :
+                            '/home';
+                    console.log('Demo login successful, redirecting to:', redirectPath);
+                    router.push(redirectPath);
+                }, 1500);
             } else {
-                // Regular authentication - use email/password login
                 console.log('Regular email/password authentication');
-
-                // Use AuthContext login with email and password
-                await login(email, password);
-
-                console.log('Regular login successful');
-                // AuthContext will handle the redirect automatically to /discover
+                setShowSuccess(true);
+                setTimeout(async () => {
+                    await login(email, password);
+                    console.log('Regular login successful');
+                }, 1500);
             }
         } catch (error) {
             console.error('Email login error:', error);
@@ -421,9 +565,54 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex relative overflow-hidden">
-            {/* Left Column - Enhanced Premium Design */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-[#FF5722] via-[#FF7043] to-[#FF8A65] overflow-hidden rounded-tr-3xl rounded-bl-3xl min-h-[80vh]">
+        <div className="min-h-screen w-full flex relative overflow-hidden bg-white">
+            {/* Success Animation Overlay */}
+            <AnimatePresence>
+                {showSuccess && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-[#FF5900]/90 backdrop-blur-lg"
+                    >
+                        <motion.div
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ type: "spring", duration: 0.8, bounce: 0.4 }}
+                            className="relative"
+                        >
+                            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-2xl">
+                                <motion.div
+                                    initial={{ scale: 0 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: 0.3, type: "spring", bounce: 0.6 }}
+                                >
+                                    <FiCheck className="w-12 h-12 text-[#FF5900]" strokeWidth={3} />
+                                </motion.div>
+                            </div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
+                                className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 text-white text-center"
+                            >
+                                <div className="text-xl font-bold">Welcome to Rovify!</div>
+                                <div className="text-sm opacity-90">Redirecting you now...</div>
+                            </motion.div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Left Column - ENERGIZED with Floating Particles & Dynamic Content */}
+            <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-[#FF5900] via-[#FF6B1A] to-[#FF8A4D] overflow-hidden rounded-tr-3xl rounded-bl-3xl my-8 mx-4">
+                {/* Floating Particles */}
+                <div className="absolute inset-0 overflow-hidden">
+                    {Array.from({ length: 20 }).map((_, i) => (
+                        <FloatingParticle key={i} delay={i * 0.5} />
+                    ))}
+                </div>
+
                 {/* Enhanced Background with Parallax Effect */}
                 <div className="absolute inset-0">
                     <AnimatePresence mode="wait">
@@ -448,82 +637,96 @@ export default function LoginPage() {
                         </motion.div>
                     </AnimatePresence>
 
-                    {/* Enhanced Multi-layer Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#FF5722]/90 via-[#FF7043]/75 to-[#FF8A65]/85"></div>
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#FF5900]/90 via-[#FF6B1A]/75 to-[#FF8A4D]/85"></div>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10"></div>
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
 
-                    {/* Enhanced Animated Elements */}
                     <div className="absolute top-1/6 left-1/5 w-72 h-72 bg-white/8 rounded-full blur-3xl animate-float opacity-60"></div>
                     <div className="absolute bottom-1/4 right-1/5 w-56 h-56 bg-white/12 rounded-full blur-2xl animate-float-reverse opacity-70"></div>
                     <div className="absolute top-1/2 right-1/4 w-40 h-40 bg-white/15 rounded-full blur-xl animate-pulse-slow opacity-80"></div>
 
-                    {/* Additional floating elements for richness */}
-                    <div className="absolute top-3/4 left-1/3 w-24 h-24 bg-gradient-to-r from-white/20 to-orange-200/20 rounded-full blur-lg animate-float-slow opacity-50"></div>
-                    <div className="absolute top-1/4 right-1/2 w-32 h-32 bg-gradient-to-bl from-white/10 to-red-200/10 rounded-full blur-xl animate-float-reverse-slow opacity-60"></div>
-
-                    {/* Enhanced Geometric Patterns */}
                     <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.08&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
-
-                    {/* Subtle radial light effect */}
-                    <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-gradient-radial from-white/15 via-white/5 to-transparent rounded-full animate-pulse-slow"></div>
                 </div>
 
-                {/* Enhanced Content Layout */}
                 <div className="relative z-10 flex flex-col justify-between p-12 text-white h-full">
-                    {/* Top Section - Logo & Title */}
                     <div className="space-y-8">
-                        {/* Enhanced Logo */}
                         <motion.div
                             className="flex items-center gap-4 cursor-pointer group"
                             onClick={handleLogoClick}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <div className="relative h-14 w-14 bg-white/25 backdrop-blur-lg rounded-tr-xl rounded-bl-xl flex items-center justify-center shadow-2xl overflow-hidden border border-white/30 group-hover:bg-white/30 transition-all duration-300">
+                            <div className="relative h-12 w-12 bg-white/25 backdrop-blur-lg rounded-tr-xl rounded-bl-xl flex items-center justify-center shadow-2xl overflow-hidden border border-white/30 group-hover:bg-white/30 transition-all duration-300">
                                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
                                 <Image
                                     src="/images/contents/rovi-logo.png"
                                     alt="Rovify Logo"
-                                    width={36}
-                                    height={36}
+                                    width={32}
+                                    height={32}
                                     className="object-contain relative z-10 group-hover:scale-110 transition-transform duration-300"
                                 />
                             </div>
                             <div>
-                                <span className="text-4xl font-bold tracking-tight">rovify</span>
-                                <div className="text-sm text-white/80 font-light tracking-wide">EVENT PLATFORM</div>
+                                <span className="text-3xl font-bold tracking-tight">rovify</span>
+                                <div className="text-xs text-white/75 font-light tracking-widest uppercase">Event Platform</div>
                             </div>
                         </motion.div>
 
-                        {/* Enhanced Hero Content */}
+                        {/* Dynamic Rotating Messages */}
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={currentMessageIndex}
+                                initial={{ opacity: 0, y: 30, rotateX: -15 }}
+                                animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                                exit={{ opacity: 0, y: -30, rotateX: 15 }}
+                                transition={{ duration: 0.8, ease: "easeOut" }}
+                                className="space-y-6 max-w-lg"
+                            >
+                                <h1 className="text-3xl font-bold leading-tight">
+                                    <span className="block text-white">{DYNAMIC_MESSAGES[currentMessageIndex].title}</span>
+                                    <span className="block bg-gradient-to-r from-white via-orange-100 to-yellow-100 bg-clip-text text-transparent">
+                                        {DYNAMIC_MESSAGES[currentMessageIndex].subtitle}
+                                    </span>
+                                </h1>
+                                <p className="text-white/85 text-base leading-relaxed font-light">
+                                    {DYNAMIC_MESSAGES[currentMessageIndex].description}
+                                </p>
+                            </motion.div>
+                        </AnimatePresence>
+
+                        {/* Creator Stats Counter */}
                         <motion.div
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.8 }}
-                            className="space-y-6 max-w-lg"
+                            transition={{ delay: 0.3, duration: 0.8 }}
+                            className="flex gap-8"
                         >
-                            <h1 className="text-4xl font-bold leading-tight">
-                                <span className="block text-white">Where Every Event</span>
-                                <span className="block bg-gradient-to-r from-white via-orange-100 to-yellow-100 bg-clip-text text-transparent">
-                                    Becomes Extraordinary
-                                </span>
-                            </h1>
-                            <p className="text-white/90 text-lg leading-relaxed font-light">
-                                Transform your events with cutting-edge technology,
-                                real-time analytics, and seamless experiences that leave lasting impressions.
-                            </p>
+                            {CREATOR_STATS.map((stat, index) => (
+                                <motion.div
+                                    key={stat.label}
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                                    className="text-center"
+                                >
+                                    <div className="mb-3 flex justify-center">
+                                        <GlassEmoji type={stat.icon} size="w-10 h-10" />
+                                    </div>
+                                    <div className="text-xl font-bold text-white">{stat.value}</div>
+                                    <div className="text-xs text-white/70 font-light">{stat.label}</div>
+                                </motion.div>
+                            ))}
                         </motion.div>
                     </div>
 
-                    {/* Middle Section - Enhanced Features */}
+                    {/* Updated Web3 Features */}
                     <motion.div
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4, duration: 0.8 }}
                         className="space-y-4 max-w-lg"
                     >
-                        {FEATURES.map((feature, index) => (
+                        {WEB3_FEATURES.map((feature, index) => (
                             <motion.div
                                 key={feature.title}
                                 initial={{ opacity: 0, x: -30 }}
@@ -531,15 +734,15 @@ export default function LoginPage() {
                                 transition={{ delay: 0.6 + index * 0.15, duration: 0.6 }}
                                 className="group"
                             >
-                                <div className="flex items-center gap-5 p-5 bg-white/10 backdrop-blur-lg rounded-tr-2xl rounded-bl-2xl border border-white/20 hover:bg-white/15 hover:border-white/30 transition-all duration-500 hover:shadow-2xl hover:shadow-white/10">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-white/25 to-white/10 rounded-tr-xl rounded-bl-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 border border-white/20">
-                                        <feature.icon className="w-6 h-6" />
+                                <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-lg rounded-tr-2xl rounded-bl-2xl border border-white/20 hover:bg-white/15 hover:border-white/30 transition-all duration-500 hover:shadow-2xl hover:shadow-white/10">
+                                    <div className="flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                                        <GlassEmoji type={feature.icon} size="w-12 h-12" />
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-orange-100 transition-colors duration-300">
+                                        <h3 className="text-base font-semibold text-white mb-1 group-hover:text-orange-100 transition-colors duration-300">
                                             {feature.title}
                                         </h3>
-                                        <p className="text-sm text-white/80 leading-relaxed">
+                                        <p className="text-xs text-white/75 leading-relaxed font-light">
                                             {feature.description}
                                         </p>
                                     </div>
@@ -549,45 +752,7 @@ export default function LoginPage() {
                         ))}
                     </motion.div>
 
-                    {/* Bottom Section - Image Info & Stats */}
                     <div className="space-y-6">
-                        {/* Enhanced Current Image Display */}
-                        <motion.div
-                            key={currentImageIndex}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 1 }}
-                            className="p-6 bg-white/10 backdrop-blur-lg rounded-tr-2xl rounded-bl-2xl border border-white/20"
-                        >
-                            {/* <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h4 className="text-lg font-semibold text-white">
-                                        {EVENT_IMAGES[currentImageIndex].title}
-                                    </h4>
-                                    <p className="text-sm text-white/70">
-                                        {EVENT_IMAGES[currentImageIndex].alt}
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-white/20 rounded-tr-lg rounded-bl-lg flex items-center justify-center">
-                                    <FiTrendingUp className="w-6 h-6" />
-                                </div>
-                            </div> */}
-
-                            {/* Mini stats */}
-                            {/* <div className="flex gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <FiUsers className="w-4 h-4 text-white/70" />
-                                    <span className="text-white/80">{Math.floor(Math.random() * 50 + 20)}K+ attendees</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <FiStar className="w-4 h-4 text-white/70" />
-                                    <span className="text-white/80">4.{Math.floor(Math.random() * 9 + 1)}/5</span>
-                                </div>
-                            </div> */}
-                        </motion.div>
-
-                        {/* Enhanced Image Indicators */}
                         <div className="flex items-center justify-between">
                             <div className="flex gap-3">
                                 {EVENT_IMAGES.map((_, index) => (
@@ -602,26 +767,18 @@ export default function LoginPage() {
                                     />
                                 ))}
                             </div>
-
-                            {/* Auto-rotate indicator */}
-                            {/* <div className="flex items-center gap-2 text-xs text-white/60">
-                                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
-                                <span>Auto-rotating</span>
-                            </div> */}
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Right Column - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50 relative overflow-hidden">
-                {/* Background elements for mobile/right side */}
+            {/* Right Column - Enhanced Form with Better UX */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center min-h-screen bg-white relative overflow-hidden">
                 <div className="absolute inset-0 lg:hidden">
-                    <div className="absolute top-1/4 -left-24 w-96 h-96 bg-[#FF5722]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>
-                    <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-[#FF5722]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float-reverse"></div>
+                    <div className="absolute top-1/4 -left-24 w-96 h-96 bg-[#FF5900]/5 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-float"></div>
+                    <div className="absolute bottom-1/4 -right-24 w-96 h-96 bg-[#FF5900]/5 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-float-reverse"></div>
                 </div>
 
-                {/* Mobile logo for small screens */}
                 <div className="lg:hidden absolute top-8 left-1/2 transform -translate-x-1/2">
                     <motion.div
                         className="flex items-center gap-3 cursor-pointer"
@@ -629,7 +786,7 @@ export default function LoginPage() {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
-                        <div className="h-10 w-10 bg-gradient-to-br from-[#FF5722] to-[#FF8A65] rounded-tr-xl rounded-bl-xl flex items-center justify-center shadow-lg overflow-hidden">
+                        <div className="h-10 w-10 bg-gradient-to-br from-[#FF5900] to-[#FF8A4D] rounded-tr-xl rounded-bl-xl flex items-center justify-center shadow-lg overflow-hidden">
                             <Image
                                 src="/images/contents/rovi-logo.png"
                                 alt="Rovify Logo"
@@ -638,30 +795,25 @@ export default function LoginPage() {
                                 className="object-contain"
                             />
                         </div>
-                        <span className="text-2xl font-bold bg-gradient-to-r from-[#FF5722] to-[#FF8A65] bg-clip-text text-transparent">
+                        <span className="text-2xl font-bold bg-gradient-to-r from-[#FF5900] to-[#FF8A4D] bg-clip-text text-transparent">
                             rovify
                         </span>
                     </motion.div>
                 </div>
 
-                {/* Login Form Container */}
                 <div className="w-full max-w-md px-6 py-8 lg:px-8 relative z-10 mt-16 lg:mt-0">
-                    {/* Form Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6 }}
                         className="bg-white/95 backdrop-blur-xl rounded-tr-3xl rounded-bl-3xl shadow-2xl border border-white/60 p-8 relative overflow-hidden"
                     >
-                        {/* Card decorations */}
-                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-[#FF5722]/8 to-[#FF8A65]/8 rounded-full animate-spin-slow"></div>
-                        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-[#FF7043]/8 to-[#FFAB91]/8 rounded-full animate-spin-reverse"></div>
+                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-gradient-to-br from-[#FF5900]/3 to-[#FF8A4D]/3 rounded-full animate-spin-slow"></div>
+                        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-gradient-to-tr from-[#FF6B1A]/3 to-[#FFAB91]/3 rounded-full animate-spin-reverse"></div>
 
-                        {/* Shimmer effect */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-shimmer"></div>
 
                         <div className="relative z-10">
-                            {/* Header */}
                             <div className="text-center mb-8">
                                 <motion.h1
                                     initial={{ opacity: 0, y: 10 }}
@@ -681,7 +833,6 @@ export default function LoginPage() {
                                 </motion.p>
                             </div>
 
-                            {/* Secret Panel (Easter Egg) */}
                             <AnimatePresence>
                                 {showSecretPanel && (
                                     <motion.div
@@ -746,7 +897,6 @@ export default function LoginPage() {
                                 )}
                             </AnimatePresence>
 
-                            {/* Error Message */}
                             <AnimatePresence>
                                 {error && (
                                     <motion.div
@@ -763,9 +913,8 @@ export default function LoginPage() {
                                 )}
                             </AnimatePresence>
 
-                            {/* Login Form */}
                             <form onSubmit={handleSubmit} className="space-y-5">
-                                {/* Email Field */}
+                                {/* Enhanced Email Field with Validation */}
                                 <motion.div
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -776,8 +925,8 @@ export default function LoginPage() {
                                         Email Address
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-[#FF5722]">
-                                            <FiMail className="h-4 w-4 text-gray-400 group-focus-within:text-[#FF5722]" />
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-[#FF5900]">
+                                            <FiMail className="h-4 w-4 text-gray-400 group-focus-within:text-[#FF5900]" />
                                         </div>
                                         <input
                                             id="email"
@@ -786,13 +935,22 @@ export default function LoginPage() {
                                             required
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
-                                            className="premium-input pl-11 pr-4 py-3 w-full rounded-tr-2xl rounded-bl-2xl bg-white/80 backdrop-blur-sm border border-gray-200/80 focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400"
+                                            className="premium-input pl-11 pr-4 py-3 w-full rounded-tr-2xl rounded-bl-2xl bg-white/80 backdrop-blur-sm border border-gray-200/80 focus:outline-none focus:ring-2 focus:ring-[#FF5900] focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400"
                                             placeholder="Enter email address"
                                         />
+                                        {email && (
+                                            <motion.div
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                                            >
+                                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                            </motion.div>
+                                        )}
                                     </div>
                                 </motion.div>
 
-                                {/* Password Field */}
+                                {/* Enhanced Password Field */}
                                 <motion.div
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
@@ -805,14 +963,14 @@ export default function LoginPage() {
                                         </label>
                                         <Link
                                             href="/auth/forgot-password"
-                                            className="text-sm text-[#FF5722] hover:text-[#E64A19] transition-colors duration-300 hover:underline"
+                                            className="text-sm text-[#FF5900] hover:text-[#E64A19] transition-colors duration-300 hover:underline"
                                         >
                                             Forgot Password?
                                         </Link>
                                     </div>
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-[#FF5722]">
-                                            <FiLock className="h-4 w-4 text-gray-400 group-focus-within:text-[#FF5722]" />
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-[#FF5900]">
+                                            <FiLock className="h-4 w-4 text-gray-400 group-focus-within:text-[#FF5900]" />
                                         </div>
                                         <input
                                             id="password"
@@ -821,13 +979,13 @@ export default function LoginPage() {
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="premium-input pl-11 pr-12 py-3 w-full rounded-tr-2xl rounded-bl-2xl bg-white/80 backdrop-blur-sm border border-gray-200/80 focus:outline-none focus:ring-2 focus:ring-[#FF5722] focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400"
+                                            className="premium-input pl-11 pr-12 py-3 w-full rounded-tr-2xl rounded-bl-2xl bg-white/80 backdrop-blur-sm border border-gray-200/80 focus:outline-none focus:ring-2 focus:ring-[#FF5900] focus:border-transparent transition-all duration-300 text-gray-800 placeholder-gray-400"
                                             placeholder="Enter password"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#FF5722] transition-colors duration-300"
+                                            className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#FF5900] transition-colors duration-300"
                                         >
                                             {showPassword ? (
                                                 <FiEyeOff className="h-4 w-4" />
@@ -850,7 +1008,7 @@ export default function LoginPage() {
                                             id="remember-me"
                                             name="remember-me"
                                             type="checkbox"
-                                            className="h-4 w-4 text-[#FF5722] focus:ring-[#FF5722] border-gray-300 rounded-md transition-colors duration-300"
+                                            className="h-4 w-4 text-[#FF5900] focus:ring-[#FF5900] border-gray-300 rounded-md transition-colors duration-300"
                                         />
                                         <label htmlFor="remember-me" className="ml-3 text-sm text-gray-600">
                                             Keep me signed in
@@ -858,7 +1016,7 @@ export default function LoginPage() {
                                     </div>
                                 </motion.div>
 
-                                {/* Submit Button */}
+                                {/* Enhanced Submit Button */}
                                 <motion.button
                                     initial={{ opacity: 0, y: 20 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -867,9 +1025,9 @@ export default function LoginPage() {
                                     whileTap={{ scale: 0.99 }}
                                     type="submit"
                                     disabled={isLoading || isBaseLoading}
-                                    className="w-full premium-button flex justify-center items-center gap-3 py-3.5 px-6 rounded-tr-2xl rounded-bl-2xl bg-gradient-to-r from-[#FF5722] to-[#FF8A65] text-white font-medium shadow-lg hover:shadow-xl transform transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#FF5722]/20 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
+                                    className="w-full premium-button flex justify-center items-center gap-3 py-3.5 px-6 rounded-tr-2xl rounded-bl-2xl bg-gradient-to-r from-[#FF5900] to-[#FF8A4D] text-white font-medium shadow-lg hover:shadow-xl transform transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-[#FF5900]/20 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none group relative overflow-hidden"
                                 >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF8A65] to-[#FF5722] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-r from-[#FF8A4D] to-[#FF5900] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                                     <div className="relative z-10 flex items-center gap-2">
                                         {isLoading || isBaseLoading ? (
                                             <>
@@ -953,7 +1111,7 @@ export default function LoginPage() {
                                     Don&apos;t have an account?{' '}
                                     <Link
                                         href="/auth/register"
-                                        className="font-medium text-[#FF5722] hover:text-[#E64A19] transition-all duration-300 hover:underline"
+                                        className="font-medium text-[#FF5900] hover:text-[#E64A19] transition-all duration-300 hover:underline"
                                     >
                                         Create an account
                                     </Link>
@@ -993,21 +1151,21 @@ export default function LoginPage() {
                 
                 .premium-input:focus {
                     box-shadow: 
-                        inset 1px 1px 2px rgba(255, 87, 34, 0.1),
+                        inset 1px 1px 2px rgba(255, 89, 0, 0.1),
                         inset -1px -1px 2px rgba(255, 255, 255, 0.9),
-                        0 0 0 3px rgba(255, 87, 34, 0.1),
-                        0 8px 25px rgba(255, 87, 34, 0.15);
+                        0 0 0 3px rgba(255, 89, 0, 0.1),
+                        0 8px 25px rgba(255, 89, 0, 0.15);
                 }
                 
                 .premium-button {
                     box-shadow: 
-                        0 8px 32px rgba(255, 87, 34, 0.3),
+                        0 8px 32px rgba(255, 89, 0, 0.3),
                         inset 0 1px 0 rgba(255, 255, 255, 0.2);
                 }
                 
                 .premium-button:hover {
                     box-shadow: 
-                        0 12px 40px rgba(255, 87, 34, 0.4),
+                        0 12px 40px rgba(255, 89, 0, 0.4),
                         inset 0 1px 0 rgba(255, 255, 255, 0.3);
                 }
                 
@@ -1021,6 +1179,26 @@ export default function LoginPage() {
                     box-shadow: 
                         0 8px 25px rgba(0, 0, 0, 0.12),
                         inset 0 1px 0 rgba(255, 255, 255, 0.7);
+                }
+
+                /* Glassmorphism Enhancement */
+                .glass-emoji {
+                    backdrop-filter: blur(20px);
+                    -webkit-backdrop-filter: blur(20px);
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    box-shadow: 
+                        0 8px 32px rgba(0, 0, 0, 0.1),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+                }
+
+                .glass-emoji:hover {
+                    transform: translateY(-2px) scale(1.05);
+                    box-shadow: 
+                        0 12px 40px rgba(0, 0, 0, 0.15),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.6),
+                        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
                 }
 
                 @keyframes float {
@@ -1056,6 +1234,19 @@ export default function LoginPage() {
                     75% { transform: translateX(5px); }
                 }
 
+                @keyframes glass-glow {
+                    0%, 100% { 
+                        box-shadow: 
+                            0 0 20px rgba(255, 255, 255, 0.2),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+                    }
+                    50% { 
+                        box-shadow: 
+                            0 0 30px rgba(255, 255, 255, 0.4),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+                    }
+                }
+
                 .animate-float { animation: float 20s ease-in-out infinite; }
                 .animate-float-reverse { animation: float-reverse 18s ease-in-out infinite; }
                 .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
@@ -1063,6 +1254,8 @@ export default function LoginPage() {
                 .animate-spin-reverse { animation: spin-slow 25s linear infinite reverse; }
                 .animate-shimmer { animation: shimmer 3s ease-in-out infinite; }
                 .animate-shake { animation: shake 0.5s ease-in-out; }
+                .animate-glass-glow { animation: glass-glow 4s ease-in-out infinite; }
+                .animate-glass-breathe { animation: glass-breathe 3s ease-in-out infinite; }
             `}</style>
         </div >
     );

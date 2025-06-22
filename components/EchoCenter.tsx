@@ -86,6 +86,15 @@ const SAMPLE_MESSAGES: Message[] = [
         content: 'Just shared the event poster in our group! 📸',
         timestamp: '14:35',
         type: 'text'
+    },
+    {
+        id: 4,
+        userId: 4,
+        userName: 'Jordan Kim',
+        userAvatar: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=400&h=400&fit=crop&crop=face',
+        content: 'The venue looks amazing! Can\'t wait to see everyone there 🚀',
+        timestamp: '14:38',
+        type: 'text'
     }
 ];
 
@@ -158,16 +167,15 @@ const EMOJI_LIST = ['😀', '😂', '😍', '🤔', '😢', '😮', '😡', '�
 
 export default function EchoCenter() {
     const [activeTab, setActiveTab] = useState<'rooms' | 'groups' | 'friends'>('rooms');
-    const [activeFilter, setActiveFilter] = useState<'all' | 'before' | 'during' | 'after'>('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [messageInput, setMessageInput] = useState('');
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const [messages, setMessages] = useState<Message[]>(SAMPLE_MESSAGES);
     const [isTyping, setIsTyping] = useState(false);
+    const [showSearchModal, setShowSearchModal] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -185,10 +193,9 @@ export default function EchoCenter() {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // Filter rooms based on active tab and filter
+    // Filter rooms based on active tab and search
     const filteredRooms = ROOMS_DATA.filter(room => {
         if (activeTab !== 'rooms' && room.category !== activeTab) return false;
-        if (activeFilter !== 'all' && room.eventPhase !== activeFilter) return false;
         if (searchQuery && !room.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
         return true;
     });
@@ -294,7 +301,7 @@ export default function EchoCenter() {
     };
 
     return (
-        <div className="h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 text-gray-900 flex overflow-hidden relative">
+        <div className="h-screen bg-white text-gray-900 flex overflow-hidden relative">
             {/* Mobile Sidebar Overlay */}
             {isMobile && isSidebarOpen && (
                 <motion.div
@@ -302,11 +309,97 @@ export default function EchoCenter() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     onClick={() => setIsSidebarOpen(false)}
-                    className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
                 />
             )}
 
-            {/* Left Sidebar - Fixed Responsive Issues */}
+            {/* Search Modal */}
+            <AnimatePresence>
+                {showSearchModal && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                        onClick={() => setShowSearchModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden"
+                        >
+                            <div className="p-6 border-b border-gray-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-xl font-bold text-gray-900">Search Echo</h2>
+                                    <motion.button
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={() => setShowSearchModal(false)}
+                                        className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                                    >
+                                        <FiX className="w-5 h-5 text-gray-600" />
+                                    </motion.button>
+                                </div>
+                                <div className="relative">
+                                    <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search rooms, groups, friends..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5900] focus:border-[#FF5900] transition-all duration-200"
+                                        autoFocus
+                                    />
+                                </div>
+                            </div>
+                            <div className="max-h-96 overflow-y-auto p-4">
+                                {filteredRooms.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {filteredRooms.map((room) => (
+                                            <motion.div
+                                                key={room.id}
+                                                whileHover={{ scale: 1.02 }}
+                                                onClick={() => {
+                                                    handleRoomSelect(room);
+                                                    setShowSearchModal(false);
+                                                }}
+                                                className="flex items-center gap-3 p-3 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors"
+                                            >
+                                                <Image
+                                                    src={room.avatar}
+                                                    alt={room.name}
+                                                    width={48}
+                                                    height={48}
+                                                    className="w-12 h-12 rounded-xl object-cover"
+                                                />
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-gray-900">{room.name}</h3>
+                                                    <p className="text-sm text-gray-600">{room.memberCount} members • {room.online} online</p>
+                                                </div>
+                                                <div className={`px-2 py-1 rounded-full text-xs font-medium ${room.eventPhase === 'during' ? 'bg-red-100 text-red-700' :
+                                                    room.eventPhase === 'before' ? 'bg-blue-100 text-blue-700' :
+                                                        'bg-gray-100 text-gray-700'
+                                                    }`}>
+                                                    {room.eventPhase}
+                                                </div>
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <FiSearch className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                        <p className="text-gray-500">No results found</p>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Left Sidebar */}
             <motion.div
                 initial={false}
                 animate={{
@@ -314,17 +407,15 @@ export default function EchoCenter() {
                     width: isMobile ? '85vw' : '320px'
                 }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                className={`bg-white/90 backdrop-blur-xl border-r border-gray-200/60 flex flex-col shadow-2xl z-50 h-full ${isMobile ? 'fixed max-w-sm' : 'relative w-80'
+                className={`bg-white border-r border-gray-100 flex flex-col shadow-lg z-50 h-full ${isMobile ? 'fixed max-w-sm' : 'relative w-80'
                     }`}
             >
                 {/* Header */}
-                <div className="p-4 border-b border-gray-200/60 bg-white/70 backdrop-blur-md">
+                <div className="p-4 border-b border-gray-100">
                     {/* Mobile Close Button */}
                     {isMobile && (
                         <div className="flex items-center justify-between mb-4">
-                            <h1 className="font-bold text-lg bg-gradient-to-r from-[#FF5900] to-[#C281FF] bg-clip-text text-transparent">
-                                Echo Center
-                            </h1>
+                            <h1 className="font-bold text-lg text-[#FF5900]">Echo Center</h1>
                             <motion.button
                                 onClick={() => setIsSidebarOpen(false)}
                                 className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
@@ -340,7 +431,7 @@ export default function EchoCenter() {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className="relative group">
-                                <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-transparent bg-gradient-to-r from-[#FF5900] to-[#C281FF] p-0.5">
+                                <div className="w-11 h-11 rounded-2xl overflow-hidden border-2 border-[#FF5900] p-0.5">
                                     <div className="w-full h-full rounded-2xl overflow-hidden bg-white">
                                         <Image
                                             src={CURRENT_USER.avatar}
@@ -351,7 +442,7 @@ export default function EchoCenter() {
                                         />
                                     </div>
                                 </div>
-                                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#18E299] border-2 border-white rounded-full animate-pulse shadow-lg" />
+                                <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#18E299] border-2 border-white rounded-full" />
                             </div>
                             <div>
                                 <h2 className="font-semibold text-gray-900 text-sm">{CURRENT_USER.name}</h2>
@@ -362,125 +453,31 @@ export default function EchoCenter() {
                             </div>
                         </div>
                         <motion.button
-                            whileHover={{ scale: 1.05, rotate: 5 }}
+                            whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="p-2.5 hover:bg-gradient-to-r hover:from-[#FF5900]/10 hover:to-[#C281FF]/10 rounded-xl transition-all duration-300"
+                            onClick={() => setShowSearchModal(true)}
+                            className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
                         >
                             <FiSearch className="w-4 h-4 text-gray-600" />
                         </motion.button>
                     </div>
 
                     {/* Navigation Tabs */}
-                    <div className="flex bg-gray-100/80 backdrop-blur-sm rounded-2xl p-1 mb-4 border border-gray-200/40">
+                    <div className="flex bg-gray-50 rounded-xl p-1 mb-4">
                         {(['rooms', 'groups', 'friends'] as const).map((tab) => (
                             <motion.button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-medium transition-all duration-300 capitalize ${activeTab === tab
-                                    ? 'bg-white text-gray-900 shadow-lg shadow-gray-200/60 border border-gray-200/50'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
+                                className={`flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-all duration-200 capitalize ${activeTab === tab
+                                    ? 'bg-white text-gray-900 shadow-sm'
+                                    : 'text-gray-600 hover:text-gray-900'
                                     }`}
                             >
                                 {tab}
                             </motion.button>
                         ))}
-                    </div>
-
-                    {/* Search Bar */}
-                    <div className="relative">
-                        <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <input
-                            type="text"
-                            placeholder={`Search ${activeTab}...`}
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-3 py-3 bg-gray-50/90 backdrop-blur-sm border border-gray-200/60 rounded-xl text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5900]/30 focus:border-[#FF5900]/50 transition-all duration-300"
-                        />
-                    </div>
-                </div>
-
-                {/* Online Users */}
-                <div className="px-4 py-3 border-b border-gray-200/60">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-sm">Online Now</h3>
-                        <span className="text-xs text-white bg-[#18E299] px-2 py-1 rounded-full font-medium">{ONLINE_USERS.length}</span>
-                    </div>
-                    <div className="flex -space-x-2">
-                        {ONLINE_USERS.slice(0, 8).map((user, index) => (
-                            <motion.div
-                                key={user.id}
-                                className="relative group"
-                                initial={{ x: 20, opacity: 0 }}
-                                animate={{ x: 0, opacity: 1 }}
-                                transition={{ delay: index * 0.1 }}
-                                whileHover={{ scale: 1.15, zIndex: 10 }}
-                            >
-                                <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-lg">
-                                    <Image
-                                        src={user.avatar}
-                                        alt={user.name}
-                                        width={32}
-                                        height={32}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-[#18E299] border-2 border-white rounded-full" />
-
-                                {/* Tooltip */}
-                                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-20">
-                                    {user.name}
-                                </div>
-                            </motion.div>
-                        ))}
-                        {ONLINE_USERS.length > 8 && (
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#FF5900] to-[#C281FF] border-2 border-white flex items-center justify-center text-xs font-bold text-white shadow-lg">
-                                +{ONLINE_USERS.length - 8}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Filters */}
-                <div className="px-4 py-3 border-b border-gray-200/60">
-                    <div className="flex items-center justify-between">
-                        <div className="flex gap-1.5 flex-wrap">
-                            {(['all', 'before', 'during', 'after'] as const).map((filter) => (
-                                <motion.button
-                                    key={filter}
-                                    onClick={() => setActiveFilter(filter)}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-300 capitalize ${activeFilter === filter
-                                        ? 'bg-gradient-to-r from-[#FF5900] to-[#C281FF] text-white shadow-lg'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                        }`}
-                                >
-                                    {filter}
-                                </motion.button>
-                            ))}
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <motion.button
-                                onClick={() => setViewMode('list')}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                className={`p-2 rounded-xl transition-all duration-300 ${viewMode === 'list' ? 'bg-[#FF5900]/10 text-[#FF5900]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                                    }`}
-                            >
-                                <FiList className="w-4 h-4" />
-                            </motion.button>
-                            <motion.button
-                                onClick={() => setViewMode('grid')}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.9 }}
-                                className={`p-2 rounded-xl transition-all duration-300 ${viewMode === 'grid' ? 'bg-[#FF5900]/10 text-[#FF5900]' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
-                                    }`}
-                            >
-                                <FiGrid className="w-4 h-4" />
-                            </motion.button>
-                        </div>
                     </div>
                 </div>
 
@@ -496,30 +493,26 @@ export default function EchoCenter() {
                                     exit={{ opacity: 0, y: -20 }}
                                     transition={{ delay: index * 0.05 }}
                                     onClick={() => handleRoomSelect(room)}
-                                    className={`flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-all duration-300 mb-2 group ${selectedRoom?.id === room.id
-                                        ? 'bg-gradient-to-r from-[#FF5900]/5 to-[#C281FF]/5 shadow-lg border border-[#FF5900]/20 scale-[1.02]'
-                                        : 'hover:bg-gray-50/80 hover:scale-[1.01] hover:shadow-md'
+                                    className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 mb-2 group ${selectedRoom?.id === room.id
+                                        ? 'bg-[#FF5900]/5 border border-[#FF5900]/20'
+                                        : 'hover:bg-gray-50'
                                         }`}
                                 >
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm">
+                                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                                             <Image
                                                 src={room.avatar}
                                                 alt={room.name}
                                                 width={48}
                                                 height={48}
-                                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                                className="w-full h-full object-cover"
                                             />
                                         </div>
                                         {room.isActive && (
-                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#18E299] border-2 border-white rounded-full animate-pulse shadow-sm" />
+                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-[#18E299] border-2 border-white rounded-full" />
                                         )}
                                         {room.eventType && (
-                                            <motion.div
-                                                className="absolute -top-1 -left-1 w-5 h-5 bg-gradient-to-r from-[#FF5900] to-[#C281FF] rounded-full flex items-center justify-center shadow-lg"
-                                                animate={{ rotate: [0, 360] }}
-                                                transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                                            >
+                                            <div className="absolute -top-1 -left-1 w-5 h-5 bg-[#FF5900] rounded-full flex items-center justify-center">
                                                 {room.eventType === 'music' ? (
                                                     <BsMusicNote className="w-2.5 h-2.5 text-white" />
                                                 ) : room.eventType === 'tech' ? (
@@ -527,7 +520,7 @@ export default function EchoCenter() {
                                                 ) : (
                                                     <BsTicket className="w-2.5 h-2.5 text-white" />
                                                 )}
-                                            </motion.div>
+                                            </div>
                                         )}
                                     </div>
 
@@ -536,7 +529,7 @@ export default function EchoCenter() {
                                             <h3 className="font-semibold text-gray-900 truncate text-sm">
                                                 {room.name}
                                                 {room.verified && (
-                                                    <FiStar className="w-3 h-3 text-[#3329CF] inline ml-1" />
+                                                    <FiStar className="w-3 h-3 text-[#FF5900] inline ml-1" />
                                                 )}
                                             </h3>
                                             <span className="text-xs text-gray-500">{room.timestamp}</span>
@@ -544,17 +537,17 @@ export default function EchoCenter() {
                                         <p className="text-xs text-gray-600 truncate mb-2">{room.lastMessage}</p>
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2 text-xs">
-                                                <div className="flex items-center gap-1 bg-gradient-to-r from-[#FF5900]/10 to-[#C281FF]/10 rounded-full px-2 py-1">
+                                                <div className="flex items-center gap-1 bg-[#FF5900]/10 rounded-full px-2 py-1">
                                                     <FiUsers className="w-3 h-3 text-[#FF5900]" />
                                                     <span className="text-[#FF5900] font-medium">{room.memberCount}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 bg-[#18E299]/10 rounded-full px-2 py-1">
-                                                    <div className="w-2 h-2 bg-[#18E299] rounded-full animate-pulse" />
+                                                    <div className="w-2 h-2 bg-[#18E299] rounded-full" />
                                                     <span className="text-[#18E299] font-medium">{room.online}</span>
                                                 </div>
                                             </div>
                                             <div className={`px-2 py-1 rounded-full text-xs font-medium ${room.eventPhase === 'during' ? 'bg-red-100 text-red-700' :
-                                                room.eventPhase === 'before' ? 'bg-[#3329CF]/10 text-[#3329CF]' :
+                                                room.eventPhase === 'before' ? 'bg-blue-100 text-blue-700' :
                                                     'bg-gray-100 text-gray-700'
                                                 }`}>
                                                 {room.eventPhase}
@@ -568,28 +561,28 @@ export default function EchoCenter() {
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="p-3 border-t border-gray-200/60 bg-white/70 backdrop-blur-md">
+                <div className="p-3 border-t border-gray-100">
                     <div className="flex items-center justify-between">
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-[#FF5900] to-[#C281FF] text-white rounded-2xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="flex items-center gap-2 px-4 py-3 bg-[#FF5900] text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                         >
                             <FiPlus className="w-4 h-4" />
                             Create Room
                         </motion.button>
                         <div className="flex items-center gap-1">
                             <motion.button
-                                whileHover={{ scale: 1.1, rotate: 5 }}
+                                whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
-                                className="p-3 hover:bg-gray-100 rounded-2xl transition-all duration-300"
+                                className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
                             >
                                 <BsSteam className="w-4 h-4 text-gray-600" />
                             </motion.button>
                             <motion.button
-                                whileHover={{ scale: 1.1, rotate: -5 }}
+                                whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
-                                className="p-3 hover:bg-gray-100 rounded-2xl transition-all duration-300"
+                                className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
                             >
                                 <FiSettings className="w-4 h-4 text-gray-600" />
                             </motion.button>
@@ -598,11 +591,11 @@ export default function EchoCenter() {
                 </div>
             </motion.div>
 
-            {/* Main Chat Area - Fixed Layout */}
-            <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-br from-white via-gray-50/30 to-gray-100/30">
+            {/* Main Chat Area */}
+            <div className="flex-1 flex flex-col min-w-0 bg-gray-50">
                 {/* Mobile Header */}
                 {isMobile && (
-                    <div className="flex items-center justify-between p-4 border-b border-gray-200/60 bg-white/90 backdrop-blur-md">
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
                         <motion.button
                             onClick={() => setIsSidebarOpen(true)}
                             className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
@@ -611,8 +604,9 @@ export default function EchoCenter() {
                         >
                             <FiMenu className="w-5 h-5 text-gray-600" />
                         </motion.button>
+
                         {selectedRoom ? (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-1 justify-center">
                                 <Image
                                     src={selectedRoom.avatar}
                                     alt={selectedRoom.name}
@@ -620,16 +614,45 @@ export default function EchoCenter() {
                                     height={32}
                                     className="w-8 h-8 rounded-xl object-cover"
                                 />
-                                <h1 className="font-semibold text-gray-900 truncate max-w-[150px]">
-                                    {selectedRoom.name}
-                                </h1>
+                                <div className="text-center">
+                                    <h1 className="font-semibold text-gray-900 truncate max-w-[120px] text-sm">
+                                        {selectedRoom.name}
+                                    </h1>
+                                    <p className="text-xs text-gray-500">{selectedRoom.online} online</p>
+                                </div>
                             </div>
                         ) : (
-                            <h1 className="font-bold text-lg bg-gradient-to-r from-[#FF5900] to-[#C281FF] bg-clip-text text-transparent">
-                                Echo
-                            </h1>
+                            <h1 className="font-bold text-lg text-[#FF5900] flex-1 text-center">Echo</h1>
                         )}
-                        <div className="w-10" /> {/* Spacer */}
+
+                        {/* Mobile Action Buttons - Only show when room is selected */}
+                        {selectedRoom ? (
+                            <div className="flex items-center gap-1">
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
+                                >
+                                    <FiPhone className="w-4 h-4 text-gray-600" />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
+                                >
+                                    <FiVideo className="w-4 h-4 text-gray-600" />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors"
+                                >
+                                    <FiInfo className="w-4 h-4 text-gray-600" />
+                                </motion.button>
+                            </div>
+                        ) : (
+                            <div className="w-14" /> /* Spacer for layout balance */
+                        )}
                     </div>
                 )}
 
@@ -637,10 +660,10 @@ export default function EchoCenter() {
                     <>
                         {/* Room Header - Desktop Only */}
                         {!isMobile && (
-                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200/60 bg-white/90 backdrop-blur-md">
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
                                 <div className="flex items-center gap-4">
                                     <div className="relative">
-                                        <div className="w-12 h-12 rounded-2xl overflow-hidden border border-gray-200/60 shadow-lg">
+                                        <div className="w-12 h-12 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
                                             <Image
                                                 src={selectedRoom.avatar}
                                                 alt={selectedRoom.name}
@@ -650,14 +673,14 @@ export default function EchoCenter() {
                                             />
                                         </div>
                                         {selectedRoom.isActive && (
-                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#18E299] border-2 border-white rounded-full animate-pulse shadow-sm" />
+                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#18E299] border-2 border-white rounded-full" />
                                         )}
                                     </div>
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <h2 className="text-xl font-bold text-gray-900">{selectedRoom.name}</h2>
                                             {selectedRoom.verified && (
-                                                <FiStar className="w-5 h-5 text-[#3329CF]" />
+                                                <FiStar className="w-5 h-5 text-[#FF5900]" />
                                             )}
                                         </div>
                                         <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -666,11 +689,11 @@ export default function EchoCenter() {
                                                 <span>{selectedRoom.memberCount} members</span>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <div className="w-2 h-2 bg-[#18E299] rounded-full animate-pulse" />
+                                                <div className="w-2 h-2 bg-[#18E299] rounded-full" />
                                                 <span>{selectedRoom.online} online</span>
                                             </div>
                                             <div className={`px-3 py-1 rounded-full text-xs font-medium ${selectedRoom.eventPhase === 'during' ? 'bg-red-100 text-red-700' :
-                                                selectedRoom.eventPhase === 'before' ? 'bg-[#3329CF]/10 text-[#3329CF]' :
+                                                selectedRoom.eventPhase === 'before' ? 'bg-blue-100 text-blue-700' :
                                                     'bg-gray-100 text-gray-700'
                                                 }`}>
                                                 {selectedRoom.eventPhase}
@@ -683,21 +706,21 @@ export default function EchoCenter() {
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
-                                        className="p-3 hover:bg-gray-100 rounded-2xl transition-all duration-300"
+                                        className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
                                     >
                                         <FiPhone className="w-5 h-5 text-gray-600" />
                                     </motion.button>
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
-                                        className="p-3 hover:bg-gray-100 rounded-2xl transition-all duration-300"
+                                        className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
                                     >
                                         <FiVideo className="w-5 h-5 text-gray-600" />
                                     </motion.button>
                                     <motion.button
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
-                                        className="p-3 hover:bg-gray-100 rounded-2xl transition-all duration-300"
+                                        className="p-3 hover:bg-gray-100 rounded-xl transition-colors"
                                     >
                                         <FiInfo className="w-5 h-5 text-gray-600" />
                                     </motion.button>
@@ -705,8 +728,8 @@ export default function EchoCenter() {
                             </div>
                         )}
 
-                        {/* Chat Messages Area */}
-                        <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 custom-scrollbar">
+                        {/* Chat Messages Area - Clean White Background */}
+                        <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 bg-white">
                             <AnimatePresence>
                                 {messages.map((message, index) => (
                                     <motion.div
@@ -716,21 +739,25 @@ export default function EchoCenter() {
                                         transition={{ delay: index * 0.1 }}
                                         className={`flex gap-3 group ${message.userId === CURRENT_USER.id ? 'flex-row-reverse' : ''}`}
                                     >
-                                        <Image
-                                            src={message.userAvatar}
-                                            alt={message.userName}
-                                            width={36}
-                                            height={36}
-                                            className="w-full h-full object-cover"
-                                        />
+                                        {/* Fixed Avatar Container */}
+                                        <div className="w-9 h-9 rounded-2xl overflow-hidden flex-shrink-0">
+                                            <Image
+                                                src={message.userAvatar}
+                                                alt={message.userName}
+                                                width={36}
+                                                height={36}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+
                                         <div className={`flex-1 max-w-sm lg:max-w-md ${message.userId === CURRENT_USER.id ? 'text-right' : ''}`}>
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="text-sm font-semibold text-gray-900">{message.userName}</span>
                                                 <span className="text-xs text-gray-500">{message.timestamp}</span>
                                             </div>
                                             <div className={`p-4 rounded-2xl shadow-sm ${message.userId === CURRENT_USER.id
-                                                ? 'bg-gradient-to-r from-[#FF5900] to-[#C281FF] text-white ml-auto'
-                                                : 'bg-white border border-gray-200/60'
+                                                ? 'bg-[#FF5900] text-white ml-auto'
+                                                : 'bg-gray-50 border border-gray-200'
                                                 }`}>
                                                 <p className="text-sm leading-relaxed">{message.content}</p>
                                             </div>
@@ -746,7 +773,7 @@ export default function EchoCenter() {
                                                             onClick={() => addReaction(message.id, reaction.emoji)}
                                                             className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs border transition-all duration-200 ${reaction.users.includes(CURRENT_USER.id)
                                                                 ? 'bg-[#FF5900]/10 border-[#FF5900]/30 text-[#FF5900]'
-                                                                : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+                                                                : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                                                                 }`}
                                                         >
                                                             <span>{reaction.emoji}</span>
@@ -784,8 +811,8 @@ export default function EchoCenter() {
                                 >
                                     <div className="flex gap-1">
                                         <div className="w-2 h-2 bg-[#FF5900] rounded-full animate-bounce"></div>
-                                        <div className="w-2 h-2 bg-[#C281FF] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                        <div className="w-2 h-2 bg-[#3329CF] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                        <div className="w-2 h-2 bg-[#FF5900] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                        <div className="w-2 h-2 bg-[#FF5900] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                                     </div>
                                     <span>Someone is typing...</span>
                                 </motion.div>
@@ -795,20 +822,20 @@ export default function EchoCenter() {
                         </div>
 
                         {/* Message Input */}
-                        <div className="p-4 lg:p-6 border-t border-gray-200/60 bg-white/90 backdrop-blur-md relative">
+                        <div className="p-4 lg:p-6 border-t border-gray-200 bg-white relative">
                             {/* File Upload Progress */}
                             {isUploading && (
                                 <motion.div
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className="mb-4 p-3 bg-[#3329CF]/5 border border-[#3329CF]/20 rounded-2xl"
+                                    className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <FiFile className="w-4 h-4 text-[#3329CF]" />
-                                        <span className="text-sm text-[#3329CF] font-medium">Uploading file...</span>
-                                        <div className="ml-auto w-20 h-2 bg-[#3329CF]/20 rounded-full overflow-hidden">
+                                        <FiFile className="w-4 h-4 text-blue-600" />
+                                        <span className="text-sm text-blue-700 font-medium">Uploading file...</span>
+                                        <div className="ml-auto w-20 h-2 bg-blue-200 rounded-full overflow-hidden">
                                             <motion.div
-                                                className="h-full bg-gradient-to-r from-[#3329CF] to-[#C281FF]"
+                                                className="h-full bg-[#FF5900]"
                                                 animate={{ width: '100%' }}
                                                 transition={{ duration: 1.5 }}
                                             />
@@ -820,10 +847,10 @@ export default function EchoCenter() {
                             <div className="flex items-end gap-3">
                                 {/* Attachment Button */}
                                 <motion.button
-                                    whileHover={{ scale: 1.1, rotate: 5 }}
+                                    whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="p-3 hover:bg-gray-100 rounded-2xl transition-all duration-300 flex-shrink-0"
+                                    className="p-3 hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0"
                                 >
                                     <FiPaperclip className="w-5 h-5 text-gray-600" />
                                 </motion.button>
@@ -836,7 +863,7 @@ export default function EchoCenter() {
                                         onKeyPress={handleKeyPress}
                                         placeholder="Type your message..."
                                         rows={1}
-                                        className="w-full px-4 py-4 bg-gray-50/90 backdrop-blur-sm border border-gray-200/60 rounded-2xl text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5900]/30 focus:border-[#FF5900]/50 pr-20 resize-none transition-all duration-300 max-h-32"
+                                        className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#FF5900] focus:border-[#FF5900] pr-20 resize-none transition-all duration-200 max-h-32"
                                     />
 
                                     {/* Input Actions */}
@@ -845,7 +872,7 @@ export default function EchoCenter() {
                                             whileHover={{ scale: 1.1 }}
                                             whileTap={{ scale: 0.9 }}
                                             onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                            className="p-2 hover:bg-gray-200 rounded-full transition-all duration-200"
+                                            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
                                         >
                                             <FiSmile className="w-4 h-4 text-gray-600" />
                                         </motion.button>
@@ -854,8 +881,8 @@ export default function EchoCenter() {
                                             whileTap={{ scale: 0.9 }}
                                             onClick={handleSendMessage}
                                             disabled={!messageInput.trim()}
-                                            className={`p-2.5 rounded-full transition-all duration-300 ${messageInput.trim()
-                                                ? 'bg-gradient-to-r from-[#FF5900] to-[#C281FF] text-white shadow-lg hover:shadow-xl'
+                                            className={`p-2.5 rounded-full transition-all duration-200 ${messageInput.trim()
+                                                ? 'bg-[#FF5900] text-white shadow-lg hover:shadow-xl'
                                                 : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                                 }`}
                                         >
@@ -871,7 +898,7 @@ export default function EchoCenter() {
                                             initial={{ opacity: 0, scale: 0.8, y: 10 }}
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
                                             exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                                            className="absolute bottom-full right-6 mb-2 p-4 bg-white border border-gray-200/60 rounded-2xl shadow-2xl z-50 w-72"
+                                            className="absolute bottom-full right-6 mb-2 p-4 bg-white border border-gray-200 rounded-2xl shadow-2xl z-50 w-72"
                                         >
                                             <div className="grid grid-cols-8 gap-2">
                                                 {EMOJI_LIST.map((emoji, index) => (
@@ -894,10 +921,10 @@ export default function EchoCenter() {
                     </>
                 ) : (
                     // No Room Selected
-                    <div className="flex-1 flex items-center justify-center p-8">
+                    <div className="flex-1 flex items-center justify-center p-8 bg-white">
                         <div className="text-center max-w-md">
                             <motion.div
-                                className="w-28 h-28 mx-auto mb-8 bg-gradient-to-br from-[#FF5900] via-[#C281FF] to-[#3329CF] rounded-3xl flex items-center justify-center shadow-2xl"
+                                className="w-28 h-28 mx-auto mb-8 bg-[#FF5900] rounded-3xl flex items-center justify-center shadow-2xl"
                                 animate={{
                                     rotate: [0, 5, -5, 0],
                                     scale: [1, 1.05, 1]
@@ -910,7 +937,7 @@ export default function EchoCenter() {
                             >
                                 <FiMessageCircle className="w-14 h-14 text-white" />
                             </motion.div>
-                            <h2 className="text-4xl font-bold bg-gradient-to-r from-[#FF5900] via-[#C281FF] to-[#3329CF] bg-clip-text text-transparent mb-4">
+                            <h2 className="text-4xl font-bold text-gray-900 mb-4">
                                 Welcome to Echo
                             </h2>
                             <p className="text-gray-600 leading-relaxed mb-8 text-lg">
@@ -921,7 +948,7 @@ export default function EchoCenter() {
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => setIsSidebarOpen(true)}
-                                    className="px-8 py-4 bg-gradient-to-r from-[#FF5900] to-[#C281FF] text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                                    className="px-8 py-4 bg-[#FF5900] text-white rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                                 >
                                     Browse Rooms
                                 </motion.button>
@@ -940,7 +967,7 @@ export default function EchoCenter() {
                 accept="image/*,video/*,.pdf,.doc,.docx,.txt"
             />
 
-            {/* Enhanced Custom Scrollbar & Styles */}
+            {/* Custom Scrollbar & Styles */}
             <style jsx>{`
                 .custom-scrollbar::-webkit-scrollbar {
                     width: 6px;
@@ -950,11 +977,11 @@ export default function EchoCenter() {
                     border-radius: 3px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: linear-gradient(135deg, #FF5900, #C281FF);
+                    background: #FF5900;
                     border-radius: 3px;
                 }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: linear-gradient(135deg, #e04d00, #a365d9);
+                    background: #e04d00;
                 }
                 
                 /* Custom textarea auto-resize */
@@ -963,21 +990,12 @@ export default function EchoCenter() {
                     overflow-y: auto;
                 }
                 
-                /* Hide scrollbar for webkit browsers */
-                .hide-scrollbar::-webkit-scrollbar {
-                    display: none;
-                }
-                .hide-scrollbar {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-                
                 /* Smooth transitions */
                 * {
                     -webkit-font-smoothing: antialiased;
                     -moz-osx-font-smoothing: grayscale;
                 }
             `}</style>
-        </div >
+        </div>
     );
 }

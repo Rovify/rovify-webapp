@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getBaseUrl } from '@/utils/env';
 
 export async function GET(request: NextRequest) {
     try {
@@ -11,22 +12,21 @@ export async function GET(request: NextRequest) {
         if (!code || !state) {
             console.error('Missing required OAuth parameters');
             return NextResponse.redirect(
-                new URL('/auth/login?error=Missing+required+parameters', request.url)
+                new URL('/auth/login?error=Missing+required+parameters', getBaseUrl())
             );
         }
 
-        // Redirect to the client-side callback handler
-        // This keeps all the authentication logic in the client for now
-        const callbackUrl = new URL('/auth/callback', request.url);
+        // Redirect to the client-side callback handler using correct base URL
+        const callbackUrl = new URL('/auth/callback', getBaseUrl());
         callbackUrl.searchParams.set('code', code);
         callbackUrl.searchParams.set('state', state);
 
-        console.log('Redirecting to client-side callback handler');
+        console.log('Redirecting to client-side callback handler:', callbackUrl.toString());
         return NextResponse.redirect(callbackUrl);
     } catch (error) {
         console.error('Error handling Google callback:', error);
         return NextResponse.redirect(
-            new URL('/auth/login?error=Authentication+failed', request.url)
+            new URL('/auth/login?error=Authentication+failed', getBaseUrl())
         );
     }
 }

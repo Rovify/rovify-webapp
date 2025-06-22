@@ -13,7 +13,6 @@ import {
 import { IoSparkles } from "react-icons/io5";
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
-// Mock user data (in a real app, this would come from a context or API)
 const mockUser = {
     id: 'user1',
     name: 'Joe Love',
@@ -38,27 +37,27 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
-    { id: 'client-dashboard', label: 'Dashboard', icon: <FiHome className="w-5 h-5" />, section: 'main', href: '/client-dashboard' },
-    { id: 'profile', label: 'Profile', icon: <FiUser className="w-5 h-5" />, section: 'main', href: '/client-dashboard/profile' },
-    { id: 'wallet', label: 'Wallet', icon: <FiCreditCard className="w-5 h-5" />, section: 'main', href: '/client-dashboard/wallet' },
-    { id: 'friends', label: 'Friends', icon: <FiUsers className="w-5 h-5" />, badge: 2, section: 'main', href: '/client-dashboard/friends' },
-    { id: 'history', label: 'History', icon: <FiArchive className="w-5 h-5" />, section: 'main', href: '/client-dashboard/history' },
-    { id: 'analytics', label: 'Analytics', icon: <FiBarChart className="w-5 h-5" />, section: 'secondary', href: '/client-dashboard/analytics' },
-    { id: 'collections', label: 'Collections', icon: <FiBookmark className="w-5 h-5" />, section: 'secondary', href: '/client-dashboard/collections' },
-    { id: 'preferences', label: 'Preferences', icon: <FiSliders className="w-5 h-5" />, section: 'secondary', href: '/client-dashboard/preferences' },
-    { id: 'settings', label: 'Settings', icon: <FiSettings className="w-5 h-5" />, section: 'secondary', href: '/client-dashboard/settings' }
+    { id: 'user-dashboard', label: 'Dashboard', icon: <FiHome className="w-5 h-5" />, section: 'main', href: '/user-dashboard' },
+    { id: 'profile', label: 'Profile', icon: <FiUser className="w-5 h-5" />, section: 'main', href: '/user-dashboard/profile' },
+    { id: 'wallet', label: 'Wallet', icon: <FiCreditCard className="w-5 h-5" />, section: 'main', href: '/user-dashboard/wallet' },
+    { id: 'friends', label: 'Friends', icon: <FiUsers className="w-5 h-5" />, badge: 2, section: 'main', href: '/user-dashboard/friends' },
+    { id: 'history', label: 'History', icon: <FiArchive className="w-5 h-5" />, section: 'main', href: '/user-dashboard/history' },
+    { id: 'analytics', label: 'Analytics', icon: <FiBarChart className="w-5 h-5" />, section: 'secondary', href: '/user-dashboard/analytics' },
+    { id: 'collections', label: 'Collections', icon: <FiBookmark className="w-5 h-5" />, section: 'secondary', href: '/user-dashboard/collections' },
+    { id: 'preferences', label: 'Preferences', icon: <FiSliders className="w-5 h-5" />, section: 'secondary', href: '/user-dashboard/preferences' },
+    { id: 'settings', label: 'Settings', icon: <FiSettings className="w-5 h-5" />, section: 'secondary', href: '/user-dashboard/settings' }
 ];
 
 const sectionDescriptions = {
-    '/client-dashboard': 'Your personal event control center',
-    '/client-dashboard/profile': 'Manage your public profile and achievements',
-    '/client-dashboard/wallet': 'Manage your crypto wallet and transactions',
-    '/client-dashboard/friends': 'Connect with other event enthusiasts',
-    '/client-dashboard/history': 'View your complete event history',
-    '/client-dashboard/analytics': 'Insights into your event patterns',
-    '/client-dashboard/collections': 'Your saved events and wishlists',
-    '/client-dashboard/preferences': 'Customize your Rovify experience',
-    '/client-dashboard/settings': 'Account and security settings'
+    '/user-dashboard': 'Your personal event control center',
+    '/user-dashboard/profile': 'Manage your public profile and achievements',
+    '/user-dashboard/wallet': 'Manage your crypto wallet and transactions',
+    '/user-dashboard/friends': 'Connect with other event enthusiasts',
+    '/user-dashboard/history': 'View your complete event history',
+    '/user-dashboard/analytics': 'Insights into your event patterns',
+    '/user-dashboard/collections': 'Your saved events and wishlists',
+    '/user-dashboard/preferences': 'Customize your Rovify experience',
+    '/user-dashboard/settings': 'Account and security settings'
 };
 
 export default function DashboardLayout({
@@ -74,14 +73,14 @@ export default function DashboardLayout({
 
     // Get current section name from pathname
     const getCurrentSection = () => {
-        if (pathname === '/client-dashboard') return 'dashboard';
+        if (pathname === '/user-dashboard') return 'dashboard';
         const lastSegment = pathname.split('/').pop() || 'dashboard';
-        return lastSegment === 'client-dashboard' ? 'dashboard' : lastSegment;
+        return lastSegment === 'user-dashboard' ? 'dashboard' : lastSegment;
     };
 
     const getSectionDisplayName = (section: string) => {
         const displayNames: Record<string, string> = {
-            'client-dashboard': 'Dashboard',
+            'user-dashboard': 'Dashboard',
             'dashboard': 'Dashboard',
             'profile': 'Profile',
             'wallet': 'Wallet',

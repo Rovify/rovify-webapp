@@ -421,200 +421,185 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex relative overflow-hidden">
-            {/* Left Column - Enhanced Premium Design */}
-            <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-[#FF5722] via-[#FF7043] to-[#FF8A65] overflow-hidden rounded-tr-3xl rounded-bl-3xl min-h-[80vh]">
-                {/* Enhanced Background with Parallax Effect */}
-                <div className="absolute inset-0">
-                    <AnimatePresence mode="wait">
+        <div className="min-h-screen w-full flex relative overflow-hidden bg-gradient-to-br from-gray-50 via-white to-orange-50">
+            {/* Left Column - Enhanced Branding & Imagery - Now Contained */}
+            <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-8 relative">
+                <div className="w-full max-w-2xl h-[80vh] relative bg-gradient-to-br from-[#FF5722] via-[#FF7043] to-[#FF8A65] overflow-hidden rounded-3xl shadow-2xl">
+                    {/* Background Image Carousel */}
+                    <div className="absolute inset-0">
+                        <AnimatePresence mode="wait">
+                            <motion.div
+                                key={currentImageIndex}
+                                initial={{ opacity: 0, scale: 1.1 }}
+                                animate={{ opacity: 0.3, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                transition={{ duration: 1.5, ease: "easeInOut" }}
+                                className="absolute inset-0"
+                            >
+                                <Image
+                                    src={EVENT_IMAGES[currentImageIndex].src}
+                                    alt={EVENT_IMAGES[currentImageIndex].alt}
+                                    fill
+                                    className="object-cover rounded-3xl"
+                                    style={{ filter: 'blur(2px) brightness(0.4)' }}
+                                />
+                            </motion.div>
+                        </AnimatePresence>
+
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#FF5722]/80 via-[#FF7043]/70 to-[#FF8A65]/80 rounded-3xl"></div>
+
+                        {/* Animated gradient orbs */}
+                        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-float"></div>
+                        <div className="absolute bottom-1/3 right-1/4 w-48 h-48 bg-white/15 rounded-full blur-2xl animate-float-reverse"></div>
+                        <div className="absolute top-1/2 right-1/3 w-32 h-32 bg-white/20 rounded-full blur-xl animate-pulse-slow"></div>
+
+                        {/* Geometric patterns */}
+                        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.05&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] rounded-3xl"></div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative z-10 flex flex-col justify-center items-start p-12 text-white h-full">
+                        {/* Logo section */}
                         <motion.div
-                            key={currentImageIndex}
-                            initial={{ opacity: 0, scale: 1.2, rotateY: 15 }}
-                            animate={{ opacity: 0.4, scale: 1, rotateY: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, rotateY: -15 }}
-                            transition={{ duration: 2, ease: "easeOut" }}
-                            className="absolute inset-0"
-                        >
-                            <Image
-                                src={EVENT_IMAGES[currentImageIndex].src}
-                                alt={EVENT_IMAGES[currentImageIndex].alt}
-                                fill
-                                className="object-cover"
-                                style={{
-                                    filter: 'blur(3px) brightness(0.3) contrast(1.2) saturate(1.1)',
-                                    transform: 'scale(1.1)'
-                                }}
-                            />
-                        </motion.div>
-                    </AnimatePresence>
-
-                    {/* Enhanced Multi-layer Gradient Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#FF5722]/90 via-[#FF7043]/75 to-[#FF8A65]/85"></div>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/10"></div>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
-
-                    {/* Enhanced Animated Elements */}
-                    <div className="absolute top-1/6 left-1/5 w-72 h-72 bg-white/8 rounded-full blur-3xl animate-float opacity-60"></div>
-                    <div className="absolute bottom-1/4 right-1/5 w-56 h-56 bg-white/12 rounded-full blur-2xl animate-float-reverse opacity-70"></div>
-                    <div className="absolute top-1/2 right-1/4 w-40 h-40 bg-white/15 rounded-full blur-xl animate-pulse-slow opacity-80"></div>
-
-                    {/* Additional floating elements for richness */}
-                    <div className="absolute top-3/4 left-1/3 w-24 h-24 bg-gradient-to-r from-white/20 to-orange-200/20 rounded-full blur-lg animate-float-slow opacity-50"></div>
-                    <div className="absolute top-1/4 right-1/2 w-32 h-32 bg-gradient-to-bl from-white/10 to-red-200/10 rounded-full blur-xl animate-float-reverse-slow opacity-60"></div>
-
-                    {/* Enhanced Geometric Patterns */}
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.08&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-40"></div>
-
-                    {/* Subtle radial light effect */}
-                    <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-gradient-radial from-white/15 via-white/5 to-transparent rounded-full animate-pulse-slow"></div>
-                </div>
-
-                {/* Enhanced Content Layout */}
-                <div className="relative z-10 flex flex-col justify-between p-12 text-white h-full">
-                    {/* Top Section - Logo & Title */}
-                    <div className="space-y-8">
-                        {/* Enhanced Logo */}
-                        <motion.div
-                            className="flex items-center gap-4 cursor-pointer group"
+                            className="flex items-center gap-3 mb-12 cursor-pointer"
                             onClick={handleLogoClick}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                         >
-                            <div className="relative h-14 w-14 bg-white/25 backdrop-blur-lg rounded-tr-xl rounded-bl-xl flex items-center justify-center shadow-2xl overflow-hidden border border-white/30 group-hover:bg-white/30 transition-all duration-300">
-                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+                            <div className="h-12 w-12 bg-white/20 backdrop-blur-lg rounded-tr-xl rounded-bl-xl flex items-center justify-center shadow-2xl overflow-hidden">
                                 <Image
                                     src="/images/contents/rovi-logo.png"
                                     alt="Rovify Logo"
-                                    width={36}
-                                    height={36}
-                                    className="object-contain relative z-10 group-hover:scale-110 transition-transform duration-300"
+                                    width={32}
+                                    height={32}
+                                    className="object-contain"
                                 />
                             </div>
-                            <div>
-                                <span className="text-4xl font-bold tracking-tight">rovify</span>
-                                <div className="text-sm text-white/80 font-light tracking-wide">EVENT PLATFORM</div>
-                            </div>
+                            <span className="text-3xl font-bold">rovify</span>
                         </motion.div>
 
-                        {/* Enhanced Hero Content */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2, duration: 0.8 }}
-                            className="space-y-6 max-w-lg"
-                        >
-                            <h1 className="text-4xl font-bold leading-tight">
-                                <span className="block text-white">Where Every Event</span>
-                                <span className="block bg-gradient-to-r from-white via-orange-100 to-yellow-100 bg-clip-text text-transparent">
-                                    Becomes Extraordinary
-                                </span>
-                            </h1>
-                            <p className="text-white/90 text-lg leading-relaxed font-light">
-                                Transform your events with cutting-edge technology,
-                                real-time analytics, and seamless experiences that leave lasting impressions.
-                            </p>
-                        </motion.div>
-                    </div>
-
-                    {/* Middle Section - Enhanced Features */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4, duration: 0.8 }}
-                        className="space-y-4 max-w-lg"
-                    >
-                        {FEATURES.map((feature, index) => (
+                        {/* Hero content */}
+                        <div className="space-y-8 max-w-lg">
                             <motion.div
-                                key={feature.title}
-                                initial={{ opacity: 0, x: -30 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.6 + index * 0.15, duration: 0.6 }}
-                                className="group"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="space-y-4"
                             >
-                                <div className="flex items-center gap-5 p-5 bg-white/10 backdrop-blur-lg rounded-tr-2xl rounded-bl-2xl border border-white/20 hover:bg-white/15 hover:border-white/30 transition-all duration-500 hover:shadow-2xl hover:shadow-white/10">
-                                    <div className="w-12 h-12 bg-gradient-to-br from-white/25 to-white/10 rounded-tr-xl rounded-bl-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 border border-white/20">
-                                        <feature.icon className="w-6 h-6" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-orange-100 transition-colors duration-300">
-                                            {feature.title}
-                                        </h3>
-                                        <p className="text-sm text-white/80 leading-relaxed">
-                                            {feature.description}
-                                        </p>
-                                    </div>
-                                    <div className="w-2 h-8 bg-gradient-to-b from-white/30 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
-                                </div>
+                                <h1 className="text-3xl font-bold leading-tight text-white">
+                                    Where Every Event
+                                    <span className="block bg-gradient-to-r from-white to-orange-100 bg-clip-text text-transparent">
+                                        Becomes Extraordinary
+                                    </span>
+                                </h1>
+                                <p className="text-white/90 text-lg leading-relaxed">
+                                    Transform your events with cutting-edge technology,
+                                    real-time analytics, and seamless experiences that leave lasting impressions.
+                                </p>
                             </motion.div>
-                        ))}
-                    </motion.div>
 
-                    {/* Bottom Section - Image Info & Stats */}
-                    <div className="space-y-6">
-                        {/* Enhanced Current Image Display */}
-                        <motion.div
-                            key={currentImageIndex}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 1 }}
-                            className="p-6 bg-white/10 backdrop-blur-lg rounded-tr-2xl rounded-bl-2xl border border-white/20"
-                        >
-                            {/* <div className="flex items-center justify-between mb-4">
-                                <div>
-                                    <h4 className="text-lg font-semibold text-white">
-                                        {EVENT_IMAGES[currentImageIndex].title}
-                                    </h4>
-                                    <p className="text-sm text-white/70">
-                                        {EVENT_IMAGES[currentImageIndex].alt}
-                                    </p>
-                                </div>
-                                <div className="w-12 h-12 bg-white/20 rounded-tr-lg rounded-bl-lg flex items-center justify-center">
-                                    <FiTrendingUp className="w-6 h-6" />
-                                </div>
-                            </div> */}
+                            {/* Features showcase */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="space-y-4"
+                            >
+                                {FEATURES.map((feature, index) => (
+                                    <motion.div
+                                        key={feature.title}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.6 + index * 0.1 }}
+                                        className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-lg rounded-tr-xl rounded-bl-xl border border-white/20 group hover:bg-white/15 transition-all duration-300"
+                                    >
+                                        <div className="w-10 h-10 bg-white/20 rounded-tr-lg rounded-bl-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                                            <feature.icon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-semibold text-white mb-1">{feature.title}</h3>
+                                            <p className="text-xs text-white/80 leading-relaxed">
+                                                {feature.description}
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </motion.div>
 
-                            {/* Mini stats */}
-                            {/* <div className="flex gap-4 text-sm">
-                                <div className="flex items-center gap-2">
-                                    <FiUsers className="w-4 h-4 text-white/70" />
-                                    <span className="text-white/80">{Math.floor(Math.random() * 50 + 20)}K+ attendees</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <FiStar className="w-4 h-4 text-white/70" />
-                                    <span className="text-white/80">4.{Math.floor(Math.random() * 9 + 1)}/5</span>
-                                </div>
-                            </div> */}
-                        </motion.div>
+                            {/* Current image title */}
+                            <motion.div
+                                key={currentImageIndex}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.8 }}
+                                className="pt-4"
+                            >
+                                <p className="text-sm text-white/70 italic">
+                                    &quot;{EVENT_IMAGES[currentImageIndex].title}&quot;
+                                </p>
+                            </motion.div>
 
-                        {/* Enhanced Image Indicators */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex gap-3">
+                            {/* Enhanced Image indicators */}
+                            <div className="flex gap-3 pt-4">
                                 {EVENT_IMAGES.map((_, index) => (
                                     <motion.div
                                         key={index}
-                                        className={`h-2 rounded-full transition-all duration-500 cursor-pointer hover:scale-125 ${index === currentImageIndex
-                                            ? 'w-8 bg-white shadow-lg'
-                                            : 'w-2 bg-white/40 hover:bg-white/70'
-                                            }`}
+                                        className={`relative cursor-pointer group`}
                                         whileHover={{ scale: 1.2 }}
+                                        whileTap={{ scale: 0.9 }}
                                         onClick={() => setCurrentImageIndex(index)}
-                                    />
+                                    >
+                                        <div className={`w-3 h-3 rounded-full transition-all duration-500 ${index === currentImageIndex
+                                            ? 'bg-white shadow-lg'
+                                            : 'bg-white/40 hover:bg-white/60'
+                                            }`} />
+                                        {index === currentImageIndex && (
+                                            <motion.div
+                                                layoutId="activeIndicator"
+                                                className="absolute inset-0 w-3 h-3 rounded-full bg-white/30 scale-150"
+                                                initial={false}
+                                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                                            />
+                                        )}
+                                        {/* Progress ring for active indicator */}
+                                        {index === currentImageIndex && (
+                                            <svg className="absolute -inset-1 w-5 h-5 -rotate-90" viewBox="0 0 20 20">
+                                                <circle
+                                                    cx="10"
+                                                    cy="10"
+                                                    r="8"
+                                                    fill="none"
+                                                    stroke="rgba(255,255,255,0.3)"
+                                                    strokeWidth="1.5"
+                                                />
+                                                <motion.circle
+                                                    cx="10"
+                                                    cy="10"
+                                                    r="8"
+                                                    fill="none"
+                                                    stroke="white"
+                                                    strokeWidth="1.5"
+                                                    strokeLinecap="round"
+                                                    strokeDasharray={50.27}
+                                                    strokeDashoffset={50.27}
+                                                    animate={{ strokeDashoffset: 0 }}
+                                                    transition={{ duration: 4, ease: "linear" }}
+                                                    className="drop-shadow-sm"
+                                                />
+                                            </svg>
+                                        )}
+                                    </motion.div>
                                 ))}
                             </div>
-
-                            {/* Auto-rotate indicator */}
-                            {/* <div className="flex items-center gap-2 text-xs text-white/60">
-                                <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
-                                <span>Auto-rotating</span>
-                            </div> */}
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Right Column - Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50 relative overflow-hidden">
+            <div className="w-full lg:w-1/2 flex items-center justify-center min-h-screen relative overflow-hidden">
                 {/* Background elements for mobile/right side */}
                 <div className="absolute inset-0 lg:hidden">
                     <div className="absolute top-1/4 -left-24 w-96 h-96 bg-[#FF5722]/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-float"></div>

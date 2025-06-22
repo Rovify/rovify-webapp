@@ -22,7 +22,7 @@ const mockAttendees = [
         name: 'Sarah Johnson',
         email: 'sarah.johnson@email.com',
         phone: '+1 (555) 123-4567',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b647?w=400&h=400&fit=crop&crop=face',
+        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop&crop=face',
         event: 'AI & Machine Learning Summit',
         eventId: 'event1',
         ticketType: 'VIP',

@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
@@ -18,12 +18,13 @@ import { usePathname } from 'next/navigation';
 import { getCurrentUser } from '@/mocks/data/users';
 import RoviLogo from '@/public/images/contents/rovi-logo.png';
 
-interface LiveNotification {
-    id: string;
-    type: 'event' | 'friend' | 'message' | 'like' | 'ticket' | 'reminder';
-    content: string;
-    timestamp: number;
-}
+// COMMENTED OUT: Live notification interface
+// interface LiveNotification {
+//     id: string;
+//     type: 'event' | 'friend' | 'message' | 'like' | 'ticket' | 'reminder';
+//     content: string;
+//     timestamp: number;
+// }
 
 interface User {
     id: string;
@@ -39,98 +40,100 @@ interface HeaderProps {
 export default function Header({ isSidebarExpanded = false }: HeaderProps) {
     const [scrolled, setScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [showNotifications, setShowNotifications] = useState(false);
+    // COMMENTED OUT: Notification states
+    // const [showNotifications, setShowNotifications] = useState(false);
     const [showSearch, setShowSearch] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [isMobile, setIsMobile] = useState(false);
     const [activeTab, setActiveTab] = useState('for-you');
     const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(0);
 
-    // Enhanced notification center state with queue management
-    const [liveNotifications, setLiveNotifications] = useState<LiveNotification[]>([
-        {
-            id: '1',
-            type: 'friend',
-            content: 'Chloe just arrived to the party',
-            timestamp: Date.now()
-        }
-    ]);
-    const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
-    const [showLiveNotification, setShowLiveNotification] = useState(true);
-    const [showMobileNotification, setShowMobileNotification] = useState(true);
-    const [isNotificationPaused, setIsNotificationPaused] = useState(false);
-    const notificationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-    const hideNotificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const queueTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // COMMENTED OUT: Enhanced notification center state with queue management
+    // const [liveNotifications, setLiveNotifications] = useState<LiveNotification[]>([
+    //     {
+    //         id: '1',
+    //         type: 'friend',
+    //         content: 'Chloe just arrived to the party',
+    //         timestamp: Date.now()
+    //     }
+    // ]);
+    // const [currentNotificationIndex, setCurrentNotificationIndex] = useState(0);
+    // const [showLiveNotification, setShowLiveNotification] = useState(true);
+    // const [showMobileNotification, setShowMobileNotification] = useState(true);
+    // const [isNotificationPaused, setIsNotificationPaused] = useState(false);
+    // const notificationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    // const hideNotificationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    // const queueTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const featuredIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const pathname = usePathname();
 
-    const notificationsRef = useRef<HTMLDivElement>(null);
+    // COMMENTED OUT: Notification refs
+    // const notificationsRef = useRef<HTMLDivElement>(null);
     const searchRef = useRef<HTMLDivElement>(null);
     const headerRef = useRef<HTMLElement>(null);
     const mobileNavRef = useRef<HTMLDivElement>(null);
 
-    // Enhanced notification types with better variety
-    const possibleNotifications: Omit<LiveNotification, 'id' | 'timestamp'>[] = [
-        { type: 'friend', content: 'Chloe just arrived to the party' },
-        { type: 'friend', content: 'Alex is now attending Tech Summit 2025' },
-        { type: 'event', content: 'Summer Festival 2025 starts in 3 hours' },
-        { type: 'message', content: 'New message from Sarah about the event' },
-        { type: 'like', content: 'Jamie liked your RSVP to Crypto Meetup' },
-        { type: 'ticket', content: 'Your NFT tickets for Neon Nights are ready' },
-        { type: 'event', content: 'Startup pitch competition is trending now' },
-        { type: 'reminder', content: 'Mindfulness Retreat starts tomorrow' },
-        { type: 'friend', content: 'Miguel and 3 others joined Web3 Hackathon' },
-        { type: 'message', content: 'Event organiser sent you important details' }
-    ];
+    // COMMENTED OUT: Enhanced notification types with better variety
+    // const possibleNotifications: Omit<LiveNotification, 'id' | 'timestamp'>[] = [
+    //     { type: 'friend', content: 'Chloe just arrived to the party' },
+    //     { type: 'friend', content: 'Alex is now attending Tech Summit 2025' },
+    //     { type: 'event', content: 'Summer Festival 2025 starts in 3 hours' },
+    //     { type: 'message', content: 'New message from Sarah about the event' },
+    //     { type: 'like', content: 'Jamie liked your RSVP to Crypto Meetup' },
+    //     { type: 'ticket', content: 'Your NFT tickets for Neon Nights are ready' },
+    //     { type: 'event', content: 'Startup pitch competition is trending now' },
+    //     { type: 'reminder', content: 'Mindfulness Retreat starts tomorrow' },
+    //     { type: 'friend', content: 'Miguel and 3 others joined Web3 Hackathon' },
+    //     { type: 'message', content: 'Event organiser sent you important details' }
+    // ];
 
-    // Enhanced notifications data
-    const notifications = [
-        {
-            id: '1',
-            type: 'event',
-            title: 'Event Starting Soon',
-            content: 'Tech Summit 2025 starts in 3 hours - Don\'t miss the opening keynote!',
-            image: '/images/events/tech-summit.jpg',
-            time: '2 hours ago',
-            read: false,
-            link: '/events/tech-summit-2025',
-            priority: 'high'
-        },
-        {
-            id: '2',
-            type: 'message',
-            title: 'New Message',
-            content: 'Sarah sent you a message about the Culinary Masterclass venue change',
-            time: '4 hours ago',
-            read: true,
-            link: '/messages/sarah',
-            priority: 'medium'
-        },
-        {
-            id: '3',
-            type: 'system',
-            title: 'Tickets Confirmed',
-            content: 'Your premium NFT tickets for Neon Nights have been confirmed and transferred',
-            time: '1 day ago',
-            read: false,
-            link: '/tickets/neon-nights',
-            priority: 'high'
-        },
-        {
-            id: '4',
-            type: 'reminder',
-            title: 'Upcoming Event',
-            content: 'Mindfulness Retreat starts tomorrow at 9 AM - Prepare your meditation setup',
-            time: '2 days ago',
-            read: true,
-            link: '/events/mindfulness-retreat',
-            priority: 'low'
-        }
-    ];
+    // COMMENTED OUT: Enhanced notifications data
+    // const notifications = [
+    //     {
+    //         id: '1',
+    //         type: 'event',
+    //         title: 'Event Starting Soon',
+    //         content: 'Tech Summit 2025 starts in 3 hours - Don\'t miss the opening keynote!',
+    //         image: '/images/events/tech-summit.jpg',
+    //         time: '2 hours ago',
+    //         read: false,
+    //         link: '/events/tech-summit-2025',
+    //         priority: 'high'
+    //     },
+    //     {
+    //         id: '2',
+    //         type: 'message',
+    //         title: 'New Message',
+    //         content: 'Sarah sent you a message about the Culinary Masterclass venue change',
+    //         time: '4 hours ago',
+    //         read: true,
+    //         link: '/messages/sarah',
+    //         priority: 'medium'
+    //     },
+    //     {
+    //         id: '3',
+    //         type: 'system',
+    //         title: 'Tickets Confirmed',
+    //         content: 'Your premium NFT tickets for Neon Nights have been confirmed and transferred',
+    //         time: '1 day ago',
+    //         read: false,
+    //         link: '/tickets/neon-nights',
+    //         priority: 'high'
+    //     },
+    //     {
+    //         id: '4',
+    //         type: 'reminder',
+    //         title: 'Upcoming Event',
+    //         content: 'Mindfulness Retreat starts tomorrow at 9 AM - Prepare your meditation setup',
+    //         time: '2 days ago',
+    //         read: true,
+    //         link: '/events/mindfulness-retreat',
+    //         priority: 'low'
+    //     }
+    // ];
 
     const recentSearches = [
         'Tech conferences 2025',
@@ -220,76 +223,76 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
         };
     }, [featuredContent.length]);
 
-    // Enhanced notification management with intelligent queue system
-    useEffect(() => {
-        const addRandomNotification = () => {
-            const randomIndex = Math.floor(Math.random() * possibleNotifications.length);
-            const newNotification = {
-                ...possibleNotifications[randomIndex],
-                id: `notification-${Date.now()}`,
-                timestamp: Date.now()
-            };
+    // COMMENTED OUT: Enhanced notification management with intelligent queue system
+    // useEffect(() => {
+    //     const addRandomNotification = () => {
+    //         const randomIndex = Math.floor(Math.random() * possibleNotifications.length);
+    //         const newNotification = {
+    //             ...possibleNotifications[randomIndex],
+    //             id: `notification-${Date.now()}`,
+    //             timestamp: Date.now()
+    //         };
 
-            setLiveNotifications(prev => [newNotification, ...prev].slice(0, 5));
-            setShowLiveNotification(true);
-            setShowMobileNotification(true);
+    //         setLiveNotifications(prev => [newNotification, ...prev].slice(0, 5));
+    //         setShowLiveNotification(true);
+    //         setShowMobileNotification(true);
 
-            // Auto-dismiss oldest notification after 6 seconds if not paused
-            if (!isNotificationPaused) {
-                if (queueTimeoutRef.current) {
-                    clearTimeout(queueTimeoutRef.current);
-                }
-                queueTimeoutRef.current = setTimeout(() => {
-                    if (!isNotificationPaused) {
-                        setLiveNotifications(prev => {
-                            if (prev.length > 0) {
-                                return prev.slice(0, -1); // Remove oldest
-                            }
-                            return prev;
-                        });
-                    }
-                }, 6000);
-            }
-        };
+    //         // Auto-dismiss oldest notification after 6 seconds if not paused
+    //         if (!isNotificationPaused) {
+    //             if (queueTimeoutRef.current) {
+    //                 clearTimeout(queueTimeoutRef.current);
+    //             }
+    //             queueTimeoutRef.current = setTimeout(() => {
+    //                 if (!isNotificationPaused) {
+    //                     setLiveNotifications(prev => {
+    //                         if (prev.length > 0) {
+    //                             return prev.slice(0, -1); // Remove oldest
+    //                         }
+    //                         return prev;
+    //                     });
+    //                 }
+    //             }, 6000);
+    //         }
+    //     };
 
-        const setupNextNotification = () => {
-            const randomDelay = Math.floor(Math.random() * 12000) + 8000; // 8-20 seconds
-            return setTimeout(addRandomNotification, randomDelay);
-        };
+    //     const setupNextNotification = () => {
+    //         const randomDelay = Math.floor(Math.random() * 12000) + 8000; // 8-20 seconds
+    //         return setTimeout(addRandomNotification, randomDelay);
+    //     };
 
-        const timeout = setupNextNotification();
-        return () => {
-            clearTimeout(timeout);
-            if (queueTimeoutRef.current) {
-                clearTimeout(queueTimeoutRef.current);
-            }
-        };
-    }, [possibleNotifications, isNotificationPaused]);
+    //     const timeout = setupNextNotification();
+    //     return () => {
+    //         clearTimeout(timeout);
+    //         if (queueTimeoutRef.current) {
+    //             clearTimeout(queueTimeoutRef.current);
+    //         }
+    //     };
+    // }, [possibleNotifications, isNotificationPaused]);
 
-    // Auto-cycle through mobile notifications
-    useEffect(() => {
-        if (isMobile && liveNotifications.length > 0 && showMobileNotification && !isNotificationPaused) {
-            hideNotificationTimeoutRef.current = setTimeout(() => {
-                setShowMobileNotification(false);
-                // Show next notification after a brief pause
-                setTimeout(() => {
-                    setLiveNotifications(prev => {
-                        if (prev.length > 1) {
-                            setShowMobileNotification(true);
-                            return prev.slice(1); // Remove first, show next
-                        }
-                        return prev;
-                    });
-                }, 500);
-            }, 6000);
-        }
+    // COMMENTED OUT: Auto-cycle through mobile notifications
+    // useEffect(() => {
+    //     if (isMobile && liveNotifications.length > 0 && showMobileNotification && !isNotificationPaused) {
+    //         hideNotificationTimeoutRef.current = setTimeout(() => {
+    //             setShowMobileNotification(false);
+    //             // Show next notification after a brief pause
+    //             setTimeout(() => {
+    //                 setLiveNotifications(prev => {
+    //                     if (prev.length > 1) {
+    //                         setShowMobileNotification(true);
+    //                         return prev.slice(1); // Remove first, show next
+    //                     }
+    //                     return prev;
+    //                 });
+    //             }, 500);
+    //         }, 6000);
+    //     }
 
-        return () => {
-            if (hideNotificationTimeoutRef.current) {
-                clearTimeout(hideNotificationTimeoutRef.current);
-            }
-        };
-    }, [isMobile, liveNotifications.length, showMobileNotification, isNotificationPaused]);
+    //     return () => {
+    //         if (hideNotificationTimeoutRef.current) {
+    //             clearTimeout(hideNotificationTimeoutRef.current);
+    //         }
+    //     };
+    // }, [isMobile, liveNotifications.length, showMobileNotification, isNotificationPaused]);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -313,9 +316,10 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
 
         // Handle outside clicks
         const handleClickOutside = (event: MouseEvent) => {
-            if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
-                setShowNotifications(false);
-            }
+            // COMMENTED OUT: Notification outside click handling
+            // if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+            //     setShowNotifications(false);
+            // }
 
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
                 setShowSearch(false);
@@ -334,34 +338,37 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
             window.removeEventListener('resize', checkMobile);
             document.removeEventListener('mousedown', handleClickOutside);
             clearTimeout(timer);
-            if (notificationIntervalRef.current) {
-                clearInterval(notificationIntervalRef.current);
-            }
-            if (hideNotificationTimeoutRef.current) {
-                clearTimeout(hideNotificationTimeoutRef.current);
-            }
-            if (queueTimeoutRef.current) {
-                clearTimeout(queueTimeoutRef.current);
-            }
+            // COMMENTED OUT: Notification cleanup
+            // if (notificationIntervalRef.current) {
+            //     clearInterval(notificationIntervalRef.current);
+            // }
+            // if (hideNotificationTimeoutRef.current) {
+            //     clearTimeout(hideNotificationTimeoutRef.current);
+            // }
+            // if (queueTimeoutRef.current) {
+            //     clearTimeout(queueTimeoutRef.current);
+            // }
             if (featuredIntervalRef.current) {
                 clearInterval(featuredIntervalRef.current);
             }
         };
     }, []);
 
-    const toggleNotifications = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        setShowNotifications(!showNotifications);
-        if (!showNotifications) {
-            setShowSearch(false);
-        }
-    }, [showNotifications]);
+    // COMMENTED OUT: Notification toggle functions
+    // const toggleNotifications = useCallback((e: React.MouseEvent) => {
+    //     e.stopPropagation();
+    //     setShowNotifications(!showNotifications);
+    //     if (!showNotifications) {
+    //         setShowSearch(false);
+    //     }
+    // }, [showNotifications]);
 
     const toggleSearch = useCallback((e: React.MouseEvent) => {
         e.stopPropagation();
         setShowSearch(!showSearch);
         if (!showSearch) {
-            setShowNotifications(false);
+            // COMMENTED OUT: Close notifications when opening search
+            // setShowNotifications(false);
         }
     }, [showSearch]);
 
@@ -382,38 +389,39 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
         }
     };
 
-    // Enhanced notification icon function
-    const getNotificationIcon = (type: LiveNotification['type']) => {
-        const iconMap = {
-            event: <FiCalendar className="w-4 h-4" />,
-            friend: <FiUser className="w-4 h-4" />,
-            message: <FiMessageSquare className="w-4 h-4" />,
-            like: <FiHeart className="w-4 h-4" />,
-            ticket: <IoTicket className="w-4 h-4" />,
-            reminder: <FiClock className="w-4 h-4" />
-        };
-        return iconMap[type] || <FiBell className="w-4 h-4" />;
-    };
+    // COMMENTED OUT: Enhanced notification icon function
+    // const getNotificationIcon = (type: LiveNotification['type']) => {
+    //     const iconMap = {
+    //         event: <FiCalendar className="w-4 h-4" />,
+    //         friend: <FiUser className="w-4 h-4" />,
+    //         message: <FiMessageSquare className="w-4 h-4" />,
+    //         like: <FiHeart className="w-4 h-4" />,
+    //         ticket: <IoTicket className="w-4 h-4" />,
+    //         reminder: <FiClock className="w-4 h-4" />
+    //     };
+    //     return iconMap[type] || <FiBell className="w-4 h-4" />;
+    // };
 
-    // Notification color schemes
-    const getNotificationColors = (type: LiveNotification['type']) => {
-        const colorMap = {
-            event: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500' },
-            friend: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-500' },
-            message: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500' },
-            like: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500' },
-            ticket: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500' },
-            reminder: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'text-indigo-500' }
-        };
-        return colorMap[type] || { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700', icon: 'text-gray-500' };
-    };
+    // COMMENTED OUT: Notification color schemes
+    // const getNotificationColors = (type: LiveNotification['type']) => {
+    //     const colorMap = {
+    //         event: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', icon: 'text-blue-500' },
+    //         friend: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', icon: 'text-green-500' },
+    //         message: { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-700', icon: 'text-purple-500' },
+    //         like: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', icon: 'text-red-500' },
+    //         ticket: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', icon: 'text-amber-500' },
+    //         reminder: { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', icon: 'text-indigo-500' }
+    //     };
+    //     return colorMap[type] || { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-700', icon: 'text-gray-500' };
+    // };
 
-    const unreadCount = notifications.filter(n => !n.read).length;
+    // COMMENTED OUT: Unread notification count
+    // const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
         <>
-            {/* iOS-style Mobile Notification at Top */}
-            <AnimatePresence>
+            {/* COMMENTED OUT: iOS-style Mobile Notification at Top */}
+            {/* <AnimatePresence>
                 {isMobile && liveNotifications.length > 0 && showMobileNotification && (
                     <motion.div
                         initial={{ y: -100, opacity: 0 }}
@@ -466,7 +474,6 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                 <FiX className="w-3 h-3 text-gray-600" />
                             </motion.button>
 
-                            {/* Queue indicator for mobile */}
                             {liveNotifications.length > 1 && (
                                 <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br from-[#FF5722] to-[#E64A19] rounded-full flex items-center justify-center shadow-lg border-2 border-white">
                                     <span className="text-white text-xs font-bold">{liveNotifications.length}</span>
@@ -475,10 +482,10 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                         </motion.div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
-            {/* REDESIGNED: Top-Right Notification Toast System */}
-            <div className="fixed top-20 right-4 z-[60] max-w-sm space-y-3">
+            {/* COMMENTED OUT: Top-Right Notification Toast System */}
+            {/* <div className="fixed top-20 right-4 z-[60] max-w-sm space-y-3">
                 <AnimatePresence mode="popLayout">
                     {!isMobile && liveNotifications.slice(0, 4).map((notification, index) => {
                         const isVisible = showLiveNotification && index < 3;
@@ -522,157 +529,12 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                 onMouseEnter={() => setIsNotificationPaused(true)}
                                 onMouseLeave={() => setIsNotificationPaused(false)}
                             >
-                                <motion.div
-                                    whileHover={{
-                                        scale: 1.02,
-                                        y: -4,
-                                        transition: { duration: 0.2 }
-                                    }}
-                                    whileTap={{ scale: 0.98 }}
-                                    className="relative overflow-hidden"
-                                    onClick={() => {
-                                        if (index === 0) {
-                                            setLiveNotifications(prev => prev.filter(n => n.id !== notification.id));
-                                        }
-                                    }}
-                                >
-                                    {/* Main Card with Better Visibility */}
-                                    <div
-                                        className="relative bg-white/95 backdrop-blur-xl rounded-2xl p-4 shadow-2xl border border-gray-200/80"
-                                        style={{
-                                            boxShadow: `
-                                                0 20px 35px -10px rgba(0, 0, 0, 0.2),
-                                                0 0 0 1px rgba(255, 255, 255, 0.8),
-                                                0 0 20px ${isLatest ? 'rgba(255, 87, 34, 0.15)' : 'rgba(0, 0, 0, 0.05)'}
-                                            `
-                                        }}
-                                    >
-                                        {/* Attention-grabbing accent bar for latest */}
-                                        {isLatest && (
-                                            <motion.div
-                                                className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-[#FF5722] to-[#E64A19] rounded-l-2xl"
-                                                initial={{ scaleY: 0 }}
-                                                animate={{ scaleY: 1 }}
-                                                transition={{ delay: 0.3 }}
-                                            />
-                                        )}
-
-                                        {/* Pulse effect for latest notification */}
-                                        {isLatest && (
-                                            <motion.div
-                                                className="absolute -inset-2 bg-gradient-to-r from-[#FF5722]/10 to-[#E64A19]/10 rounded-2xl"
-                                                animate={{
-                                                    opacity: [0, 0.5, 0],
-                                                    scale: [1, 1.02, 1]
-                                                }}
-                                                transition={{
-                                                    duration: 2,
-                                                    repeat: Infinity,
-                                                    repeatDelay: 1
-                                                }}
-                                            />
-                                        )}
-
-                                        <div className="relative z-10 flex items-start gap-3">
-                                            {/* Enhanced Icon with Better Contrast */}
-                                            <motion.div
-                                                animate={isLatest ? {
-                                                    scale: [1, 1.1, 1],
-                                                    rotate: [0, 5, -5, 0]
-                                                } : {}}
-                                                transition={{
-                                                    duration: 0.6,
-                                                    delay: isLatest ? 0.5 : 0
-                                                }}
-                                                className={`
-                                                    w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg
-                                                    ${isLatest
-                                                        ? 'bg-gradient-to-br from-[#FF5722] to-[#E64A19] text-white'
-                                                        : `${colors.bg} ${colors.icon} border border-gray-200`
-                                                    }
-                                                `}
-                                            >
-                                                {getNotificationIcon(notification.type)}
-                                            </motion.div>
-
-                                            <div className="flex-1 min-w-0">
-                                                <motion.p
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: 0.2 }}
-                                                    className={`
-                                                        text-sm font-semibold leading-relaxed
-                                                        ${isLatest ? 'text-gray-900' : 'text-gray-700'}
-                                                    `}
-                                                >
-                                                    {notification.content}
-                                                </motion.p>
-
-                                                <motion.div
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    transition={{ delay: 0.4 }}
-                                                    className="flex items-center gap-2 mt-2"
-                                                >
-                                                    {isLatest && (
-                                                        <motion.div
-                                                            className="w-2 h-2 rounded-full bg-[#FF5722]"
-                                                            animate={{
-                                                                scale: [1, 1.3, 1],
-                                                                opacity: [0.8, 1, 0.8]
-                                                            }}
-                                                            transition={{ duration: 1.5, repeat: Infinity }}
-                                                        />
-                                                    )}
-                                                    <span className="text-xs text-gray-500 font-medium">
-                                                        {isLatest ? 'Just now' : 'Recent'}
-                                                    </span>
-                                                </motion.div>
-                                            </div>
-
-                                            {/* Enhanced Close Button */}
-                                            <motion.button
-                                                whileHover={{ scale: 1.1, rotate: 90 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                className="w-7 h-7 rounded-lg bg-gray-100/80 hover:bg-red-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setLiveNotifications(prev => prev.filter(n => n.id !== notification.id));
-                                                }}
-                                            >
-                                                <FiX className="w-3 h-3 text-gray-600 hover:text-red-600" />
-                                            </motion.button>
-                                        </div>
-
-                                        {/* Progress bar only for latest */}
-                                        {isLatest && (
-                                            <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-100 overflow-hidden rounded-b-2xl">
-                                                <motion.div
-                                                    className="h-full bg-gradient-to-r from-[#FF5722] to-[#E64A19]"
-                                                    initial={{ width: "0%" }}
-                                                    animate={{ width: "100%" }}
-                                                    transition={{ duration: 6, ease: "linear" }}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Stack indicator */}
-                                    {index === 0 && liveNotifications.length > 1 && (
-                                        <motion.div
-                                            initial={{ scale: 0, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[#FF5722] text-white text-xs font-bold flex items-center justify-center shadow-lg border-2 border-white"
-                                        >
-                                            {liveNotifications.length}
-                                        </motion.div>
-                                    )}
-                                </motion.div>
+                                [Complete notification card content would be here]
                             </motion.div>
                         );
                     })}
                 </AnimatePresence>
-            </div>
+            </div> */}
 
             <header
                 ref={headerRef}
@@ -855,8 +717,8 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-shimmer"></div>
                             ) : currentUser ? (
                                 <>
-                                    {/* ENHANCED: Notification Bell with Attention Indicators */}
-                                    <div className="relative" ref={notificationsRef}>
+                                    {/* COMMENTED OUT: ENHANCED Notification Bell with Attention Indicators */}
+                                    {/* <div className="relative" ref={notificationsRef}>
                                         <motion.button
                                             whileHover={{ scale: 1.05, y: -1 }}
                                             whileTap={{ scale: 0.95 }}
@@ -865,7 +727,6 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                         >
                                             <FiBell className="w-5 h-5" />
 
-                                            {/* Enhanced notification count with better visibility */}
                                             {unreadCount > 0 && (
                                                 <motion.span
                                                     initial={{ scale: 0 }}
@@ -876,7 +737,6 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                                 </motion.span>
                                             )}
 
-                                            {/* Live notification pulse indicator */}
                                             {liveNotifications.length > 0 && (
                                                 <>
                                                     <motion.div
@@ -899,7 +759,6 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                             )}
                                         </motion.button>
 
-                                        {/* iOS-native Notifications Widget */}
                                         <AnimatePresence>
                                             {showNotifications && (
                                                 <motion.div
@@ -912,91 +771,11 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                                                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.5)',
                                                     }}
                                                 >
-                                                    <div className="flex items-center justify-between p-6 border-b border-gray-100/80">
-                                                        <div>
-                                                            <h3 className="font-bold text-gray-800 text-lg">Notifications</h3>
-                                                            {unreadCount > 0 && (
-                                                                <p className="text-sm text-gray-500">{unreadCount} new notifications</p>
-                                                            )}
-                                                        </div>
-                                                        <Link href="/notifications" className="text-sm text-[#FF5722] font-semibold hover:text-[#E64A19] transition-colors">
-                                                            View All
-                                                        </Link>
-                                                    </div>
-
-                                                    {/* iOS-native Notifications List */}
-                                                    <div className="max-h-[420px] overflow-y-auto">
-                                                        {notifications.length === 0 ? (
-                                                            <div className="p-8 text-center">
-                                                                <FiBell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                                                                <p className="text-gray-500 text-sm">No notifications yet</p>
-                                                            </div>
-                                                        ) : (
-                                                            <div className="p-2">
-                                                                {notifications.map((notification, index) => (
-                                                                    <motion.div
-                                                                        key={notification.id}
-                                                                        initial={{ opacity: 0, x: -20 }}
-                                                                        animate={{ opacity: 1, x: 0 }}
-                                                                        transition={{ delay: index * 0.05 }}
-                                                                        whileHover={{ scale: 1.02, y: -1 }}
-                                                                    >
-                                                                        <Link
-                                                                            href={notification.link}
-                                                                            className={`block p-4 rounded-2xl mb-2 transition-all duration-300 group border ${!notification.read
-                                                                                ? 'bg-gradient-to-r from-orange-50/50 to-red-50/50 border-orange-100/50 shadow-sm'
-                                                                                : 'border-transparent hover:bg-gray-50/80'
-                                                                                }`}
-                                                                            onClick={() => setShowNotifications(false)}
-                                                                        >
-                                                                            <div className="flex items-start gap-4">
-                                                                                {/* Slim accent */}
-                                                                                {!notification.read && (
-                                                                                    <div className="w-0.5 h-16 bg-gradient-to-b from-[#FF5722] to-[#E64A19] rounded-full shadow-sm" />
-                                                                                )}
-
-                                                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 ${!notification.read
-                                                                                    ? 'bg-gradient-to-br from-[#FF5722] to-[#E64A19] text-white shadow-lg'
-                                                                                    : 'bg-gray-100 text-gray-600'
-                                                                                    } group-hover:scale-110 transition-transform duration-300`}>
-                                                                                    {notification.type === 'event' && <FiCalendar className="w-5 h-5" />}
-                                                                                    {notification.type === 'message' && <FiMessageSquare className="w-5 h-5" />}
-                                                                                    {notification.type === 'system' && <IoTicket className="w-5 h-5" />}
-                                                                                    {notification.type === 'reminder' && <FiClock className="w-5 h-5" />}
-                                                                                </div>
-
-                                                                                <div className="flex-1 min-w-0">
-                                                                                    <div className="flex items-start justify-between mb-1">
-                                                                                        <p className="font-semibold text-gray-900 group-hover:text-[#FF5722] transition-colors">
-                                                                                            {notification.title}
-                                                                                        </p>
-                                                                                        {!notification.read && (
-                                                                                            <span className="w-2 h-2 rounded-full bg-[#FF5722] flex-shrink-0 mt-1 shadow-sm"></span>
-                                                                                        )}
-                                                                                    </div>
-                                                                                    <p className="text-sm text-gray-600 leading-relaxed mb-2">
-                                                                                        {notification.content}
-                                                                                    </p>
-                                                                                    <p className="text-xs text-gray-500 font-medium">{notification.time}</p>
-                                                                                </div>
-                                                                            </div>
-                                                                        </Link>
-                                                                    </motion.div>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    {/* Enhanced Quick Actions */}
-                                                    <div className="p-4 bg-gray-50/80 border-t border-gray-100/80">
-                                                        <button className="w-full py-3 px-4 bg-white/80 border border-gray-200/50 rounded-2xl text-sm text-gray-700 hover:bg-white hover:border-gray-300 transition-all font-medium">
-                                                            Mark All as Read
-                                                        </button>
-                                                    </div>
+                                                    [Complete notification dropdown content would be here]
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>
-                                    </div>
+                                    </div> */}
 
                                     {/* Enhanced DAO Button */}
                                     <motion.div
@@ -1209,7 +988,7 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                 )}
             </AnimatePresence>
 
-            {/* Enhanced Global Styles */}
+            {/* COMMENTED OUT: Enhanced Global Styles for notifications */}
             <style jsx global>{`
                 @keyframes shimmer {
                     0% { transform: translateX(-100%) skewX(-12deg); }
@@ -1293,8 +1072,8 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                     }
                 }
 
-                /* Enhanced notification attention system */
-                .notification-attention {
+                /* COMMENTED OUT: Enhanced notification attention system */
+                /* .notification-attention {
                     position: relative;
                 }
                 
@@ -1321,7 +1100,6 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                     }
                 }
                 
-                /* Better notification card shadows */
                 .notification-card-enhanced {
                     box-shadow: 
                         0 20px 35px -10px rgba(0, 0, 0, 0.15),
@@ -1329,7 +1107,6 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                         0 2px 8px rgba(255, 87, 34, 0.1);
                 }
                 
-                /* Notification entrance animation */
                 @keyframes notification-entrance {
                     0% {
                         transform: translateY(-100px) translateX(50px) scale(0.8);
@@ -1347,7 +1124,7 @@ export default function Header({ isSidebarExpanded = false }: HeaderProps) {
                 
                 .notification-entrance {
                     animation: notification-entrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                }
+                } */
 
                 /* Cute search component styles */
                 .search-input-focus {

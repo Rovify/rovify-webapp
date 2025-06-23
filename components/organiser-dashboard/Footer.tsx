@@ -76,7 +76,7 @@ export default function Footer({ sidebarCollapsed = false, isMobile = false }: F
                         <div className="flex items-center gap-3 text-xs">
                             <div className="flex items-center gap-1.5 text-gray-600">
                                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse shadow-sm"></div>
-                                <span className="font-medium text-xs">v2.1.4</span>
+                                <span className="font-medium text-xs">v1.0.0</span>
                             </div>
 
                             {/* <div className="flex items-center gap-1.5 text-gray-600">

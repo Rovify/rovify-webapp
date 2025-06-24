@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import TicketsPage from '@/components/TicketsPage';
+import TicketsPage from '@/components/organiser-dashboard/TicketsPage';
 
 export const metadata: Metadata = {
     title: 'Tickets Management',

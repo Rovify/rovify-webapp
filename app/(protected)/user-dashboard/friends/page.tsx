@@ -6,6 +6,6 @@ export const metadata: Metadata = {
     description: 'Friends management dashboard for users',
 };
 
-export default function WalletCenter() {
+export default function Rovers() {
     return <FriendsPage />;
 }   

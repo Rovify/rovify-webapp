@@ -6,6 +6,6 @@ export const metadata: Metadata = {
     description: 'History management dashboard for users',
 };
 
-export default function WalletCenter() {
+export default function HistoryCenter() {
     return <HistoryPage />;
 }   

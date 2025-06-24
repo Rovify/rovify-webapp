@@ -6,6 +6,6 @@ export const metadata: Metadata = {
     description: 'Collections management dashboard for users',
 };
 
-export default function WalletCenter() {
+export default function CollectionsCenter() {
     return <CollectionsPage />;
 }   

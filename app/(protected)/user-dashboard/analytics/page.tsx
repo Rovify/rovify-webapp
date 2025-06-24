@@ -6,6 +6,6 @@ export const metadata: Metadata = {
     description: 'Analytics dashboard for users',
 };
 
-export default function WalletCenter() {
+export default function AnalyticsCenter() {
     return <AnalyticsPage />;
 }   

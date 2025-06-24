@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     FiBell, FiShield, FiSettings, FiUser, FiSave, FiCheck, FiMoon, FiSun, FiGlobe,
     FiMusic, FiMapPin, FiWifi, FiDollarSign, FiTrendingUp, FiZap, FiHeart,
-    FiStar, FiCalendar, FiCamera, FiHeadphones, FiVolumeX
+    FiStar, FiCalendar, FiCamera, FiHeadphones, FiVolumeX, FiActivity
 } from 'react-icons/fi';
 
 interface NotificationPreferences {
@@ -165,93 +166,91 @@ export default function PreferencesPage() {
     interface ToggleSwitchProps {
         value: boolean;
         onChange: () => void;
-        color?: 'orange' | 'green' | 'blue' | 'purple' | 'neon' | 'gold' | 'pink';
         size?: 'sm' | 'md' | 'lg';
     }
 
-    const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ value, onChange, color = "orange", size = "md" }) => {
+    const ToggleSwitch: React.FC<ToggleSwitchProps> = ({ value, onChange, size = "md" }) => {
         const sizeClasses = {
-            sm: { container: 'w-10 h-5', toggle: 'w-3 h-3', translate: 'translate-x-5' },
-            md: { container: 'w-12 h-6', toggle: 'w-4 h-4', translate: 'translate-x-6' },
-            lg: { container: 'w-14 h-7', toggle: 'w-5 h-5', translate: 'translate-x-7' }
+            sm: { container: 'w-10 h-5', toggle: 'w-3 h-3', translateOn: 'translate-x-5', translateOff: 'translate-x-0.5' },
+            md: { container: 'w-12 h-6', toggle: 'w-4 h-4', translateOn: 'translate-x-6', translateOff: 'translate-x-1' },
+            lg: { container: 'w-14 h-7', toggle: 'w-5 h-5', translateOn: 'translate-x-7', translateOff: 'translate-x-1' }
         };
 
-        const colorClasses = {
-            orange: value ? 'bg-gradient-to-r from-orange-400 to-orange-600 shadow-orange-400/50' : 'bg-gray-300',
-            green: value ? 'bg-gradient-to-r from-green-400 to-green-600 shadow-green-400/50' : 'bg-gray-300',
-            blue: value ? 'bg-gradient-to-r from-blue-400 to-blue-600 shadow-blue-400/50' : 'bg-gray-300',
-            purple: value ? 'bg-gradient-to-r from-purple-400 to-purple-600 shadow-purple-400/50' : 'bg-gray-300',
-            neon: value ? 'bg-gradient-to-r from-cyan-400 to-emerald-500 shadow-cyan-400/50' : 'bg-gray-300',
-            gold: value ? 'bg-gradient-to-r from-yellow-400 to-orange-500 shadow-yellow-400/50' : 'bg-gray-300',
-            pink: value ? 'bg-gradient-to-r from-pink-400 to-rose-500 shadow-pink-400/50' : 'bg-gray-300'
-        };
-
-        const { container, toggle, translate } = sizeClasses[size];
+        const { container, toggle, translateOn, translateOff } = sizeClasses[size];
 
         return (
-            <button
+            <motion.button
                 onClick={onChange}
-                className={`relative ${container} rounded-full transition-all duration-300 ${colorClasses[color]} ${value ? 'shadow-lg' : ''} hover:scale-105`}
+                className={`relative ${container} rounded-full transition-all duration-300 flex items-center ${value
+                    ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-lg shadow-orange-500/25'
+                    : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
             >
-                <div
-                    className={`absolute top-0.5 ${toggle} bg-white rounded-full shadow-md transition-transform duration-300 ${value ? translate : 'translate-x-0.5'
-                        }`}
+                <motion.div
+                    className={`${toggle} bg-white rounded-full shadow-md transition-transform duration-300`}
+                    animate={{
+                        x: value ?
+                            (size === 'sm' ? 20 : size === 'md' ? 24 : 28) :
+                            (size === 'sm' ? 2 : 4)
+                    }}
                 />
-            </button>
+            </motion.button>
         );
     };
 
-    interface SectionButtonProps {
+    interface SectionTabProps {
         id: string;
         icon: React.ComponentType<{ className?: string }>;
         title: string;
         isActive: boolean;
         onClick: (id: string) => void;
-        gradient?: string;
     }
 
-    const SectionButton: React.FC<SectionButtonProps> = ({ id, icon: Icon, title, isActive, onClick, gradient }) => (
-        <button
+    const SectionTab: React.FC<SectionTabProps> = ({ id, icon: Icon, title, isActive, onClick }) => (
+        <motion.button
             onClick={() => onClick(id)}
-            className={`flex items-center gap-3 w-full p-4 rounded-2xl transition-all duration-300 group relative overflow-hidden ${isActive
-                ? `bg-gradient-to-r ${gradient || 'from-indigo-500 to-purple-600'} text-white shadow-lg scale-105`
-                : 'bg-white/80 backdrop-blur-sm text-gray-700 hover:bg-white/90 border border-gray-100/50 hover:shadow-md'
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm font-medium whitespace-nowrap ${isActive
+                ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-md'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                 }`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
         >
-            {isActive && (
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-50"></div>
-            )}
-            <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'text-white scale-110' : 'text-gray-500 group-hover:scale-105'}`} />
-            <span className="font-semibold relative z-10">{title}</span>
-        </button>
+            <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+            <span>{title}</span>
+        </motion.button>
     );
 
-    const GlassCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
-        <div className={`bg-white/70 backdrop-blur-xl rounded-3xl border border-white/20 shadow-xl ${className}`}>
+    const PreferenceCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = "" }) => (
+        <motion.div
+            className={`bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 ${className}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+        >
             {children}
-        </div>
+        </motion.div>
     );
 
     const renderParty = () => (
         <div className="space-y-6">
-            <GlassCard className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl">
-                        <FiMusic className="w-6 h-6 text-white" />
+            <PreferenceCard className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                        <FiMusic className="w-5 h-5 text-white" />
                     </div>
-                    Party & Social Vibes 🎉
-                </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Party & Social Preferences</h3>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <div className="p-5 bg-gradient-to-br from-pink-50 to-purple-50 rounded-2xl border border-pink-100">
-                        <label className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <FiHeadphones className="w-4 h-4 text-pink-500" />
-                            Music Genre
-                        </label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Music Genre</label>
                         <select
                             value={userPreferences.party.musicGenre}
                             onChange={(e) => handlePreferenceChange('party', 'musicGenre', e.target.value)}
-                            className="w-full p-3 bg-white/80 backdrop-blur border border-pink-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500/30 transition-all"
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                         >
                             <option value="electronic">Electronic/EDM</option>
                             <option value="hiphop">Hip Hop</option>
@@ -262,12 +261,12 @@ export default function PreferencesPage() {
                         </select>
                     </div>
 
-                    <div className="p-5 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl border border-purple-100">
-                        <label className="block font-semibold text-gray-900 mb-3">Party Size Preference</label>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Party Size Preference</label>
                         <select
                             value={userPreferences.party.partySize}
                             onChange={(e) => handlePreferenceChange('party', 'partySize', e.target.value)}
-                            className="w-full p-3 bg-white/80 backdrop-blur border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 transition-all"
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                         >
                             <option value="intimate">Intimate (10-30)</option>
                             <option value="medium">Medium (30-100)</option>
@@ -276,12 +275,12 @@ export default function PreferencesPage() {
                         </select>
                     </div>
 
-                    <div className="p-5 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100">
-                        <label className="block font-semibold text-gray-900 mb-3">Vibe Preference</label>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Vibe Preference</label>
                         <select
                             value={userPreferences.party.vibePreference}
                             onChange={(e) => handlePreferenceChange('party', 'vibePreference', e.target.value)}
-                            className="w-full p-3 bg-white/80 backdrop-blur border border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all"
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                         >
                             <option value="chill">Chill & Relaxed</option>
                             <option value="energetic">High Energy</option>
@@ -302,10 +301,14 @@ export default function PreferencesPage() {
                         liveStreaming: 'Live Stream Party Moments',
                         partyMode: 'Party Mode (Enhanced Features)'
                     }).map(([key, label]) => (
-                        <div key={key} className="flex items-center justify-between p-5 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur rounded-2xl border border-white/30 hover:from-white/80 hover:to-white/60 transition-all">
-                            <div>
-                                <h4 className="font-semibold text-gray-900">{label}</h4>
-                                <p className="text-sm text-gray-600">
+                        <motion.div
+                            key={key}
+                            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                            whileHover={{ scale: 1.01 }}
+                        >
+                            <div className="flex-1">
+                                <h4 className="font-medium text-gray-900">{label}</h4>
+                                <p className="text-sm text-gray-600 mt-1">
                                     {key === 'partyDiscovery' && 'Find parties based on your music taste and location'}
                                     {key === 'autoCheckin' && 'Automatically check into events you attend'}
                                     {key === 'partyNotifications' && 'Get notified when parties are starting'}
@@ -315,39 +318,37 @@ export default function PreferencesPage() {
                                     {key === 'partyMode' && 'Enable enhanced party features and UI'}
                                 </p>
                             </div>
-                            <ToggleSwitch
-                                value={userPreferences.party[key as keyof PartyPreferences] as boolean}
-                                onChange={() => handlePreferenceChange('party', key, !userPreferences.party[key as keyof PartyPreferences])}
-                                color="pink"
-                                size="lg"
-                            />
-                        </div>
+                            <div className="ml-4">
+                                <ToggleSwitch
+                                    value={userPreferences.party[key as keyof PartyPreferences] as boolean}
+                                    onChange={() => handlePreferenceChange('party', key, !userPreferences.party[key as keyof PartyPreferences])}
+                                    size="lg"
+                                />
+                            </div>
+                        </motion.div>
                     ))}
                 </div>
-            </GlassCard>
+            </PreferenceCard>
         </div>
     );
 
     const renderBlockchain = () => (
         <div className="space-y-6">
-            <GlassCard className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-cyan-500 to-emerald-600 rounded-xl">
-                        <FiZap className="w-6 h-6 text-white" />
+            <PreferenceCard className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                        <FiZap className="w-5 h-5 text-white" />
                     </div>
-                    Blockchain & Crypto ⚡
-                </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Blockchain & Crypto Settings</h3>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div className="p-6 bg-gradient-to-br from-cyan-50 to-emerald-50 rounded-2xl border border-cyan-100">
-                        <label className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <FiWifi className="w-4 h-4 text-cyan-500" />
-                            Preferred Wallet
-                        </label>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Preferred Wallet</label>
                         <select
                             value={userPreferences.blockchain.preferredWallet}
                             onChange={(e) => handlePreferenceChange('blockchain', 'preferredWallet', e.target.value)}
-                            className="w-full p-3 bg-white/80 backdrop-blur border border-cyan-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/30 transition-all"
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                         >
                             <option value="metamask">MetaMask</option>
                             <option value="coinbase">Coinbase Wallet</option>
@@ -357,23 +358,20 @@ export default function PreferencesPage() {
                         </select>
                     </div>
 
-                    <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                                    <FiTrendingUp className="w-4 h-4 text-emerald-500" />
-                                    Base Chain Enabled
-                                </h4>
-                                <p className="text-sm text-gray-600">Use Coinbase&apos;s Base network</p>
-                            </div>
-                            <ToggleSwitch
-                                value={userPreferences.blockchain.basechainEnabled}
-                                onChange={() => handlePreferenceChange('blockchain', 'basechainEnabled', !userPreferences.blockchain.basechainEnabled)}
-                                color="neon"
-                                size="lg"
-                            />
+                    <motion.div
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
+                        whileHover={{ scale: 1.01 }}
+                    >
+                        <div>
+                            <h4 className="font-medium text-gray-900">Base Chain Enabled</h4>
+                            <p className="text-sm text-gray-600">Use Coinbase&apos;s Base network</p>
                         </div>
-                    </div>
+                        <ToggleSwitch
+                            value={userPreferences.blockchain.basechainEnabled}
+                            onChange={() => handlePreferenceChange('blockchain', 'basechainEnabled', !userPreferences.blockchain.basechainEnabled)}
+                            size="lg"
+                        />
+                    </motion.div>
                 </div>
 
                 <div className="space-y-4">
@@ -387,17 +385,14 @@ export default function PreferencesPage() {
                         stakingAlerts: 'Staking Rewards Notifications',
                         smartContracts: 'Smart Contract Interactions'
                     }).map(([key, label]) => (
-                        <div key={key} className="flex items-center justify-between p-5 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur rounded-2xl border border-white/30 hover:from-white/80 hover:to-white/60 transition-all">
-                            <div>
-                                <h4 className="font-semibold text-gray-900 flex items-center gap-2">
-                                    {key === 'walletConnected' && <FiWifi className="w-4 h-4 text-cyan-500" />}
-                                    {key === 'gasAlerts' && <FiZap className="w-4 h-4 text-yellow-500" />}
-                                    {key === 'nftDisplay' && <FiStar className="w-4 h-4 text-purple-500" />}
-                                    {key === 'cryptoPayments' && <FiDollarSign className="w-4 h-4 text-green-500" />}
-                                    {key === 'tokenUpdates' && <FiTrendingUp className="w-4 h-4 text-blue-500" />}
-                                    {label}
-                                </h4>
-                                <p className="text-sm text-gray-600">
+                        <motion.div
+                            key={key}
+                            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                            whileHover={{ scale: 1.01 }}
+                        >
+                            <div className="flex-1">
+                                <h4 className="font-medium text-gray-900">{label}</h4>
+                                <p className="text-sm text-gray-600 mt-1">
                                     {key === 'walletConnected' && 'Connect your crypto wallet to the app'}
                                     {key === 'gasAlerts' && 'Get notified about optimal gas fees'}
                                     {key === 'nftDisplay' && 'Display your NFT collection on your profile'}
@@ -408,34 +403,39 @@ export default function PreferencesPage() {
                                     {key === 'smartContracts' && 'Enable smart contract interactions'}
                                 </p>
                             </div>
-                            <ToggleSwitch
-                                value={userPreferences.blockchain[key as keyof BlockchainPreferences] as boolean}
-                                onChange={() => handlePreferenceChange('blockchain', key, !userPreferences.blockchain[key as keyof BlockchainPreferences])}
-                                color="neon"
-                                size="lg"
-                            />
-                        </div>
+                            <div className="ml-4">
+                                <ToggleSwitch
+                                    value={userPreferences.blockchain[key as keyof BlockchainPreferences] as boolean}
+                                    onChange={() => handlePreferenceChange('blockchain', key, !userPreferences.blockchain[key as keyof BlockchainPreferences])}
+                                    size="lg"
+                                />
+                            </div>
+                        </motion.div>
                     ))}
                 </div>
-            </GlassCard>
+            </PreferenceCard>
         </div>
     );
 
     const renderNotifications = () => (
         <div className="space-y-6">
-            <GlassCard className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl">
-                        <FiBell className="w-6 h-6 text-white" />
+            <PreferenceCard className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                        <FiBell className="w-5 h-5 text-white" />
                     </div>
-                    Notification Hub 📢
-                </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Notification Preferences</h3>
+                </div>
                 <div className="space-y-4">
                     {Object.entries(userPreferences.notifications).map(([key, value]) => (
-                        <div key={key} className="flex items-center justify-between p-5 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur rounded-2xl border border-white/30 hover:from-white/80 hover:to-white/60 transition-all">
-                            <div>
-                                <h4 className="font-semibold text-gray-900 capitalize">{key.replace(/([A-Z])/g, ' $1')}</h4>
-                                <p className="text-sm text-gray-600">
+                        <motion.div
+                            key={key}
+                            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                            whileHover={{ scale: 1.01 }}
+                        >
+                            <div className="flex-1">
+                                <h4 className="font-medium text-gray-900 capitalize">{key.replace(/([A-Z])/g, ' $1')}</h4>
+                                <p className="text-sm text-gray-600 mt-1">
                                     {key === 'email' && 'Receive notifications via email'}
                                     {key === 'push' && 'Browser push notifications'}
                                     {key === 'sms' && 'Text message notifications'}
@@ -446,36 +446,37 @@ export default function PreferencesPage() {
                                     {key === 'securityAlerts' && 'Important security notifications'}
                                 </p>
                             </div>
-                            <ToggleSwitch
-                                value={value}
-                                onChange={() => handlePreferenceChange('notifications', key, !value)}
-                                color="orange"
-                                size="lg"
-                            />
-                        </div>
+                            <div className="ml-4">
+                                <ToggleSwitch
+                                    value={value}
+                                    onChange={() => handlePreferenceChange('notifications', key, !value)}
+                                    size="lg"
+                                />
+                            </div>
+                        </motion.div>
                     ))}
                 </div>
-            </GlassCard>
+            </PreferenceCard>
         </div>
     );
 
     const renderPrivacy = () => (
         <div className="space-y-6">
-            <GlassCard className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl">
-                        <FiShield className="w-6 h-6 text-white" />
+            <PreferenceCard className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                        <FiShield className="w-5 h-5 text-white" />
                     </div>
-                    Privacy & Security 🔒
-                </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Privacy & Security</h3>
+                </div>
                 <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100">
-                            <label className="block font-semibold text-gray-900 mb-3">Profile Visibility</label>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">Profile Visibility</label>
                             <select
                                 value={userPreferences.privacy.profileVisibility}
                                 onChange={(e) => handlePreferenceChange('privacy', 'profileVisibility', e.target.value)}
-                                className="w-full p-3 bg-white/80 backdrop-blur border border-green-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/30 transition-all"
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                             >
                                 <option value="public">Public</option>
                                 <option value="friends">Friends Only</option>
@@ -483,12 +484,12 @@ export default function PreferencesPage() {
                             </select>
                         </div>
 
-                        <div className="p-5 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl border border-emerald-100">
-                            <label className="block font-semibold text-gray-900 mb-3">Who can message you</label>
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-700">Who can message you</label>
                             <select
                                 value={userPreferences.privacy.allowMessages}
                                 onChange={(e) => handlePreferenceChange('privacy', 'allowMessages', e.target.value)}
-                                className="w-full p-3 bg-white/80 backdrop-blur border border-emerald-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 transition-all"
+                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                             >
                                 <option value="everyone">Everyone</option>
                                 <option value="friends">Friends Only</option>
@@ -498,48 +499,50 @@ export default function PreferencesPage() {
                     </div>
 
                     {['showLocation', 'showEvents', 'dataSharing', 'analytics'].map((key) => (
-                        <div key={key} className="flex items-center justify-between p-5 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur rounded-2xl border border-white/30 hover:from-white/80 hover:to-white/60 transition-all">
-                            <div>
-                                <h4 className="font-semibold text-gray-900 capitalize">{key.replace(/([A-Z])/g, ' $1')}</h4>
-                                <p className="text-sm text-gray-600">
+                        <motion.div
+                            key={key}
+                            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                            whileHover={{ scale: 1.01 }}
+                        >
+                            <div className="flex-1">
+                                <h4 className="font-medium text-gray-900 capitalize">{key.replace(/([A-Z])/g, ' $1')}</h4>
+                                <p className="text-sm text-gray-600 mt-1">
                                     {key === 'showLocation' && 'Display your location on your profile'}
                                     {key === 'showEvents' && 'Show your event attendance publicly'}
                                     {key === 'dataSharing' && 'Share anonymized data for product improvement'}
                                     {key === 'analytics' && 'Allow usage analytics for better experience'}
                                 </p>
                             </div>
-                            <ToggleSwitch
-                                value={userPreferences.privacy[key as keyof PrivacyPreferences] as boolean}
-                                onChange={() => handlePreferenceChange('privacy', key, !userPreferences.privacy[key as keyof PrivacyPreferences])}
-                                color="green"
-                                size="lg"
-                            />
-                        </div>
+                            <div className="ml-4">
+                                <ToggleSwitch
+                                    value={userPreferences.privacy[key as keyof PrivacyPreferences] as boolean}
+                                    onChange={() => handlePreferenceChange('privacy', key, !userPreferences.privacy[key as keyof PrivacyPreferences])}
+                                    size="lg"
+                                />
+                            </div>
+                        </motion.div>
                     ))}
                 </div>
-            </GlassCard>
+            </PreferenceCard>
         </div>
     );
 
     const renderDisplay = () => (
         <div className="space-y-6">
-            <GlassCard className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl">
-                        <FiSettings className="w-6 h-6 text-white" />
+            <PreferenceCard className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                        <FiSettings className="w-5 h-5 text-white" />
                     </div>
-                    Display & Language 🎨
-                </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Display & Language</h3>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-                    <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
-                        <label className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <FiMoon className="w-4 h-4" />
-                            Theme
-                        </label>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Theme</label>
                         <select
                             value={userPreferences.display.theme}
                             onChange={(e) => handlePreferenceChange('display', 'theme', e.target.value)}
-                            className="w-full p-3 bg-white/80 backdrop-blur border border-blue-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                         >
                             <option value="light">Light</option>
                             <option value="dark">Dark</option>
@@ -548,15 +551,12 @@ export default function PreferencesPage() {
                         </select>
                     </div>
 
-                    <div className="p-5 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100">
-                        <label className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                            <FiGlobe className="w-4 h-4" />
-                            Language
-                        </label>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Language</label>
                         <select
                             value={userPreferences.display.language}
                             onChange={(e) => handlePreferenceChange('display', 'language', e.target.value)}
-                            className="w-full p-3 bg-white/80 backdrop-blur border border-indigo-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all"
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                         >
                             <option value="en">English</option>
                             <option value="es">Español</option>
@@ -566,54 +566,58 @@ export default function PreferencesPage() {
                         </select>
                     </div>
 
-                    <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
-                        <label className="block font-semibold text-gray-900 mb-3">Currency</label>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Currency</label>
                         <select
                             value={userPreferences.display.currency}
                             onChange={(e) => handlePreferenceChange('display', 'currency', e.target.value)}
-                            className="w-full p-3 bg-white/80 backdrop-blur border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 transition-all"
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                         >
                             <option value="USD">USD ($)</option>
                             <option value="EUR">EUR (€)</option>
                             <option value="GBP">GBP (£)</option>
                             <option value="ETH">ETH (Ξ)</option>
-                            <option value="BTC">BTC (₿)</option>
+                            <option value="ROVI">ROVI ($ROVI)</option>
                         </select>
                     </div>
                 </div>
 
-                <div className="flex items-center justify-between p-5 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur rounded-2xl border border-white/30 hover:from-white/80 hover:to-white/60 transition-all">
-                    <div>
-                        <h4 className="font-semibold text-gray-900">Compact Mode</h4>
-                        <p className="text-sm text-gray-600">Use a more condensed interface layout</p>
+                <motion.div
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                    whileHover={{ scale: 1.01 }}
+                >
+                    <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">Compact Mode</h4>
+                        <p className="text-sm text-gray-600 mt-1">Use a more condensed interface layout</p>
                     </div>
-                    <ToggleSwitch
-                        value={userPreferences.display.compactMode}
-                        onChange={() => handlePreferenceChange('display', 'compactMode', !userPreferences.display.compactMode)}
-                        color="blue"
-                        size="lg"
-                    />
-                </div>
-            </GlassCard>
+                    <div className="ml-4">
+                        <ToggleSwitch
+                            value={userPreferences.display.compactMode}
+                            onChange={() => handlePreferenceChange('display', 'compactMode', !userPreferences.display.compactMode)}
+                            size="lg"
+                        />
+                    </div>
+                </motion.div>
+            </PreferenceCard>
         </div>
     );
 
     const renderAccount = () => (
         <div className="space-y-6">
-            <GlassCard className="p-8">
-                <h3 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-3">
-                    <div className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl">
-                        <FiUser className="w-6 h-6 text-white" />
+            <PreferenceCard className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
+                        <FiUser className="w-5 h-5 text-white" />
                     </div>
-                    Account Settings ⚙️
-                </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Account Settings</h3>
+                </div>
                 <div className="space-y-6">
-                    <div className="p-5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl border border-purple-100">
-                        <label className="block font-semibold text-gray-900 mb-3">Session Timeout</label>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Session Timeout</label>
                         <select
                             value={userPreferences.account.sessionTimeout}
                             onChange={(e) => handlePreferenceChange('account', 'sessionTimeout', e.target.value)}
-                            className="w-full p-3 bg-white/80 backdrop-blur border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/30 transition-all"
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
                         >
                             <option value="15">15 minutes</option>
                             <option value="30">30 minutes</option>
@@ -622,34 +626,43 @@ export default function PreferencesPage() {
                         </select>
                     </div>
 
-                    <div className="flex items-center justify-between p-5 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur rounded-2xl border border-white/30 hover:from-white/80 hover:to-white/60 transition-all">
-                        <div>
-                            <h4 className="font-semibold text-gray-900">Two-Factor Authentication</h4>
-                            <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
+                    <motion.div
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        whileHover={{ scale: 1.01 }}
+                    >
+                        <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">Two-Factor Authentication</h4>
+                            <p className="text-sm text-gray-600 mt-1">Add an extra layer of security to your account</p>
                         </div>
-                        <ToggleSwitch
-                            value={userPreferences.account.twoFactorAuth}
-                            onChange={() => handlePreferenceChange('account', 'twoFactorAuth', !userPreferences.account.twoFactorAuth)}
-                            color="purple"
-                            size="lg"
-                        />
-                    </div>
+                        <div className="ml-4">
+                            <ToggleSwitch
+                                value={userPreferences.account.twoFactorAuth}
+                                onChange={() => handlePreferenceChange('account', 'twoFactorAuth', !userPreferences.account.twoFactorAuth)}
+                                size="lg"
+                            />
+                        </div>
+                    </motion.div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <button className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-2xl text-blue-700 hover:from-blue-100 hover:to-cyan-100 transition-all transform hover:scale-105">
-                            <div className="font-semibold flex items-center gap-2">
-                                <FiSave className="w-4 h-4" />
-                                Download Your Data
-                            </div>
+                        <motion.button
+                            className="p-4 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 hover:bg-blue-100 transition-colors"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                        >
+                            <div className="font-medium">Download Your Data</div>
                             <div className="text-sm text-blue-600">Get a copy of your account data</div>
-                        </button>
-                        <button className="p-6 bg-gradient-to-r from-red-50 to-pink-50 border border-red-200 rounded-2xl text-red-700 hover:from-red-100 hover:to-pink-100 transition-all transform hover:scale-105">
-                            <div className="font-semibold">Delete Account</div>
+                        </motion.button>
+                        <motion.button
+                            className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 hover:bg-red-100 transition-colors"
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                        >
+                            <div className="font-medium">Delete Account</div>
                             <div className="text-sm text-red-600">Permanently delete your account</div>
-                        </button>
+                        </motion.button>
                     </div>
                 </div>
-            </GlassCard>
+            </PreferenceCard>
         </div>
     );
 
@@ -666,106 +679,102 @@ export default function PreferencesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
-            <div className="max-w-7xl mx-auto p-6 space-y-8">
-                {/* Futuristic Header */}
-                <div className="relative bg-gradient-to-br from-indigo-600 via-purple-700 to-pink-600 rounded-3xl p-8 text-white overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
-                    <div className="absolute -top-20 -right-20 w-60 h-60 bg-white/10 rounded-full blur-3xl"></div>
-                    <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-white/5 rounded-full blur-2xl"></div>
-                    <div className="relative z-10">
-                        <h1 className="text-5xl font-bold mb-3 bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-                            Rovify Preferences
-                        </h1>
-                        <p className="text-indigo-100 text-xl font-medium">
-                            🎉 Customize your party & crypto experience
-                        </p>
-                    </div>
+        <div className="space-y-8">
+            {/* Tab Navigation */}
+            <motion.div
+                className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+            >
+                <div className="flex flex-wrap gap-2 p-1 bg-gray-50 rounded-xl">
+                    <SectionTab
+                        id="party"
+                        icon={FiMusic}
+                        title="Party & Social"
+                        isActive={activeSection === 'party'}
+                        onClick={setActiveSection}
+                    />
+                    <SectionTab
+                        id="blockchain"
+                        icon={FiZap}
+                        title="Blockchain"
+                        isActive={activeSection === 'blockchain'}
+                        onClick={setActiveSection}
+                    />
+                    <SectionTab
+                        id="notifications"
+                        icon={FiBell}
+                        title="Notifications"
+                        isActive={activeSection === 'notifications'}
+                        onClick={setActiveSection}
+                    />
+                    <SectionTab
+                        id="privacy"
+                        icon={FiShield}
+                        title="Privacy"
+                        isActive={activeSection === 'privacy'}
+                        onClick={setActiveSection}
+                    />
+                    <SectionTab
+                        id="display"
+                        icon={FiSettings}
+                        title="Display"
+                        isActive={activeSection === 'display'}
+                        onClick={setActiveSection}
+                    />
+                    <SectionTab
+                        id="account"
+                        icon={FiUser}
+                        title="Account"
+                        isActive={activeSection === 'account'}
+                        onClick={setActiveSection}
+                    />
                 </div>
+            </motion.div>
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Modern Sidebar */}
-                    <div className="lg:w-72 space-y-3">
-                        <SectionButton
-                            id="party"
-                            icon={FiMusic}
-                            title="Party Vibes"
-                            isActive={activeSection === 'party'}
-                            onClick={setActiveSection}
-                            gradient="from-pink-500 to-purple-600"
-                        />
-                        <SectionButton
-                            id="blockchain"
-                            icon={FiZap}
-                            title="Blockchain & Crypto"
-                            isActive={activeSection === 'blockchain'}
-                            onClick={setActiveSection}
-                            gradient="from-cyan-500 to-emerald-600"
-                        />
-                        <SectionButton
-                            id="notifications"
-                            icon={FiBell}
-                            title="Notifications"
-                            isActive={activeSection === 'notifications'}
-                            onClick={setActiveSection}
-                            gradient="from-orange-500 to-red-600"
-                        />
-                        <SectionButton
-                            id="privacy"
-                            icon={FiShield}
-                            title="Privacy & Security"
-                            isActive={activeSection === 'privacy'}
-                            onClick={setActiveSection}
-                            gradient="from-green-500 to-emerald-600"
-                        />
-                        <SectionButton
-                            id="display"
-                            icon={FiSettings}
-                            title="Display & Language"
-                            isActive={activeSection === 'display'}
-                            onClick={setActiveSection}
-                            gradient="from-blue-500 to-indigo-600"
-                        />
-                        <SectionButton
-                            id="account"
-                            icon={FiUser}
-                            title="Account Settings"
-                            isActive={activeSection === 'account'}
-                            onClick={setActiveSection}
-                            gradient="from-purple-500 to-pink-600"
-                        />
-                    </div>
+            {/* Content */}
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeSection}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    {renderContent()}
+                </motion.div>
+            </AnimatePresence>
 
-                    {/* Main Content */}
-                    <div className="flex-1">
-                        {renderContent()}
-                    </div>
-                </div>
-
-                {/* Futuristic Save Button */}
-                <div className="flex justify-center">
-                    <button
-                        onClick={handleSavePreferences}
-                        className={`relative overflow-hidden flex items-center gap-4 px-12 py-5 rounded-2xl font-bold text-white transition-all duration-500 transform hover:scale-105 ${savedState
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 shadow-green-500/30'
-                            : 'bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 shadow-indigo-500/30'
-                            } shadow-2xl`}
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300"></div>
-                        {savedState ? (
-                            <>
-                                <FiCheck className="w-6 h-6 relative z-10" />
-                                <span className="text-xl relative z-10">Preferences Saved! ✨</span>
-                            </>
-                        ) : (
-                            <>
-                                <FiSave className="w-6 h-6 relative z-10" />
-                                <span className="text-xl relative z-10">Save Preferences</span>
-                            </>
-                        )}
-                    </button>
-                </div>
-            </div>
+            {/* Save Button */}
+            <motion.div
+                className="flex justify-end"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+            >
+                <motion.button
+                    onClick={handleSavePreferences}
+                    className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold text-white transition-all duration-300 shadow-lg ${savedState
+                        ? 'bg-emerald-500 hover:bg-emerald-600'
+                        : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                        }`}
+                    whileHover={{ scale: 1.05, y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                >
+                    {savedState ? (
+                        <>
+                            <FiCheck className="w-5 h-5" />
+                            Preferences Saved!
+                        </>
+                    ) : (
+                        <>
+                            <FiSave className="w-5 h-5" />
+                            Save Preferences
+                        </>
+                    )}
+                </motion.button>
+            </motion.div>
         </div>
     );
 }

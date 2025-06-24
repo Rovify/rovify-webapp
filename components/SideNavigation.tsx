@@ -32,7 +32,7 @@ export default function SideNavigation({ isOrganiser = false, className = '' }: 
         { href: '/stream', icon: <BsCameraVideoFill />, label: 'Live' },
         { href: '/gaming', icon: <BsController />, label: 'Gaming' },
         { href: '/marketplace', icon: <AiOutlineShop />, label: 'Shop' },
-        { href: '/profile', icon: <FiUser />, label: 'Profile' }
+        { href: '/user-dashboard', icon: <FiUser />, label: 'Profile' }
     ], []);
 
     const isActiveRoute = useCallback((href: string): boolean => {

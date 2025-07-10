@@ -21,7 +21,8 @@ export default function RootPage() {
       <div className="flex flex-col items-center">
         <div className="h-12 w-12 bg-gradient-to-br from-[#FF5722] to-[#FF7A50] rounded-xl flex items-center justify-center shadow-lg animate-pulse">
           <Image
-            src={RoviLogo}
+            // src={RoviLogo}
+            src="/images/contents/rovi-logo.png"
             alt="Rovify Logo"
             width={32}
             height={32}

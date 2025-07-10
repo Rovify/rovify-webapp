@@ -45,8 +45,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
             setIsDesktop(width >= 1024);
 
             // Auto-adjust navigation based on screen size
-            // On mobile, we might want to hide the side nav by default
-            setShowSideNav(width >= 768);
+            // setShowSideNav(width >= 768);
         };
 
         // Set initial values

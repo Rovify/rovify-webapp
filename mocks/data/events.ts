@@ -14,7 +14,7 @@ export const mockEvents: Event[] = [
             city: 'Metropolis',
             coordinates: { lat: 40.7128, lng: -74.006 }
         },
-        organizer: {
+        organiser: {
             id: '1',
             name: 'Electric Dreams Productions',
             image: 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?q=80&w=2070&auto=format&fit=crop',
@@ -53,7 +53,7 @@ export const mockEvents: Event[] = [
             city: 'Silicon Heights',
             coordinates: { lat: 37.7749, lng: -122.4194 }
         },
-        organizer: {
+        organiser: {
             id: '2',
             name: 'Future Forward Inc.',
             image: 'https://images.unsplash.com/photo-1605379399642-870262d3d051?q=80&w=2081&auto=format&fit=crop',
@@ -92,7 +92,7 @@ export const mockEvents: Event[] = [
             city: 'Culinary Heights',
             coordinates: { lat: 34.0522, lng: -118.2437 }
         },
-        organizer: {
+        organiser: {
             id: '3',
             name: 'Elite Dining Experiences',
             image: 'https://images.unsplash.com/photo-1577219491135-ce391730fb2c?q=80&w=1954&auto=format&fit=crop',
@@ -131,7 +131,7 @@ export const mockEvents: Event[] = [
             city: 'Artville',
             coordinates: { lat: 51.5074, lng: -0.1278 }
         },
-        organizer: {
+        organiser: {
             id: '4',
             name: 'Contemporary Arts Collective',
             image: 'https://images.unsplash.com/photo-1622737133809-d95047b9e673?q=80&w=1932&auto=format&fit=crop',
@@ -170,7 +170,7 @@ export const mockEvents: Event[] = [
             city: 'Cryptopia',
             coordinates: { lat: 25.7617, lng: -80.1918 }
         },
-        organizer: {
+        organiser: {
             id: '5',
             name: 'Decentralized Futures',
             image: 'https://images.unsplash.com/photo-1620321023374-d1a68fbc720d?q=80&w=1974&auto=format&fit=crop',
@@ -209,7 +209,7 @@ export const mockEvents: Event[] = [
             city: 'Tranquil Valley',
             coordinates: { lat: 39.7392, lng: -104.9903 }
         },
-        organizer: {
+        organiser: {
             id: '6',
             name: 'Harmonious Living',
             image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2020&auto=format&fit=crop',
@@ -248,7 +248,7 @@ export const mockEvents: Event[] = [
             city: 'Pixel City',
             coordinates: { lat: 47.6062, lng: -122.3321 }
         },
-        organizer: {
+        organiser: {
             id: '7',
             name: 'Pro Gaming League',
             image: 'https://images.unsplash.com/photo-1548344840-6d3df8c76de7?q=80&w=2070&auto=format&fit=crop',
@@ -287,7 +287,7 @@ export const mockEvents: Event[] = [
             city: 'Filmville',
             coordinates: { lat: 34.0522, lng: -118.2437 }
         },
-        organizer: {
+        organiser: {
             id: '8',
             name: 'Independent Cinema Collective',
             image: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=2070&auto=format&fit=crop',
@@ -326,7 +326,7 @@ export const mockEvents: Event[] = [
             city: 'Motorville',
             coordinates: { lat: 42.3601, lng: -71.0589 }
         },
-        organizer: {
+        organiser: {
             id: '9',
             name: 'Classic Automobile Society',
             image: 'https://images.unsplash.com/photo-1596609548086-85bbf8ddb6b9?q=80&w=1970&auto=format&fit=crop',
@@ -365,7 +365,7 @@ export const mockEvents: Event[] = [
             city: 'Neo Metropolis',
             coordinates: { lat: 37.7749, lng: -122.4194 }
         },
-        organizer: {
+        organiser: {
             id: '10',
             name: 'Immersive Technologies',
             image: 'https://images.unsplash.com/photo-1626379953822-baec19c3accd?q=80&w=1974&auto=format&fit=crop',

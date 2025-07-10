@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FiHome, FiCompass, FiPlus, FiUser } from 'react-icons/fi';
@@ -11,298 +11,760 @@ import { MdOutlineAddBox, MdOutlineNotifications } from "react-icons/md";
 import { AiOutlineShop } from "react-icons/ai";
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface SideNavigationProps {
-    isOrganizer?: boolean;
+interface NavigationItem {
+    href: string;
+    icon: React.ReactNode;
+    label: string;
 }
 
-export default function SideNavigation({ isOrganizer = false }: SideNavigationProps) {
+interface SideNavigationProps {
+    isOrganiser?: boolean;
+    className?: string;
+}
+
+export default function SideNavigation({ isOrganiser = false, className = '' }: SideNavigationProps) {
     const pathname = usePathname();
-    const [activeTab, setActiveTab] = useState(pathname);
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isVisible, setIsVisible] = useState(true);
-    const [isScrollingUp, setIsScrollingUp] = useState(true);
-    const lastScrollY = useRef(0);
-    const visibilityTimeout = useRef<NodeJS.Timeout | null>(null);
-    const expandTimeout = useRef<NodeJS.Timeout | null>(null);
+    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-    // Track scroll direction to hide/show the navigation
-    useEffect(() => {
-        const handleScroll = () => {
-            const currentScrollY = window.scrollY;
+    const navigationItems: NavigationItem[] = useMemo(() => [
+        { href: '/home', icon: <FiHome />, label: 'Home' },
+        { href: '/feed', icon: <MdOutlineAddBox />, label: 'Feed' },
+        { href: '/stream', icon: <BsCameraVideoFill />, label: 'Live' },
+        { href: '/gaming', icon: <BsController />, label: 'Gaming' },
+        { href: '/marketplace', icon: <AiOutlineShop />, label: 'Shop' },
+        { href: '/user-dashboard', icon: <FiUser />, label: 'Profile' }
+    ], []);
 
-            // Determine if scrolling up or down
-            setIsScrollingUp(currentScrollY < lastScrollY.current);
-
-            // Auto-hide on scroll down, show on scroll up
-            if (currentScrollY > 150) {
-                setIsVisible(isScrollingUp);
-            } else {
-                setIsVisible(true);
-            }
-
-            // Collapse the nav on scroll
-            setIsExpanded(false);
-
-            // Store current position for next comparison
-            lastScrollY.current = currentScrollY;
-
-            // Reset timeout to show navigation after scrolling stops
-            if (visibilityTimeout.current) clearTimeout(visibilityTimeout.current);
-
-            visibilityTimeout.current = setTimeout(() => {
-                setIsVisible(true);
-            }, 2000);
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            if (visibilityTimeout.current) clearTimeout(visibilityTimeout.current);
-            if (expandTimeout.current) clearTimeout(expandTimeout.current);
-        };
-    }, [isScrollingUp]);
-
-    // Update active tab when path changes
-    useEffect(() => {
-        setActiveTab(pathname);
+    const isActiveRoute = useCallback((href: string): boolean => {
+        if (href === '/home') return pathname === '/home' || pathname === '/';
+        return pathname.startsWith(href);
     }, [pathname]);
 
-    // Handle URL paths where we should hide the navigation
-    useEffect(() => {
-        // Add paths where side navigation should be hidden
-        const hiddenPaths = ['/checkout', '/payment', '/live-event'];
-        const shouldHide = hiddenPaths.some(path => pathname.includes(path));
-
-        if (shouldHide) {
-            setIsVisible(false);
-        }
+    const shouldHideNavigation = useMemo(() => {
+        const hiddenPaths = ['/checkout', '/payment', '/live-event', '/onboarding'];
+        return hiddenPaths.some(path => pathname.includes(path));
     }, [pathname]);
 
-    // Handle hover interactions
-    const handleMouseEnter = () => {
-        if (expandTimeout.current) clearTimeout(expandTimeout.current);
-        setIsExpanded(true);
-    };
-
-    const handleMouseLeave = () => {
-        expandTimeout.current = setTimeout(() => {
-            setIsExpanded(false);
-        }, 300);
-    };
+    if (shouldHideNavigation) return null;
 
     return (
-        <div
-            className={`fixed left-5 top-1/2 -translate-y-1/2 z-40 transition-all duration-300 ${isVisible ? 'translate-x-0 opacity-100' : '-translate-x-20 opacity-0'
-                }`}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-        >
-            {/* Main Navigation Dock */}
-            <motion.div
-                className="rounded-2xl overflow-hidden backdrop-blur-md bg-white/95 shadow-xl border border-gray-100 flex flex-col items-center py-6 relative"
-                animate={{
-                    width: isExpanded ? '5rem' : '4rem',
-                }}
-                transition={{ duration: 0.2 }}
+        <>
+            {/* Desktop Modern Dock */}
+            <motion.nav
+                className={`fixed left-6 top-1/2 -translate-y-1/2 z-50 hidden md:block ${className}`}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-                {/* Glass effect overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/50 to-white/30 pointer-events-none"></div>
+                {/* Clean Container */}
+                <div className="
+          relative bg-white/95 backdrop-blur-md
+          border border-gray-200/80 rounded-2xl
+          shadow-lg shadow-gray-900/5
+          p-3 w-16
+        ">
+                    {/* Navigation Items */}
+                    <div className="flex flex-col space-y-2">
+                        {navigationItems.map((item, index) => (
+                            <ModernNavItem
+                                key={item.href}
+                                item={item}
+                                index={index}
+                                isActive={isActiveRoute(item.href)}
+                                hoveredIndex={hoveredIndex}
+                                setHoveredIndex={setHoveredIndex}
+                            />
+                        ))}
 
-                {/* Animated active indicator */}
+                        {/* Create Button */}
+                        {isOrganiser && (
+                            <div className="mt-3 pt-3 border-t border-gray-200/60">
+                                <ModernCreateButton />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Active Indicator */}
+                    <AnimatePresence>
+                        {navigationItems.some(item => isActiveRoute(item.href)) && (
+                            <motion.div
+                                layoutId="activeIndicator"
+                                className="absolute left-0 w-0.5 bg-orange-500 rounded-r"
+                                style={{
+                                    height: 32,
+                                    top: (() => {
+                                        const activeIndex = navigationItems.findIndex(item => isActiveRoute(item.href));
+                                        const containerPadding = 12; // p-3
+                                        const itemHeight = 40; // h-10
+                                        const itemSpacing = 8; // space-y-2
+                                        const itemCenter = itemHeight / 2; // Center the line on the item
+
+                                        return containerPadding + (activeIndex * (itemHeight + itemSpacing)) + itemCenter - 16;
+                                    })(),
+                                }}
+                                initial={{ opacity: 0, scaleY: 0 }}
+                                animate={{ opacity: 1, scaleY: 1 }}
+                                exit={{ opacity: 0, scaleY: 0 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                            />
+                        )}
+                    </AnimatePresence>
+                </div>
+            </motion.nav>
+
+            {/* Mobile Modern Dock */}
+            <ModernMobileDock
+                navigationItems={navigationItems}
+                isActiveRoute={isActiveRoute}
+                isOrganiser={isOrganiser}
+            />
+        </>
+    );
+}
+
+// Modern Navigation Item
+interface ModernNavItemProps {
+    item: NavigationItem;
+    index: number;
+    isActive: boolean;
+    hoveredIndex: number | null;
+    setHoveredIndex: (index: number | null) => void;
+}
+
+function ModernNavItem({
+    item,
+    index,
+    isActive,
+    hoveredIndex,
+    setHoveredIndex
+}: ModernNavItemProps) {
+    const isHovered = hoveredIndex === index;
+
+    return (
+        <motion.div
+            className="relative"
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
+        >
+            <Link
+                href={item.href}
+                className="
+          relative flex items-center justify-center
+          w-10 h-10 rounded-xl
+          transition-all duration-200 ease-out
+          group
+        "
+                aria-label={item.label}
+            >
+                {/* Background */}
+                <motion.div
+                    className="absolute inset-0 rounded-xl"
+                    animate={{
+                        backgroundColor: isActive
+                            ? 'rgb(249 115 22 / 0.1)'
+                            : isHovered
+                                ? 'rgb(156 163 175 / 0.08)'
+                                : 'transparent'
+                    }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                />
+
+                {/* Icon */}
+                <motion.div
+                    className="relative z-10 w-5 h-5"
+                    animate={{
+                        color: isActive ? '#f97316' : isHovered ? '#374151' : '#6b7280',
+                        scale: isHovered ? 1.05 : 1
+                    }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                >
+                    {item.icon}
+                </motion.div>
+
+                {/* Modern Tooltip */}
                 <AnimatePresence>
-                    {isExpanded && (
+                    {isHovered && (
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            className="absolute h-14 w-1 bg-[#FF5722] left-0 rounded-r-md transition-all duration-300"
-                            style={{
-                                top: activeTab === '/home' ? '10%' :
-                                    activeTab.includes('/feed') ? '24%' :
-                                        activeTab.includes('/stream') ? '38%' :
-                                            activeTab.includes('/marketplace') ? '52%' :
-                                                activeTab.includes('/profile') ? '66%' :
-                                                    activeTab.includes('/create') ? '80%' : '50%',
+                            initial={{ opacity: 0, x: -8, scale: 0.96 }}
+                            animate={{ opacity: 1, x: 8, scale: 1 }}
+                            exit={{ opacity: 0, x: -8, scale: 0.96 }}
+                            className="
+                absolute left-full top-1/2 -translate-y-1/2 ml-3
+                px-3 py-2 rounded-lg
+                bg-gray-900 text-white text-sm font-medium
+                whitespace-nowrap pointer-events-none z-50
+                shadow-xl
+              "
+                            transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        >
+                            {item.label}
+
+                            {/* Arrow */}
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 rotate-45 bg-gray-900" />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </Link>
+        </motion.div>
+    );
+}
+
+function ModernCreateButton() {
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+        <motion.div
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            whileTap={{ scale: 0.95 }}
+        >
+            <Link
+                href="/create"
+                className="
+          relative flex items-center justify-center
+          w-10 h-10 rounded-xl
+          bg-orange-500 hover:bg-orange-600
+          transition-colors duration-200 ease-out
+          group
+        "
+                aria-label="Create new event"
+            >
+                {/* Icon */}
+                <motion.div
+                    animate={{ rotate: isHovered ? 90 : 0 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                    <FiPlus className="w-5 h-5 text-white" />
+                </motion.div>
+
+                {/* Modern Tooltip */}
+                <AnimatePresence>
+                    {isHovered && (
+                        <motion.div
+                            initial={{ opacity: 0, x: -8, scale: 0.96 }}
+                            animate={{ opacity: 1, x: 8, scale: 1 }}
+                            exit={{ opacity: 0, x: -8, scale: 0.96 }}
+                            className="
+                absolute left-full top-1/2 -translate-y-1/2 ml-3
+                px-3 py-2 rounded-lg
+                bg-gray-900 text-white text-sm font-medium
+                whitespace-nowrap pointer-events-none z-50
+                shadow-xl
+              "
+                            transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        >
+                            Create Event
+
+                            {/* Arrow */}
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1 w-2 h-2 rotate-45 bg-gray-900" />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </Link>
+        </motion.div>
+    );
+}
+
+function ModernMobileDock({
+    navigationItems,
+    isActiveRoute,
+    isOrganiser
+}: {
+    navigationItems: NavigationItem[];
+    isActiveRoute: (href: string) => boolean;
+    isOrganiser: boolean;
+}) {
+    const [pressedIndex, setPressedIndex] = useState<number | null>(null);
+
+    const displayItems = navigationItems.slice(0, isOrganiser ? 4 : 5);
+
+    return (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50">
+            {/* Background Blur Area */}
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-xl" />
+
+            {/* Main Navigation Container */}
+            <div className="relative">
+                {/* Premium Container with Clean Design */}
+                <motion.div
+                    className="
+            relative mx-4 mb-4 mt-2
+            bg-white/95 backdrop-blur-xl
+            border border-gray-200/60 rounded-[28px]
+            shadow-xl shadow-gray-900/8
+            overflow-hidden
+          "
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30, delay: 0.1 }}
+                >
+                    {/* Navigation Items Container */}
+                    <div className="flex items-stretch px-2 py-2">
+                        {displayItems.map((item, index) => (
+                            <MobileProfessionalNavItem
+                                key={item.href}
+                                item={item}
+                                index={index}
+                                isActive={isActiveRoute(item.href)}
+                                pressedIndex={pressedIndex}
+                                setPressedIndex={setPressedIndex}
+                            />
+                        ))}
+
+                        {/* Professional Mobile Create Button */}
+                        {isOrganiser && (
+                            <MobileProfessionalCreateButton
+                                pressedIndex={pressedIndex}
+                                setPressedIndex={setPressedIndex}
+                            />
+                        )}
+                    </div>
+
+                    {/* Subtle Bottom Accent */}
+                    <div className="absolute bottom-0 left-4 right-4 h-[1px] bg-gradient-to-r from-transparent via-gray-200/40 to-transparent" />
+                </motion.div>
+
+                {/* iOS Safe Area with Gradient */}
+                <div className="h-safe-area-inset-bottom bg-gradient-to-t from-white via-white/95 to-transparent" />
+            </div>
+        </div>
+    );
+}
+
+interface MobileProfessionalNavItemProps {
+    item: NavigationItem;
+    index: number;
+    isActive: boolean;
+    pressedIndex: number | null;
+    setPressedIndex: (index: number | null) => void;
+}
+
+function MobileProfessionalNavItem({
+    item,
+    index,
+    isActive,
+    pressedIndex,
+    setPressedIndex
+}: MobileProfessionalNavItemProps) {
+    const isPressed = pressedIndex === index;
+
+    return (
+        <Link
+            href={item.href}
+            className="flex-1 relative"
+            onTouchStart={() => setPressedIndex(index)}
+            onTouchEnd={() => setPressedIndex(null)}
+            onTouchCancel={() => setPressedIndex(null)}
+        >
+            <motion.div
+                className="
+          relative flex flex-col items-center justify-center
+          h-[4.5rem] px-3 rounded-[20px]
+          cursor-pointer select-none
+        "
+                animate={{
+                    scale: isPressed ? 0.95 : 1,
+                }}
+                transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                    mass: 0.5
+                }}
+            >
+                {/* iOS-style Dot Indicator */}
+                <AnimatePresence>
+                    {isActive && (
+                        <motion.div
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            className="absolute top-0.5 w-1.5 h-1.5 bg-orange-500 rounded-full"
+                            transition={{
+                                type: "spring",
+                                stiffness: 500,
+                                damping: 30,
+                                duration: 0.3
                             }}
                         />
                     )}
                 </AnimatePresence>
 
-                {/* Home */}
-                <NavItem
-                    href="/home"
-                    icon={<FiHome />}
-                    label="Home"
-                    isActive={activeTab === '/home'}
-                    isExpanded={isExpanded}
-                />
-
-                { }
-                <NavItem
-                    href="/feed"
-                    icon={<MdOutlineAddBox />}
-                    label="Feed"
-                    isActive={activeTab.includes('/feed')}
-                    isExpanded={isExpanded}
-                />
-
-                {/* Streaming */}
-                <NavItem
-                    href="/stream"
-                    icon={<BsCameraVideoFill />}
-                    label="Live"
-                    isActive={activeTab.includes('/stream')}
-                    isExpanded={isExpanded}
-                />
-
-                <NavItem
-                    href="/gaming"
-                    icon={<BsController />}
-                    label="Gaming"
-                    isActive={activeTab.includes('/gaming')}
-                    isExpanded={isExpanded}
-                />
-
-                {/* Tickets */}
-                <NavItem
-                    href="/marketplace"
-                    icon={<AiOutlineShop />}
-                    label="Marketplace"
-                    isActive={activeTab.includes('/marketplace')}
-                    isExpanded={isExpanded}
-                />
-
-                {/* Profile */}
-                <NavItem
-                    href="/profile"
-                    icon={<FiUser />}
-                    label="Profile"
-                    isActive={activeTab.includes('/profile')}
-                    isExpanded={isExpanded}
-                />
-
-                {/* Create Button - only shown for organizers */}
-                {isOrganizer && (
+                {/* Icon Container */}
+                <motion.div
+                    className="relative mt-1"
+                    animate={{
+                        y: isActive ? -1 : 0,
+                    }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                >
                     <motion.div
-                        className="mt-4 relative"
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
+                        className="w-7 h-7 flex items-center justify-center text-2xl"
+                        animate={{
+                            color: isActive ? '#f97316' : '#9ca3af',
+                            scale: isActive ? 1.1 : 1,
+                        }}
+                        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
                     >
-                        <Link
-                            href="/create"
-                            className="relative z-50 group"
-                            aria-label="Create new event"
-                        >
-                            {/* Shadow/glow effect */}
-                            <div className="absolute inset-0 rounded-full bg-[#FF5722]/20 blur-md opacity-80 group-hover:opacity-100 transition-opacity"></div>
-
-                            {/* Button bg with gradient */}
-                            <div className="relative w-12 h-12 rounded-full bg-gradient-to-r from-[#FF5722] to-[#FF7A50] flex items-center justify-center shadow-lg overflow-hidden group-hover:scale-105 transition-transform">
-                                {/* Subtle animated background */}
-                                <div className="absolute inset-0 opacity-30">
-                                    <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 rounded-full bg-white/30 animate-pulse"></div>
-                                </div>
-
-                                {/* Icon */}
-                                <FiPlus className="w-6 h-6 text-white group-hover:rotate-90 transition-transform duration-300" />
-                            </div>
-
-                            {/* Label that appears when expanded */}
-                            <AnimatePresence>
-                                {isExpanded && (
-                                    <motion.span
-                                        initial={{ opacity: 0, x: -5 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: -5 }}
-                                        className="absolute left-full ml-2 whitespace-nowrap text-xs font-medium text-[#FF5722] bg-white/90 px-2 py-1 rounded-md"
-                                    >
-                                        Create
-                                    </motion.span>
-                                )}
-                            </AnimatePresence>
-                        </Link>
+                        {item.icon}
                     </motion.div>
-                )}
-            </motion.div>
 
-            {/* Custom styles */}
-            <style jsx global>{`
-                @keyframes pulse-glow {
-                    0% { box-shadow: 0 0 5px 0px rgba(255, 87, 34, 0.6); }
-                    50% { box-shadow: 0 0 12px 4px rgba(255, 87, 34, 0.4); }
-                    100% { box-shadow: 0 0 5px 0px rgba(255, 87, 34, 0.6); }
-                }
-                
-                .nav-item-active {
-                    animation: pulse-glow 3s infinite ease-in-out;
-                }
-                
-                /* Ensure side content has margin */
-                .content-area {
-                    margin-left: 5rem;
-                }
-                
-                /* Add parallax effect to dock */
-                @media (min-width: 768px) {
-                    .side-nav-dock {
-                        transform: perspective(1000px) rotateY(5deg);
-                        transform-origin: left center;
-                        transition: transform 0.3s ease;
-                    }
-                    
-                    .side-nav-dock:hover {
-                        transform: perspective(1000px) rotateY(0deg);
-                    }
-                }
-            `}</style>
-        </div>
+                    {/* Subtle glow for active state */}
+                    <AnimatePresence>
+                        {isActive && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 0.2, scale: 1.3 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute inset-0 bg-orange-400 rounded-full blur-md"
+                                transition={{ duration: 0.3 }}
+                            />
+                        )}
+                    </AnimatePresence>
+                </motion.div>
+
+                {/* Label */}
+                <motion.span
+                    className="
+            text-xs mt-1
+            whitespace-nowrap overflow-hidden text-ellipsis
+            max-w-full
+          "
+                    animate={{
+                        color: isActive ? '#f97316' : '#9ca3af',
+                        fontWeight: isActive ? 600 : 400,
+                        fontSize: isActive ? '0.75rem' : '0.7rem',
+                    }}
+                    transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                    {item.label}
+                </motion.span>
+
+                {/* Touch Feedback Ripple */}
+                <AnimatePresence>
+                    {isPressed && (
+                        <motion.div
+                            initial={{ scale: 0, opacity: 0.3 }}
+                            animate={{ scale: 2.2, opacity: 0 }}
+                            exit={{ scale: 2.2, opacity: 0 }}
+                            className="absolute inset-0 bg-orange-200 rounded-[20px]"
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                        />
+                    )}
+                </AnimatePresence>
+            </motion.div>
+        </Link>
     );
 }
 
-// NavItem component to reduce repetition
-interface NavItemProps {
-    href: string;
-    icon: React.ReactNode;
-    label: string;
-    isActive: boolean;
-    isExpanded: boolean;
+interface MobileProfessionalCreateButtonProps {
+    pressedIndex: number | null;
+    setPressedIndex: (index: number | null) => void;
 }
 
-function NavItem({ href, icon, label, isActive, isExpanded }: NavItemProps) {
-    return (
-        <motion.div
-            className="my-3 first:mt-0 last:mb-0 relative"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-        >
-            <Link
-                href={href}
-                className="flex items-center justify-center relative"
-            >
-                <div className={`p-3 rounded-full transition-all ${isActive
-                    ? 'text-[#FF5722] bg-[#FF5722]/10 nav-item-active'
-                    : 'text-gray-500 hover:text-[#FF5722] hover:bg-[#FF5722]/5'
-                    }`}>
-                    <div className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.5]'}`}>
-                        {icon}
-                    </div>
-                </div>
+function MobileProfessionalCreateButton({
+    pressedIndex,
+    setPressedIndex
+}: MobileProfessionalCreateButtonProps) {
+    const isPressed = pressedIndex === -1;
 
-                {/* Label that appears when expanded */}
+    return (
+        <Link
+            href="/create"
+            className="flex-1 relative"
+            onTouchStart={() => setPressedIndex(-1)}
+            onTouchEnd={() => setPressedIndex(null)}
+            onTouchCancel={() => setPressedIndex(null)}
+        >
+            <motion.div
+                className="
+          relative flex flex-col items-center justify-center
+          h-[4.5rem] px-3 rounded-[20px]
+          bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600
+          cursor-pointer select-none overflow-hidden
+        "
+                animate={{
+                    scale: isPressed ? 0.95 : 1,
+                }}
+                transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                    mass: 0.5
+                }}
+                style={{
+                    boxShadow: '0 4px 20px rgba(249, 115, 22, 0.25), 0 2px 8px rgba(249, 115, 22, 0.15)'
+                }}
+            >
+                {/* Create indicator dot (always visible for create button) */}
+                <div className="absolute top-0.5 w-1.5 h-1.5 bg-white/90 rounded-full" />
+
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/5 to-white/10" />
+
+                {/* Plus Icon */}
+                <motion.div
+                    className="relative z-10 mb-1 mt-1"
+                    animate={{
+                        rotate: isPressed ? 90 : 0,
+                        scale: isPressed ? 0.95 : 1,
+                    }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                >
+                    <FiPlus className="w-6 h-6 text-white drop-shadow-sm" />
+                </motion.div>
+
+                {/* Create Label */}
+                <motion.span
+                    className="text-xs font-semibold text-white/95 relative z-10"
+                    animate={{
+                        opacity: isPressed ? 0.8 : 1,
+                    }}
+                    transition={{ duration: 0.15 }}
+                >
+                    Create
+                </motion.span>
+
+                {/* Subtle Shimmer Effect */}
+                <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12"
+                    animate={{
+                        x: ['-100%', '200%']
+                    }}
+                    transition={{
+                        duration: 3,
+                        repeat: Infinity,
+                        repeatDelay: 4,
+                        ease: "easeInOut"
+                    }}
+                />
+
+                {/* Press Ripple */}
                 <AnimatePresence>
-                    {isExpanded && (
-                        <motion.span
-                            initial={{ opacity: 0, x: -5 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -5 }}
-                            className={`absolute left-full ml-2 whitespace-nowrap text-xs ${isActive ? 'font-medium text-[#FF5722]' : 'text-gray-500'
-                                } bg-white/90 px-2 py-1 rounded-md`}
-                        >
-                            {label}
-                        </motion.span>
+                    {isPressed && (
+                        <motion.div
+                            initial={{ scale: 0, opacity: 0.4 }}
+                            animate={{ scale: 2.5, opacity: 0 }}
+                            exit={{ scale: 2.5, opacity: 0 }}
+                            className="absolute inset-0 bg-white rounded-[20px]"
+                            transition={{ duration: 0.5, ease: "easeOut" }}
+                        />
                     )}
                 </AnimatePresence>
-            </Link>
-        </motion.div>
+            </motion.div>
+        </Link>
+    );
+}
+
+// Premium Mobile Navigation Item
+interface MobilePremiumNavItemProps {
+    item: NavigationItem;
+    index: number;
+    isActive: boolean;
+    pressedIndex: number | null;
+    setPressedIndex: (index: number | null) => void;
+    setActiveIndex: (index: number) => void;
+}
+
+function MobilePremiumNavItem({
+    item,
+    index,
+    isActive,
+    pressedIndex,
+    setPressedIndex,
+    setActiveIndex
+}: MobilePremiumNavItemProps) {
+    const isPressed = pressedIndex === index;
+
+    return (
+        <Link
+            href={item.href}
+            className="flex-1 relative"
+            onTouchStart={() => {
+                setPressedIndex(index);
+                setActiveIndex(index);
+            }}
+            onTouchEnd={() => setPressedIndex(null)}
+            onTouchCancel={() => setPressedIndex(null)}
+        >
+            <motion.div
+                className="
+          relative flex flex-col items-center justify-center
+          h-12 px-3 rounded-[20px]
+          cursor-pointer select-none
+        "
+                animate={{
+                    scale: isPressed ? 0.92 : 1,
+                }}
+                transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                    mass: 0.5
+                }}
+            >
+                {/* Icon Container */}
+                <motion.div
+                    className="relative"
+                    animate={{
+                        y: isActive ? -2 : 0,
+                    }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                >
+                    <motion.div
+                        className="w-7 h-7 flex items-center justify-center"
+                        animate={{
+                            color: isActive ? '#f97316' : '#6b7280',
+                            scale: isActive ? 1.1 : 1,
+                        }}
+                        transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    >
+                        {item.icon}
+                    </motion.div>
+
+                    {/* Active Glow Effect */}
+                    <AnimatePresence>
+                        {isActive && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 0.4, scale: 1.2 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute inset-0 bg-orange-400 rounded-full blur-md"
+                                transition={{ duration: 0.3 }}
+                            />
+                        )}
+                    </AnimatePresence>
+                </motion.div>
+
+                {/* Dynamic Label */}
+                <motion.span
+                    className="
+            text-xs font-medium mt-0.5
+            whitespace-nowrap overflow-hidden text-ellipsis
+            max-w-full
+          "
+                    animate={{
+                        color: isActive ? '#f97316' : '#9ca3af',
+                        opacity: isActive ? 1 : 0.75,
+                        y: isActive ? 1 : 0,
+                        fontSize: isActive ? '0.75rem' : '0.7rem',
+                        fontWeight: isActive ? 600 : 500,
+                    }}
+                    transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+                >
+                    {item.label}
+                </motion.span>
+
+                {/* Ripple Effect for Touch */}
+                <AnimatePresence>
+                    {isPressed && (
+                        <motion.div
+                            initial={{ scale: 0, opacity: 0.3 }}
+                            animate={{ scale: 2, opacity: 0 }}
+                            exit={{ scale: 2, opacity: 0 }}
+                            className="absolute inset-0 bg-orange-200 rounded-[20px]"
+                            transition={{ duration: 0.4, ease: "easeOut" }}
+                        />
+                    )}
+                </AnimatePresence>
+            </motion.div>
+        </Link>
+    );
+}
+
+// Premium Mobile Create Button
+interface MobilePremiumCreateButtonProps {
+    pressedIndex: number | null;
+    setPressedIndex: (index: number | null) => void;
+}
+
+function MobilePremiumCreateButton({
+    pressedIndex,
+    setPressedIndex
+}: MobilePremiumCreateButtonProps) {
+    const isPressed = pressedIndex === -1; // Use -1 for create button
+
+    return (
+        <Link
+            href="/create"
+            className="flex-1 relative"
+            onTouchStart={() => setPressedIndex(-1)}
+            onTouchEnd={() => setPressedIndex(null)}
+            onTouchCancel={() => setPressedIndex(null)}
+        >
+            <motion.div
+                className="
+          relative flex flex-col items-center justify-center
+          h-12 px-3 rounded-[20px]
+          bg-gradient-to-br from-orange-500 via-orange-500 to-red-500
+          cursor-pointer select-none overflow-hidden
+        "
+                animate={{
+                    scale: isPressed ? 0.92 : 1,
+                }}
+                transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 30,
+                    mass: 0.5
+                }}
+                style={{
+                    boxShadow: '0 4px 20px rgba(249, 115, 22, 0.25), 0 2px 8px rgba(249, 115, 22, 0.15)'
+                }}
+            >
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent" />
+
+                {/* Plus Icon */}
+                <motion.div
+                    className="relative z-10"
+                    animate={{
+                        rotate: isPressed ? 45 : 0,
+                        scale: isPressed ? 0.9 : 1,
+                    }}
+                    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                >
+                    <FiPlus className="w-6 h-6 text-white drop-shadow-sm" />
+                </motion.div>
+
+                {/* Create Label */}
+                <motion.span
+                    className="text-xs font-semibold text-white/95 mt-0.5 relative z-10"
+                    animate={{
+                        opacity: isPressed ? 0.8 : 1,
+                    }}
+                    transition={{ duration: 0.15 }}
+                >
+                    Create
+                </motion.span>
+
+                {/* Shimmer Effect */}
+                <motion.div
+                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12"
+                    animate={{
+                        x: ['-100%', '200%']
+                    }}
+                    transition={{
+                        duration: 2,
+                        repeat: Infinity,
+                        repeatDelay: 3,
+                        ease: "easeInOut"
+                    }}
+                />
+
+                {/* Press Ripple */}
+                <AnimatePresence>
+                    {isPressed && (
+                        <motion.div
+                            initial={{ scale: 0, opacity: 0.4 }}
+                            animate={{ scale: 2.5, opacity: 0 }}
+                            exit={{ scale: 2.5, opacity: 0 }}
+                            className="absolute inset-0 bg-white rounded-[20px]"
+                            transition={{ duration: 0.5, ease: "easeOut" }}
+                        />
+                    )}
+                </AnimatePresence>
+            </motion.div>
+        </Link>
     );
 }

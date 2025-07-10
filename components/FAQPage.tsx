@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 'use client';
 
@@ -79,7 +80,7 @@ const faqData = {
         },
         {
             question: "What is your refund policy?",
-            answer: "Refund policies are set by event organizers and vary by event. The refund policy for each event is displayed on the event page before purchase. For NFT tickets, refunds may be subject to additional blockchain-related limitations."
+            answer: "Refund policies are set by event organisers and vary by event. The refund policy for each event is displayed on the event page before purchase. For NFT tickets, refunds may be subject to additional blockchain-related limitations."
         }
     ],
     app: [
@@ -461,7 +462,8 @@ export default function HelpPage() {
                                     {/* Add subtle shine effect */}
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
                                     <Image
-                                        src={RoviLogo}
+                                        // src={RoviLogo}
+                                        src="/images/contents/rovi-logo.png"
                                         alt="Rovify Logo"
                                         width={36}
                                         height={36}

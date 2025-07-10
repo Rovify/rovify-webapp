@@ -34,7 +34,8 @@ export default function PublicHeader() {
                 <Link href="/" className="flex items-center group">
                     <div className="h-10 w-10 rounded-full bg-[#FF5722] flex items-center justify-center shadow-md group-hover:shadow-lg transition-all duration-300">
                         <Image
-                            src={RoviLogo}
+                            // src={RoviLogo}
+                            src="/images/contents/rovi-logo.png"
                             alt="Rovify Logo"
                             width={32}
                             height={32}

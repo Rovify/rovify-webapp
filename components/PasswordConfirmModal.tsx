@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -76,6 +77,7 @@ export default function PasswordConfirmModal({ email, onConfirmAction, onCancelA
                             {/* <div className="h-12 w-12 bg-[#FF5722] rounded-xl flex items-center justify-center shadow-sm mr-3">
                                 <Image
                                     src={RoviLogo}
+                                    src="/images/contents/rovi-logo.png"
                                     alt="Rovify Logo"
                                     width={32}
                                     height={32}

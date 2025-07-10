@@ -4,7 +4,7 @@ const EventDetailsSkeleton = () => {
             {/* Cover Image Skeleton */}
             <div className="relative h-[30vh] md:h-[40vh] rounded-2xl overflow-hidden bg-gray-200 animate-pulse"></div>
 
-            {/* Title & Organizer */}
+            {/* Title & Organiser */}
             <div className="space-y-2">
                 <div className="h-10 w-3/4 bg-gray-200 rounded-lg animate-shimmer"></div>
                 <div className="flex items-center gap-2">

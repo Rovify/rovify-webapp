@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 'use client';
 
@@ -535,7 +536,7 @@ export default function TermsPage() {
                                 }`}>
                                 <div className="px-6 pb-8 pt-2 prose max-w-none text-gray-600">
                                     <p className="text-gray-700 leading-relaxed">
-                                        Rovify offers a dual-ticketing approach—traditional payment methods and blockchain-based NFT ticketing—providing flexibility for both organizers and attendees.
+                                        Rovify offers a dual-ticketing approach—traditional payment methods and blockchain-based NFT ticketing—providing flexibility for both organisers and attendees.
                                     </p>
 
                                     <h3 className="text-gray-800 font-semibold mt-5 flex items-center">
@@ -545,7 +546,7 @@ export default function TermsPage() {
                                         Understanding Pricing & Fees
                                     </h3>
                                     <p className="text-gray-700 leading-relaxed">
-                                        Event organizers set their ticket prices, and Rovify adds service fees to support our platform operations. All prices and fees will be clearly displayed during checkout in the specified event currency.
+                                        Event organisers set their ticket prices, and Rovify adds service fees to support our platform operations. All prices and fees will be clearly displayed during checkout in the specified event currency.
                                     </p>
 
                                     <div className="mt-4 overflow-hidden rounded-xl border border-gray-200 shadow-sm">
@@ -585,7 +586,7 @@ export default function TermsPage() {
                                         Refunds & Event Changes
                                     </h3>
                                     <p className="text-gray-700 leading-relaxed">
-                                        Refund policies are established by event organizers and will be clearly communicated at purchase. Rovify strives to create transparency between organizers and attendees.
+                                        Refund policies are established by event organisers and will be clearly communicated at purchase. Rovify strives to create transparency between organisers and attendees.
                                     </p>
 
                                     <div className="p-5 bg-gradient-to-r from-[#FF5722]/5 to-transparent rounded-xl border border-[#FF5722]/20 mt-4 relative">
@@ -929,7 +930,8 @@ export default function TermsPage() {
                                     {/* Add subtle shine effect */}
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
                                     <Image
-                                        src={RoviLogo}
+                                        // src={RoviLogo}
+                                        src="/images/contents/rovi-logo.png"
                                         alt="Rovify Logo"
                                         width={36}
                                         height={36}

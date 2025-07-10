@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
             console.log('🔐 AUTH: Login successful');
 
             // Navigate to main page
-            router.push('/discover');
+            router.push('/home');
         } catch (error) {
             console.error('🔐 AUTH ERROR: Login failed');
             throw new Error('Invalid email or password');

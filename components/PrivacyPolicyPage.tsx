@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { useState, FormEvent } from 'react';
@@ -306,7 +307,7 @@ export default function PrivacyPolicy() {
                                     <div className="prose max-w-none text-gray-600">
                                         <p>We may share your information in the following circumstances:</p>
                                         <ul>
-                                            <li>With event organizers when you purchase tickets to their events</li>
+                                            <li>With event organisers when you purchase tickets to their events</li>
                                             <li>With service providers who perform services on our behalf</li>
                                             <li>To comply with legal obligations</li>
                                             <li>To protect the rights, property, or safety of Rovify, our users, or others</li>
@@ -464,7 +465,8 @@ export default function PrivacyPolicy() {
                                     {/* Add subtle shine effect */}
                                     <div className="absolute inset-0 opacity-0 group-hover:opacity-30 bg-gradient-to-r from-transparent via-white to-transparent -translate-x-full group-hover:translate-x-full transition-all duration-1000"></div>
                                     <Image
-                                        src={RoviLogo}
+                                        // src={RoviLogo}
+                                        src="/images/contents/rovi-logo.png"
                                         alt="Rovify Logo"
                                         width={36}
                                         height={36}

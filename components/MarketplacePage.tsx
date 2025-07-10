@@ -158,7 +158,7 @@ const Marketplace: React.FC = () => {
         {
             id: "creator3",
             name: "Miguel Santos",
-            profession: "Event Organizer",
+            profession: "Event Organiser",
             image: "https://images.unsplash.com/photo-1531384441138-2736e62e0919?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80",
             verified: true,
             gradient: "from-green-400 to-teal-500"
@@ -249,7 +249,7 @@ const Marketplace: React.FC = () => {
         },
         {
             id: 5,
-            title: 'Event Organizer Pro Membership',
+            title: 'Event Organiser Pro Membership',
             type: 'membership',
             price: 99,
             currency: 'USD',

@@ -30,7 +30,8 @@ export function Footer() {
                         <Link href="/" className="flex items-center gap-2 group mb-4">
                             <div className="h-10 w-10 bg-gradient-to-r from-[#FF5722] to-[#FF7A50] rounded-xl flex items-center justify-center shadow-md transition-transform group-hover:scale-105">
                                 <Image
-                                    src={RoviLogo}
+                                    // src={RoviLogo}
+                                    src="/images/contents/rovi-logo.png"
                                     alt="Rovify Logo"
                                     width={32}
                                     height={32}
@@ -135,8 +136,8 @@ export function Footer() {
                             </li>
                             <li className="flex items-start gap-2">
                                 <FiMail className="h-5 w-5 text-[#FF5722] mt-0.5" />
-                                <a href="mailto:hello@rovify.com" className="text-gray-600 hover:text-[#FF5722] transition-colors">
-                                    hello@rovify.com
+                                <a href="mailto:hello@rovify.io" className="text-gray-600 hover:text-[#FF5722] transition-colors">
+                                    hello@rovify.io
                                 </a>
                             </li>
                         </ul>

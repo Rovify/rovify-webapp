@@ -251,6 +251,10 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
             const { data, error } = await authHelpers.signInWithProvider(provider);
             
             if (error) {
+                // Provide specific error message for provider not enabled
+                if (error.message.includes('provider is not enabled')) {
+                    throw new Error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} OAuth is not enabled in Supabase. Please enable it in your Supabase dashboard under Authentication → Providers.`);
+                }
                 throw new Error(error.message);
             }
 

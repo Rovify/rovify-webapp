@@ -13,6 +13,8 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   },
 });
 
@@ -38,6 +40,67 @@ export function handleSupabaseError(error: any): never {
   console.error('Supabase error:', error);
   throw new Error(error.message || 'Database operation failed');
 }
+
+// Auth helper functions
+export const authHelpers = {
+  // Sign up with email and password
+  async signUp(email: string, password: string, metadata?: any) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata
+      }
+    });
+
+    if (error) handleSupabaseError(error);
+    return data;
+  },
+
+  // Sign in with email and password
+  async signIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) handleSupabaseError(error);
+    return data;
+  },
+
+  // Sign in with OAuth provider
+  async signInWithProvider(provider: 'google' | 'github') {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`
+      }
+    });
+
+    if (error) handleSupabaseError(error);
+    return data;
+  },
+
+  // Sign out
+  async signOut() {
+    const { error } = await supabase.auth.signOut();
+    if (error) handleSupabaseError(error);
+  },
+
+  // Get current session
+  async getSession() {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) handleSupabaseError(error);
+    return data.session;
+  },
+
+  // Get current user
+  async getUser() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) handleSupabaseError(error);
+    return data.user;
+  }
+};
 
 // Utility functions for common operations
 export const supabaseUtils = {

@@ -157,31 +157,26 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
 
             // If no profile exists, create one efficiently
             if (!profile) {
-                console.log('🔐 AUTH: Creating new user profile');
-                const { error: insertError } = await supabase
-                    .from('users')
-                    .upsert({
+                console.log('🔐 AUTH: Creating new user profile via API');
+                const resp = await fetch('/api/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         id: supabaseUser.id,
                         email: supabaseUser.email,
                         name: userData.name,
                         image: userData.image,
-                        auth_method: userData.authMethod as 'email' | 'google' | 'metamask' | 'base',
-                        is_organiser: false,
-                        is_admin: false,
-                        verified: userData.verified,
-                        email_verified: supabaseUser.email_confirmed_at ? true : false,
-                        updated_at: new Date().toISOString()
-                    }, {
-                        onConflict: 'id',
-                        ignoreDuplicates: false
-                    });
+                        auth_method: userData.authMethod,
+                    })
+                });
 
-                if (insertError) {
-                    console.error('🔐 AUTH ERROR: Failed to create user profile', insertError);
-                    throw insertError; // Re-throw to handle in calling function
-                } else {
-                    console.log('🔐 AUTH: User profile created successfully');
+                if (!resp.ok) {
+                    const err = await resp.json().catch(() => ({}));
+                    console.error('🔐 AUTH ERROR: Failed to create user profile (API)', err);
+                    throw new Error(err?.error || 'Failed to create user profile');
                 }
+
+                console.log('🔐 AUTH: User profile created successfully (API)');
             }
 
             setUser(userData);
@@ -228,9 +223,9 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                 // Create a demo user
                 const demoUser: User = {
                     id: 'demo-user-' + Date.now(),
-                    email: email,
+                email: email,
                     name: 'Demo User',
-                    authMethod: 'email',
+                authMethod: 'email',
                     role: 'attendee',
                     verified: true
                 };
@@ -249,11 +244,11 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
             }
 
             console.log('🔐 AUTH: Login successful');
-            
+
             // Optimized: Don't wait for onAuthStateChange, redirect immediately
             // The auth state will be updated in the background
             setTimeout(() => {
-                router.push('/home');
+            router.push('/home');
             }, 100); // Small delay to ensure state updates
         } catch (error) {
             console.error('🔐 AUTH ERROR: Login failed', error);
@@ -347,7 +342,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                     authMethod: 'metamask' as 'email' | 'google' | 'metamask' | 'base'
                 };
                 setUser(userObj);
-                setIsAuthenticated(true);
+            setIsAuthenticated(true);
             }
 
             console.log('🔐 AUTH: Wallet login successful');
@@ -412,9 +407,9 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
         } catch (error) {
             console.error('🔐 AUTH ERROR: Logout failed', error);
             // Force logout locally even if server logout fails
-            setUser(null);
-            setIsAuthenticated(false);
-            router.push('/auth/login');
+        setUser(null);
+        setIsAuthenticated(false);
+        router.push('/auth/login');
         }
     };
 

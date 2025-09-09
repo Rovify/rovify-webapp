@@ -59,6 +59,19 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
 
         const initAuth = async () => {
             try {
+                // Check if we're in demo mode (when Supabase is not configured)
+                const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || 
+                              !process.env.NEXT_PUBLIC_SUPABASE_URL || 
+                              process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co';
+
+                if (isDemo) {
+                    console.log('🔐 AUTH: Running in demo mode - Supabase not configured');
+                    setUser(null);
+                    setIsAuthenticated(false);
+                    setIsLoading(false);
+                    return;
+                }
+
                 // Get current session
                 const { data: { session } } = await supabase.auth.getSession();
                 
@@ -180,6 +193,30 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
         setIsLoading(true);
 
         try {
+            // Check if we're in demo mode
+            const isDemo = process.env.NEXT_PUBLIC_DEMO_MODE === 'true' || 
+                          !process.env.NEXT_PUBLIC_SUPABASE_URL || 
+                          process.env.NEXT_PUBLIC_SUPABASE_URL === 'https://placeholder.supabase.co';
+
+            if (isDemo) {
+                console.log('🔐 AUTH: Demo mode login');
+                // Create a demo user
+                const demoUser: User = {
+                    id: 'demo-user-' + Date.now(),
+                    email: email,
+                    name: 'Demo User',
+                    authMethod: 'email',
+                    role: 'attendee',
+                    verified: true
+                };
+                
+                setUser(demoUser);
+                setIsAuthenticated(true);
+                console.log('🔐 AUTH: Demo login successful');
+                router.push('/home');
+                return;
+            }
+
             const { data, error } = await authHelpers.signIn(email, password);
             
             if (error) {

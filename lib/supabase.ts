@@ -1,11 +1,21 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/supabase';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// Get environment variables with fallbacks
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qmhuazlqizdqiwmyflgh.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtaHVhemxxaXpkcWl3bXlmbGdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczODk2MzcsImV4cCI6MjA3Mjk2NTYzN30.LYxmXfh7_jkxilNEZvk-5f--H1Fkym-hqQowYB6bBfA';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || 'placeholder-service-key';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+// Check if we're using placeholder values
+const isPlaceholder = supabaseUrl === 'https://placeholder.supabase.co' || 
+                     supabaseAnonKey === 'placeholder-anon-key' ||
+                     supabaseUrl.includes('your-project-id') ||
+                     supabaseAnonKey.includes('your-anon-key');
+
+if (isPlaceholder) {
+  console.warn('🚨 SUPABASE: Using placeholder values - authentication will not work');
+  console.warn('📝 Please update your .env.local file with actual Supabase credentials');
+  console.warn('💡 Get your credentials from: https://supabase.com/dashboard');
 }
 
 // Client for browser usage
@@ -21,7 +31,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
 // Admin client for server-side operations
 export const supabaseAdmin = createClient<Database>(
   supabaseUrl,
-  process.env.SUPABASE_SERVICE_KEY!,
+  supabaseServiceKey,
   {
     auth: {
       autoRefreshToken: false,

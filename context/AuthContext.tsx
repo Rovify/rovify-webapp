@@ -243,12 +243,27 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                 throw new Error(error.message);
             }
 
-            console.log('🔐 AUTH: Login successful');
+            // Ensure middleware sees the session by setting server auth cookies
+            try {
+                const access_token = data?.session?.access_token;
+                const refresh_token = data?.session?.refresh_token;
+                if (access_token && refresh_token) {
+                    await fetch('/api/auth/set-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ access_token, refresh_token })
+                    });
+                }
+            } catch (e) {
+                console.warn('Auth cookie sync warning:', e);
+            }
 
+            console.log('🔐 AUTH: Login successful');
+            
             // Optimized: Don't wait for onAuthStateChange, redirect immediately
             // The auth state will be updated in the background
             setTimeout(() => {
-            router.push('/home');
+                router.push('/home');
             }, 100); // Small delay to ensure state updates
         } catch (error) {
             console.error('🔐 AUTH ERROR: Login failed', error);

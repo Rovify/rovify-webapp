@@ -4,7 +4,7 @@ import { Database } from '@/types/supabase';
 // Get environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://qmhuazlqizdqiwmyflgh.supabase.co';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtaHVhemxxaXpkcWl3bXlmbGdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczODk2MzcsImV4cCI6MjA3Mjk2NTYzN30.LYxmXfh7_jkxilNEZvk-5f--H1Fkym-hqQowYB6bBfA';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || 'placeholder-service-key';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFtaHVhemxxaXpkcWl3bXlmbGdoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NzM4OTYzNywiZXhwIjoyMDcyOTY1NjM3fQ.GXHp9S05J4K4zuIP2DSXEXuAIw4PpkSInS0B8q1i66M';
 
 // Check if we're using placeholder values
 const isPlaceholder = supabaseUrl === 'https://placeholder.supabase.co' || 

@@ -63,8 +63,7 @@ export const authHelpers = {
       }
     });
 
-    if (error) handleSupabaseError(error);
-    return data;
+    return { data, error };
   },
 
   // Sign in with email and password
@@ -74,8 +73,7 @@ export const authHelpers = {
       password,
     });
 
-    if (error) handleSupabaseError(error);
-    return data;
+    return { data, error };
   },
 
   // Sign in with OAuth provider
@@ -87,8 +85,7 @@ export const authHelpers = {
       }
     });
 
-    if (error) handleSupabaseError(error);
-    return data;
+    return { data, error };
   },
 
   // Sign out

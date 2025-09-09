@@ -15,7 +15,7 @@ interface User {
     walletAddress?: string;
     baseName?: string;
     ethName?: string;
-    authMethod?: 'email' | 'oauth' | 'wallet';
+    authMethod?: 'email' | 'google' | 'metamask' | 'base';
     role?: 'admin' | 'organiser' | 'attendee';
     verified?: boolean;
     [key: string]: unknown;
@@ -114,6 +114,8 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     // Setup user from Supabase session
     const setupUserFromSession = async (supabaseUser: SupabaseUser) => {
         try {
+            console.log('🔐 AUTH: Setting up user from session', supabaseUser.email);
+            
             // Get user profile from our users table
             const { data: profile, error } = await supabase
                 .from('users')
@@ -123,20 +125,21 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
 
             if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
                 console.error('🔐 AUTH ERROR: Failed to fetch user profile', error);
+                throw error;
             }
 
             // Create user object combining Supabase auth and our profile data
             const userData: User = {
                 id: supabaseUser.id,
-                email: supabaseUser.email,
-                name: profile?.name || supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name,
-                image: profile?.image || supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture,
-                authMethod: supabaseUser.app_metadata?.provider === 'google' ? 'oauth' : 'email',
-                role: profile?.role || 'attendee',
-                verified: supabaseUser.email_confirmed_at ? true : false,
-                walletAddress: profile?.wallet_address,
-                baseName: profile?.base_name,
-                ethName: profile?.eth_name
+                email: supabaseUser.email || undefined,
+                name: profile?.name || supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || undefined,
+                image: profile?.image || supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || undefined,
+                authMethod: (supabaseUser.app_metadata?.provider === 'google' ? 'google' : 'email') as 'email' | 'google' | 'metamask' | 'base',
+                role: profile?.is_admin ? 'admin' : (profile?.is_organiser ? 'organiser' : 'attendee'),
+                verified: profile?.verified || (supabaseUser.email_confirmed_at ? true : false),
+                walletAddress: profile?.wallet_address || undefined,
+                baseName: profile?.base_name || undefined,
+                ethName: profile?.ens_name || undefined
             };
 
             // If no profile exists, create one
@@ -149,13 +152,18 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                         email: supabaseUser.email,
                         name: userData.name,
                         image: userData.image,
-                        auth_method: userData.authMethod,
-                        role: 'attendee',
-                        created_at: new Date().toISOString()
+                        auth_method: userData.authMethod as 'email' | 'google' | 'metamask' | 'base',
+                        is_organiser: false,
+                        is_admin: false,
+                        verified: userData.verified,
+                        email_verified: supabaseUser.email_confirmed_at ? true : false
                     });
 
                 if (insertError) {
                     console.error('🔐 AUTH ERROR: Failed to create user profile', insertError);
+                    throw insertError; // Re-throw to handle in calling function
+                } else {
+                    console.log('🔐 AUTH: User profile created successfully');
                 }
             }
 
@@ -278,11 +286,15 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
 
             if (existingUser) {
                 // User exists, update their info
-                setUser({
+                const userObj: User = {
                     ...existingUser,
-                    walletAddress: existingUser.wallet_address,
-                    authMethod: 'wallet'
-                });
+                    email: existingUser.email || undefined,
+                    name: existingUser.name || undefined,
+                    image: existingUser.image || undefined,
+                    walletAddress: existingUser.wallet_address || undefined,
+                    authMethod: 'metamask' as 'email' | 'google' | 'metamask' | 'base'
+                };
+                setUser(userObj);
                 setIsAuthenticated(true);
             } else {
                 // Create new user
@@ -290,9 +302,10 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                     .from('users')
                     .insert({
                         wallet_address: userData.walletAddress,
-                        name: userData.name || userData.baseName || userData.ethName,
-                        auth_method: 'wallet',
-                        role: 'attendee',
+                        name: userData.name || userData.baseName || userData.ethName || undefined,
+                        auth_method: 'metamask',
+                        is_organiser: false,
+                        is_admin: false,
                         created_at: new Date().toISOString()
                     })
                     .select()
@@ -300,11 +313,15 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
 
                 if (error) throw error;
 
-                setUser({
+                const userObj: User = {
                     ...newUser,
-                    walletAddress: newUser.wallet_address,
-                    authMethod: 'wallet'
-                });
+                    email: newUser.email || undefined,
+                    name: newUser.name || undefined,
+                    image: newUser.image || undefined,
+                    walletAddress: newUser.wallet_address || undefined,
+                    authMethod: 'metamask' as 'email' | 'google' | 'metamask' | 'base'
+                };
+                setUser(userObj);
                 setIsAuthenticated(true);
             }
 

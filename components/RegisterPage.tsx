@@ -94,6 +94,7 @@ export default function RegisterPage() {
         try {
             await register(formData.name, formData.email, formData.password);
             console.log('🔐 REGISTER: Registration successful');
+            // Success feedback will be handled by AuthContext redirect
         } catch (error) {
             console.error('🔐 REGISTER ERROR:', error);
             setError(error instanceof Error ? error.message : 'Registration failed. Please try again.');

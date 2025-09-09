@@ -246,7 +246,7 @@ const base64UrlEncode = (buffer: ArrayBuffer): string => {
 export default function LoginPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { login, loginWithProvider } = useAuth();
+    const { login, loginWithProvider, isAuthenticated } = useAuth();
     const { authenticateWithBase, isLoading: isBaseLoading, error: baseError } = useBaseAuth();
 
     const [email, setEmail] = useState('');
@@ -266,6 +266,21 @@ export default function LoginPage() {
     const [logoClickCount, setLogoClickCount] = useState(0);
     const [showSecretPanel, setShowSecretPanel] = useState(false);
     const [secretSequence, setSecretSequence] = useState<string[]>([]);
+
+    // If authenticated, ensure we leave auth pages immediately
+    useEffect(() => {
+        if (isAuthenticated) {
+            router.replace('/home');
+        }
+    }, [isAuthenticated, router]);
+
+    // Fallback: when success overlay shows, force redirect shortly after
+    useEffect(() => {
+        if (showSuccess) {
+            const t = setTimeout(() => router.replace('/home'), 300);
+            return () => clearTimeout(t);
+        }
+    }, [showSuccess, router]);
 
     // Store auth challenge state
     const [metaMaskChallenge, setMetaMaskChallenge] = useState('');
@@ -315,15 +330,17 @@ export default function LoginPage() {
             }
 
             // Secret sequence detection
-            const key = e.key.toLowerCase();
-            const newSequence = [...secretSequence, key];
-            if (newSequence.length > 10) newSequence.shift();
-            setSecretSequence(newSequence);
+            const key = e.key?.toLowerCase() || '';
+            if (key) {
+                const newSequence = [...secretSequence, key];
+                if (newSequence.length > 10) newSequence.shift();
+                setSecretSequence(newSequence);
 
-            if (newSequence.join('').includes('demo')) {
-                setShowSecretPanel(true);
-                setSecretSequence([]);
-                setTimeout(() => setShowSecretPanel(false), 10000);
+                if (newSequence.join('').includes('demo')) {
+                    setShowSecretPanel(true);
+                    setSecretSequence([]);
+                    setTimeout(() => setShowSecretPanel(false), 10000);
+                }
             }
         };
 
@@ -385,7 +402,6 @@ export default function LoginPage() {
 
             setShowSuccess(true);
             setTimeout(() => {
-                login(userData);
                 console.log('Google authentication successful, redirecting to home');
                 window.history.replaceState({}, document.title, window.location.pathname);
                 router.push('/home');

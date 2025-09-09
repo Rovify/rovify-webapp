@@ -50,6 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [authInitialized, setAuthInitialized] = useState<boolean>(false);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -89,24 +90,36 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                 setIsAuthenticated(false);
             } finally {
                 setIsLoading(false);
+                setAuthInitialized(true);
             }
         };
 
         initAuth();
 
-        // Listen for auth changes
+        // Listen for auth changes with debouncing
+        let authChangeTimeout: NodeJS.Timeout;
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
             console.log('🔐 AUTH: Auth state changed:', event);
             
-            if (event === 'SIGNED_IN' && session?.user) {
-                await setupUserFromSession(session.user);
-            } else if (event === 'SIGNED_OUT') {
-                setUser(null);
-                setIsAuthenticated(false);
+            // Clear previous timeout to debounce rapid auth changes
+            if (authChangeTimeout) {
+                clearTimeout(authChangeTimeout);
             }
+            
+            authChangeTimeout = setTimeout(async () => {
+                if (event === 'SIGNED_IN' && session?.user) {
+                    await setupUserFromSession(session.user);
+                } else if (event === 'SIGNED_OUT') {
+                    setUser(null);
+                    setIsAuthenticated(false);
+                }
+            }, 50); // 50ms debounce
         });
 
         return () => {
+            if (authChangeTimeout) {
+                clearTimeout(authChangeTimeout);
+            }
             subscription.unsubscribe();
         };
     }, []);
@@ -116,10 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
         try {
             console.log('🔐 AUTH: Setting up user from session', supabaseUser.email);
             
-            // Get user profile from our users table
+            // Get user profile from our users table with optimized query
             const { data: profile, error } = await supabase
                 .from('users')
-                .select('*')
+                .select('id, email, name, image, auth_method, is_organiser, is_admin, verified, wallet_address, base_name, ens_name')
                 .eq('id', supabaseUser.id)
                 .single();
 
@@ -142,12 +155,12 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                 ethName: profile?.ens_name || undefined
             };
 
-            // If no profile exists, create one
+            // If no profile exists, create one efficiently
             if (!profile) {
                 console.log('🔐 AUTH: Creating new user profile');
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert({
+                    .upsert({
                         id: supabaseUser.id,
                         email: supabaseUser.email,
                         name: userData.name,
@@ -156,7 +169,11 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                         is_organiser: false,
                         is_admin: false,
                         verified: userData.verified,
-                        email_verified: supabaseUser.email_confirmed_at ? true : false
+                        email_verified: supabaseUser.email_confirmed_at ? true : false,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'id',
+                        ignoreDuplicates: false
                     });
 
                 if (insertError) {
@@ -191,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
             router.push('/auth/login');
         } else if (isAuthenticated && isAuthPath) {
             console.log('🔐 AUTH: Redirecting authenticated user');
-            router.push('/discover');
+            router.push('/home');
         }
     }, [isAuthenticated, isLoading, pathname, router]);
 
@@ -232,8 +249,12 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
             }
 
             console.log('🔐 AUTH: Login successful');
-            // User state will be updated automatically via onAuthStateChange
-            router.push('/home');
+            
+            // Optimized: Don't wait for onAuthStateChange, redirect immediately
+            // The auth state will be updated in the background
+            setTimeout(() => {
+                router.push('/home');
+            }, 100); // Small delay to ensure state updates
         } catch (error) {
             console.error('🔐 AUTH ERROR: Login failed', error);
             throw new Error(error instanceof Error ? error.message : 'Login failed');
@@ -353,9 +374,24 @@ export function AuthProvider({ children }: { children: ReactNode }): JSX.Element
                 throw new Error(error.message);
             }
 
-            console.log('🔐 AUTH: Registration successful');
-            // Show success message and redirect to login
-            router.push('/auth/login?message=Check your email to verify your account');
+            console.log('🔐 AUTH: Registration successful', data);
+            
+            // Check if user is immediately signed in (email confirmation disabled)
+            if (data.user && data.session) {
+                console.log('🔐 AUTH: User automatically signed in after registration');
+                // User is signed in immediately, redirect to home
+                setTimeout(() => {
+                    router.push('/home');
+                }, 100);
+            } else if (data.user && !data.session) {
+                console.log('🔐 AUTH: Email confirmation required for user:', data.user.email);
+                // Email confirmation is required, but provide better UX
+                router.push('/auth/login?message=Registration successful! Please check your email to verify your account and then log in.');
+            } else {
+                console.log('🔐 AUTH: Registration completed, redirecting to login');
+                // Fallback case
+                router.push('/auth/login?message=Registration successful! Please log in to continue.');
+            }
         } catch (error) {
             console.error('🔐 AUTH ERROR: Registration failed', error);
             throw new Error(error instanceof Error ? error.message : 'Registration failed');

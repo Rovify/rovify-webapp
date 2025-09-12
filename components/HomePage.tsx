@@ -23,6 +23,9 @@ import { IoGameControllerOutline, IoTicketOutline, IoSparkles } from "react-icon
 import { GiPartyPopper } from "react-icons/gi";
 import EchoChatWidget from "./EchoChatWidget";
 import EventMapWidget from "./EventMapWidget";
+import EventList from "./EventList";
+import MarketplaceSection from "./MarketplaceSection";
+import MarketplaceNavigation from "./MarketplaceNavigation";
 
 // Types
 interface Event {
@@ -1099,6 +1102,36 @@ export default function HomePage() {
                                         </motion.button>
                                     </div>
                                 )}
+                            </motion.div>
+
+                            {/* Event List Section */}
+                            <motion.div
+                                className="mb-12"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.6 }}
+                            >
+                                <EventList />
+                            </motion.div>
+
+                            {/* Marketplace Navigation */}
+                            <motion.div
+                                className="mb-8"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.6 }}
+                            >
+                                <MarketplaceNavigation />
+                            </motion.div>
+
+                            {/* Marketplace Section */}
+                            <motion.div
+                                className="mb-12"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.7 }}
+                            >
+                                <MarketplaceSection />
                             </motion.div>
                         </motion.div>
                     </div>

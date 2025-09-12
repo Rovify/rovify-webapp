@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import Header from '@/components/Header';
+import PublicHeader from '@/components/PublicHeader';
 import BottomNavigation from '@/components/SideNavigation';
 
 export default function AuthAwareLayout({ children }: { children: ReactNode }) {
@@ -31,7 +31,7 @@ export default function AuthAwareLayout({ children }: { children: ReactNode }) {
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-50">
-            <Header />
+            <PublicHeader />
             <main className="flex-1 container mx-auto px-4 pt-4 pb-24">
                 {children}
             </main>

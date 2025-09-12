@@ -1,16 +1,20 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
+  reactStrictMode: true,
+  devIndicators: false,
+  typescript: {
+    ignoreBuildErrors: process.env.NEXT_PUBLIC_IGNORE_BUILD_ERROR === "true",
   },
-  reactStrictMode: false,
+  eslint: {
+    ignoreDuringBuilds: process.env.NEXT_PUBLIC_IGNORE_BUILD_ERROR === "true",
+  },
+  webpack: config => {
+    config.resolve.fallback = { fs: false, net: false, tls: false };
+    config.externals.push("pino-pretty", "lokijs", "encoding");
+    return config;
+  },
   images: {
-    // domains: [
-    //   'via.placeholder.com',
-    //   'images.unsplash.com',
-    //   'api.qrserver.com'
-    // ],
     remotePatterns: [
       {
         protocol: 'https',
@@ -26,7 +30,16 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  // Remove swcMinify: true
 };
 
-export default nextConfig;
+const isIpfs = process.env.NEXT_PUBLIC_IPFS_BUILD === "true";
+
+if (isIpfs) {
+  nextConfig.output = "export";
+  nextConfig.trailingSlash = true;
+  nextConfig.images = {
+    unoptimized: true,
+  };
+}
+
+module.exports = nextConfig;

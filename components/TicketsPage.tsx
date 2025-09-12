@@ -11,7 +11,7 @@ import { getEventById } from '@/mocks/data/events';
 import { getCurrentUser } from '@/mocks/data/users';
 import { Ticket, Event, User } from '@/types';
 import BottomNavigation from '@/components/SideNavigation';
-import Header from '@/components/Header';
+import PublicHeader from '@/components/PublicHeader';
 
 export default function TicketsPage() {
     const router = useRouter();
@@ -101,7 +101,7 @@ export default function TicketsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <Header />
+            <PublicHeader />
 
             <main className="container mx-auto px-4 py-6 pt-24 pb-32">
                 <div className="flex justify-between items-center mb-6">

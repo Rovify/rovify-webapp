@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import {
     FiCalendar, FiClock, FiUsers, FiDollarSign, FiTrendingUp,
     FiTrendingDown, FiEye, FiMessageSquare, FiShare2, FiAward,
@@ -269,11 +270,16 @@ const EventCard = ({ event, index }: { event: typeof mockUpcomingEvents[0], inde
 
 export default function Dashboard() {
     const [currentTime, setCurrentTime] = useState(new Date());
+    const router = useRouter();
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         return () => clearInterval(timer);
     }, []);
+
+    const handleCreateEvent = () => {
+        router.push('/organiser-dashboard/create-event');
+    };
 
     return (
         <div className="space-y-8">
@@ -426,6 +432,7 @@ export default function Dashboard() {
                             </h2>
                             <div className="flex items-center gap-3">
                                 <motion.button
+                                    onClick={handleCreateEvent}
                                     className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-2 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
@@ -462,13 +469,14 @@ export default function Dashboard() {
                         </h3>
                         <div className="space-y-3">
                             {[
-                                { label: '🎯 Create Event', color: 'from-orange-500 to-orange-600' },
-                                { label: '📊 View Analytics', color: 'from-blue-500 to-blue-600' },
-                                { label: '💰 Check Payments', color: 'from-emerald-500 to-emerald-600' },
-                                { label: '📱 Marketing Tools', color: 'from-purple-500 to-purple-600' }
+                                { label: '🎯 Create Event', color: 'from-orange-500 to-orange-600', action: handleCreateEvent },
+                                { label: '📊 View Analytics', color: 'from-blue-500 to-blue-600', action: () => console.log('View Analytics') },
+                                { label: '💰 Check Payments', color: 'from-emerald-500 to-emerald-600', action: () => console.log('Check Payments') },
+                                { label: '📱 Marketing Tools', color: 'from-purple-500 to-purple-600', action: () => console.log('Marketing Tools') }
                             ].map((action, index) => (
                                 <motion.button
                                     key={action.label}
+                                    onClick={action.action}
                                     className={`w-full bg-gradient-to-r ${action.color} hover:shadow-lg text-white rounded-xl p-3 font-semibold transition-all text-sm`}
                                     initial={{ opacity: 0, x: -10 }}
                                     animate={{ opacity: 1, x: 0 }}

@@ -183,3 +183,27 @@ a {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 }
+
+/* Wallet Connect Dropdown Fixes */
+.wallet-connect-dropdown {
+  position: relative !important;
+  z-index: 1000 !important;
+}
+
+.wallet-connect-dropdown .dropdown-content {
+  position: absolute !important;
+  top: 100% !important;
+  left: 0 !important;
+  right: auto !important;
+  transform: none !important;
+  margin-top: 0.5rem !important;
+  z-index: 1001 !important;
+}
+
+/* Ensure navbar height consistency */
+.navbar-container {
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

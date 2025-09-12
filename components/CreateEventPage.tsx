@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { getCurrentUser } from '@/mocks/data/users';
 import { EventCategory, User } from '@/types';
-import Header from '@/components/Header';
+import PublicHeader from '@/components/PublicHeader';
 import BottomNavigation from '@/components/SideNavigation';
 import { FiChevronLeft } from 'react-icons/fi';
 
@@ -99,7 +99,7 @@ export default function CreateEventPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 text-gray-900">
-            <Header />
+            <PublicHeader />
 
             <main className="container mx-auto px-4 py-6 pt-24 pb-28">
                 <div className="flex items-center mb-4">

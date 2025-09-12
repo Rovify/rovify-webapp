@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import Header from '@/components/Header';
+import PublicHeader from '@/components/PublicHeader';
 import SideNavigation from '@/components/SideNavigation';
 import { useUI } from '@/context/UIContext';
 
@@ -27,7 +27,7 @@ export default function PageLayout({ children }: { children: ReactNode }) {
     // For regular app pages, render with conditional Header and SideNavigation
     return (
         <div className="flex flex-col min-h-screen bg-gray-50">
-            {showHeader && <Header />}
+            {showHeader && <PublicHeader />}
 
             <main className={`flex-1 container mx-auto px-4 pt-4 ${showHeader ? 'pt-20' : 'pt-4'} ${isMobile ? 'pb-24' : 'pb-8'}`}>
                 {children}

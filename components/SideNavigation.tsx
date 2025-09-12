@@ -9,6 +9,8 @@ import { IoTicket } from "react-icons/io5";
 import { BsCameraVideoFill, BsController } from "react-icons/bs";
 import { MdOutlineAddBox, MdOutlineNotifications } from "react-icons/md";
 import { AiOutlineShop } from "react-icons/ai";
+import { RiNftFill } from "react-icons/ri";
+import { FaBug } from "react-icons/fa";
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface NavigationItem {
@@ -32,6 +34,8 @@ export default function SideNavigation({ isOrganiser = false, className = '' }: 
         { href: '/stream', icon: <BsCameraVideoFill />, label: 'Live' },
         { href: '/gaming', icon: <BsController />, label: 'Gaming' },
         { href: '/marketplace', icon: <AiOutlineShop />, label: 'Shop' },
+        { href: '/marketplace-secondary', icon: <RiNftFill />, label: 'NFT Market' },
+        { href: '/debug', icon: <FaBug />, label: 'Debug' },
         { href: '/user-dashboard', icon: <FiUser />, label: 'Profile' }
     ], []);
 
